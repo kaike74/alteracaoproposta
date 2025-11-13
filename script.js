@@ -27,6 +27,20 @@ let charts = {
     impacts: null
 };
 
+// Função de debug visual
+function addDebug(message) {
+    console.log(message);
+    const debugPanel = document.getElementById('debugPanel');
+    const debugContent = document.getElementById('debugContent');
+    if (debugPanel && debugContent) {
+        debugPanel.style.display = 'block';
+        const line = document.createElement('div');
+        line.textContent = message;
+        line.style.marginBottom = '5px';
+        debugContent.appendChild(line);
+    }
+}
+
 // =====================================================
 // INICIALIZAÇÃO
 // =====================================================
@@ -82,96 +96,103 @@ function showWelcomeMessage() {
 // =====================================================
 
 async function loadProposalFromNotion(tableId) {
-    console.log('📡 Carregando tabela de emissoras do Notion:', tableId);
-    console.log('📡 URL atual:', window.location.href);
+    addDebug('🚀 Iniciando carregamento...');
+    addDebug(`📌 ID da tabela: ${tableId}`);
     
     const apiUrl = getApiUrl();
     const baseUrl = apiUrl.endsWith('/') ? apiUrl : apiUrl + '/';
     const finalUrl = `${baseUrl}?id=${tableId}`;
     
-    console.log('📡 URL da API final:', finalUrl);
+    addDebug(`📡 URL final: ${finalUrl}`);
     
-    const response = await fetch(finalUrl);
-    
-    console.log('📊 Status:', response.status);
-    
-    if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({}));
-        console.error('❌ Erro detalhado:', errorBody);
-        console.error('❌ Status:', response.status);
-        console.error('❌ StatusText:', response.statusText);
-        throw new Error(`Erro ao carregar dados: ${response.status} - ${errorBody.error || response.statusText}`);
-    }
+    try {
+        const response = await fetch(finalUrl);
+        
+        addDebug(`📊 Status HTTP: ${response.status}`);
+        addDebug(`✅ OK: ${response.ok}`);
+        
+        if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({}));
+            addDebug(`❌ Erro: ${JSON.stringify(errorBody)}`);
+            throw new Error(`Erro ao carregar dados: ${response.status}`);
+        }
 
-    const data = await response.json();
-    console.log('📊 Dados recebidos:', data);
-    console.log('📊 É array?', Array.isArray(data));
-    console.log('📊 Tamanho:', Array.isArray(data) ? data.length : 'N/A');
-    console.log('📊 Primeiro item:', Array.isArray(data) && data.length > 0 ? data[0] : 'vazio');
-    
-    // Espera um array de emissoras
-    if (Array.isArray(data) && data.length > 0) {
-        console.log('✅ Processando', data.length, 'emissoras');
-        proposalData.emissoras = data.map(row => ({
-            id: row.id,
-            emissora: row.emissora || '',
-            praca: row.praca || '',
-            dial: row.dial || '',
-            uf: row.uf || '',
+        const data = await response.json();
+        addDebug(`📦 Dados recebidos: ${JSON.stringify(data).substring(0, 200)}...`);
+        addDebug(`📊 É array? ${Array.isArray(data)}`);
+        addDebug(`📊 Tamanho: ${Array.isArray(data) ? data.length : 'N/A'}`);
+        
+        if (Array.isArray(data) && data.length > 0) {
+            addDebug(`✅ Processando ${data.length} emissoras`);
+            addDebug(`📋 Primeiro item chaves: ${Object.keys(data[0]).join(', ')}`);
             
-            // Spots 30"
-            spots30: parseFloat(row.spots30) || 0,
-            valorTabela30: parseFloat(row.valorTabela30) || 0,
-            valorNegociado30: parseFloat(row.valorNegociado30) || 0,
+            proposalData.emissoras = data.map(row => ({
+                id: row.id,
+                emissora: row.emissora || '',
+                praca: row.praca || '',
+                dial: row.dial || '',
+                uf: row.uf || '',
+                
+                // Spots 30"
+                spots30: parseFloat(row.spots30) || 0,
+                valorTabela30: parseFloat(row.valorTabela30) || 0,
+                valorNegociado30: parseFloat(row.valorNegociado30) || 0,
+                
+                // Spots 60"
+                spots60: parseFloat(row.spots60) || 0,
+                valorTabela60: parseFloat(row.valorTabela60) || 0,
+                valorNegociado60: parseFloat(row.valorNegociado60) || 0,
+                
+                // Blitz
+                spotsBlitz: parseFloat(row.spotsBlitz) || 0,
+                valorTabelaBlitz: parseFloat(row.valorTabelaBlitz) || 0,
+                valorNegociadoBlitz: parseFloat(row.valorNegociadoBlitz) || 0,
+                
+                // Spots 15"
+                spots15: parseFloat(row.spots15) || 0,
+                valorTabela15: parseFloat(row.valorTabela15) || 0,
+                valorNegociado15: parseFloat(row.valorNegociado15) || 0,
+                
+                // Spots 5"
+                spots5: parseFloat(row.spots5) || 0,
+                valorTabela5: parseFloat(row.valorTabela5) || 0,
+                valorNegociado5: parseFloat(row.valorNegociado5) || 0,
+                
+                // Test 60"
+                spotsTest60: parseFloat(row.spotsTest60) || 0,
+                valorTabelaTest60: parseFloat(row.valorTabelaTest60) || 0,
+                valorNegociadoTest60: parseFloat(row.valorNegociadoTest60) || 0,
+                
+                // Flash 30"
+                spotsFlash30: parseFloat(row.spotsFlash30) || 0,
+                valorTabelaFlash30: parseFloat(row.valorTabelaFlash30) || 0,
+                valorNegociadoFlash30: parseFloat(row.valorNegociadoFlash30) || 0,
+                
+                // Flash 60"
+                spotsFlash60: parseFloat(row.spotsFlash60) || 0,
+                valorTabelaFlash60: parseFloat(row.valorTabelaFlash60) || 0,
+                valorNegociadoFlash60: parseFloat(row.valorNegociadoFlash60) || 0,
+                
+                // Mensham 30"
+                spotsMensham30: parseFloat(row.spotsMensham30) || 0,
+                valorTabelaMensham30: parseFloat(row.valorTabelaMensham30) || 0,
+                valorNegociadoMensham30: parseFloat(row.valorNegociadoMensham30) || 0,
+                
+                // Mensham 60"
+                spotsMensham60: parseFloat(row.spotsMensham60) || 0,
+                valorTabelaMensham60: parseFloat(row.valorTabelaMensham60) || 0,
+                valorNegociadoMensham60: parseFloat(row.valorNegociadoMensham60) || 0
+            }));
             
-            // Spots 60"
-            spots60: parseFloat(row.spots60) || 0,
-            valorTabela60: parseFloat(row.valorTabela60) || 0,
-            valorNegociado60: parseFloat(row.valorNegociado60) || 0,
-            
-            // Blitz
-            spotsBlitz: parseFloat(row.spotsBlitz) || 0,
-            valorTabelaBlitz: parseFloat(row.valorTabelaBlitz) || 0,
-            valorNegociadoBlitz: parseFloat(row.valorNegociadoBlitz) || 0,
-            
-            // Spots 15"
-            spots15: parseFloat(row.spots15) || 0,
-            valorTabela15: parseFloat(row.valorTabela15) || 0,
-            valorNegociado15: parseFloat(row.valorNegociado15) || 0,
-            
-            // Spots 5"
-            spots5: parseFloat(row.spots5) || 0,
-            valorTabela5: parseFloat(row.valorTabela5) || 0,
-            valorNegociado5: parseFloat(row.valorNegociado5) || 0,
-            
-            // Test 60"
-            spotsTest60: parseFloat(row.spotsTest60) || 0,
-            valorTabelaTest60: parseFloat(row.valorTabelaTest60) || 0,
-            valorNegociadoTest60: parseFloat(row.valorNegociadoTest60) || 0,
-            
-            // Flash 30"
-            spotsFlash30: parseFloat(row.spotsFlash30) || 0,
-            valorTabelaFlash30: parseFloat(row.valorTabelaFlash30) || 0,
-            valorNegociadoFlash30: parseFloat(row.valorNegociadoFlash30) || 0,
-            
-            // Flash 60"
-            spotsFlash60: parseFloat(row.spotsFlash60) || 0,
-            valorTabelaFlash60: parseFloat(row.valorTabelaFlash60) || 0,
-            valorNegociadoFlash60: parseFloat(row.valorNegociadoFlash60) || 0,
-            
-            // Mensham 30"
-            spotsMensham30: parseFloat(row.spotsMensham30) || 0,
-            valorTabelaMensham30: parseFloat(row.valorTabelaMensham30) || 0,
-            valorNegociadoMensham30: parseFloat(row.valorNegociadoMensham30) || 0,
-            
-            // Mensham 60"
-            spotsMensham60: parseFloat(row.spotsMensham60) || 0,
-            valorTabelaMensham60: parseFloat(row.valorTabelaMensham60) || 0,
-            valorNegociadoMensham60: parseFloat(row.valorNegociadoMensham60) || 0
-        }));
-        console.log('✅ Emissoras carregadas:', proposalData.emissoras);
-    } else {
-        throw new Error('Formato de dados inválido. Esperado array de emissoras.');
+            addDebug(`✅ ${proposalData.emissoras.length} emissoras carregadas com sucesso!`);
+        } else {
+            addDebug('⚠️ Array vazio ou inválido');
+            throw new Error('Nenhuma emissora encontrada');
+        }
+    } catch (error) {
+        addDebug(`❌ Erro na função: ${error.message}`);
+        console.error(error);
+        throw error;
     }
 }
 
