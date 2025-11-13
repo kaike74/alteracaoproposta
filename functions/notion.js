@@ -210,12 +210,12 @@ export async function onRequest(context) {
           // Spots 30"
           spots30: extractValue(properties['Spots 30"'], 0),
           valorTabela30: extractValue(properties['Valor spot 30" (Tabela)'], 0),
-          valorNegociado30: extractValue(properties['Valor spot 30" (Negociado)'], 0),
+          valorNegociado30: extractValue(properties['Valor spot 30"(Negociado)'], 0),
           
           // Spots 60"
           spots60: extractValue(properties['Spots 60"'], 0),
           valorTabela60: extractValue(properties['Valor spot 60" (Tabela)'], 0),
-          valorNegociado60: extractValue(properties['Valor spot 60" (Negociado)'], 0),
+          valorNegociado60: extractValue(properties['Valor spot 60"(Negociado)'], 0),
           
           // Blitz
           spotsBlitz: extractValue(properties['Blitz'], 0),
@@ -225,12 +225,12 @@ export async function onRequest(context) {
           // Spots 15"
           spots15: extractValue(properties['Spots 15"'], 0),
           valorTabela15: extractValue(properties['Valor spot 15" (Tabela)'], 0),
-          valorNegociado15: extractValue(properties['Valor spot 15" (Negociado)'], 0),
+          valorNegociado15: extractValue(properties['Valor spot 15"(Negociado)'], 0),
           
           // Spots 5"
           spots5: extractValue(properties['Spots 5"'], 0),
           valorTabela5: extractValue(properties['Valor spot 5" (Tabela)'], 0),
-          valorNegociado5: extractValue(properties['Valor spot 5" (Negociado)'], 0),
+          valorNegociado5: extractValue(properties['Valor spot 5"(Negociado)'], 0),
           
           // Test 60"
           spotsTest60: extractValue(properties['Test 60"'], 0),
@@ -240,22 +240,22 @@ export async function onRequest(context) {
           // Flash 30"
           spotsFlash30: extractValue(properties['Flash 30"'], 0),
           valorTabelaFlash30: extractValue(properties['Valor Flash 30" (Tabela)'], 0),
-          valorNegociadoFlash30: extractValue(properties['Valor Flash 30" (Negociado)'], 0),
+          valorNegociadoFlash30: extractValue(properties['Valor Flash 30"(Negociado)'], 0),
           
           // Flash 60"
           spotsFlash60: extractValue(properties['Flash 60"'], 0),
           valorTabelaFlash60: extractValue(properties['Valor Flash 60" (Tabela)'], 0),
-          valorNegociadoFlash60: extractValue(properties['Valor Flash 60" (Negociado)'], 0),
+          valorNegociadoFlash60: extractValue(properties['Valor Flash 60"(Negociado)'], 0),
           
-          // Mensham 30"
-          spotsMensham30: extractValue(properties['Mensham 30"'], 0),
-          valorTabelaMensham30: extractValue(properties['Valor Mensham 30" (Tabela)'], 0),
-          valorNegociadoMensham30: extractValue(properties['Valor Mensham 30" (Negociado)'], 0),
+          // Menshan 30"
+          spotsMensham30: extractValue(properties['Menshan 30"'], 0),
+          valorTabelaMensham30: extractValue(properties['Valor Mershan 30" (Tabela)'], 0),
+          valorNegociadoMensham30: extractValue(properties['Valor Mershan 30" (Tabela)'], 0),
           
-          // Mensham 60"
-          spotsMensham60: extractValue(properties['Mensham 60"'], 0),
-          valorTabelaMensham60: extractValue(properties['Valor Mensham 60" (Tabela)'], 0),
-          valorNegociadoMensham60: extractValue(properties['Valor Mensham 60" (Negociado)'], 0)
+          // Menshan 60"
+          spotsMensham60: extractValue(properties['Menshan 60"'], 0),
+          valorTabelaMensham60: extractValue(properties['Valor Mershan 60" (Tabela)'], 0),
+          valorNegociadoMensham60: extractValue(properties['Valor Mershan 60" (Tabela)'], 0)
         };
       });
 
