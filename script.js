@@ -90,16 +90,25 @@ function showWelcomeMessage() {
 
 async function loadProposalFromNotion(notionId) {
     console.log('📡 Carregando proposta do Notion:', notionId);
+    console.log('📡 URL atual:', window.location.href);
+    console.log('📡 Params recebidos:', new URLSearchParams(window.location.search));
     
     const apiUrl = getApiUrl();
-    const response = await fetch(`${apiUrl}?id=${notionId}`);
+    const finalUrl = `${apiUrl}?id=${notionId}`;
     
-    console.log('📊 ai errou:', response);
+    console.log('📡 URL da API:', finalUrl);
+    
+    const response = await fetch(finalUrl);
+    
+    console.log('📊 Resposta bruta:', response);
+    console.log('📊 Status:', response.status);
+    console.log('📊 OK?:', response.ok);
     
     if (!response.ok) {
-        throw new Error(`Erro ao carregar dados: ${response.status}`);
+        const errorBody = await response.json().catch(() => ({}));
+        console.error('❌ Erro detalhado:', errorBody);
+        throw new Error(`Erro ao carregar dados: ${response.status} - ${errorBody.error || response.statusText}`);
     }
-    
 
     const data = await response.json();
     console.log('📊 Dados recebidos:', data);

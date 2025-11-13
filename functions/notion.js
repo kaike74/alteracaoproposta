@@ -45,9 +45,18 @@ export async function onRequest(context) {
     if (request.method === 'GET') {
       const id = url.searchParams.get('id');
       
-      if (!id) {
+      console.log('⚠️ DEBUG GET REQUEST');
+      console.log('URL completa:', request.url);
+      console.log('Query params:', [...url.searchParams.entries()]);
+      console.log('ID extraído:', id);
+      
+      if (!id || id.trim() === '') {
         return new Response(JSON.stringify({ 
-          error: 'ID do registro é obrigatório' 
+          error: 'ID do registro é obrigatório',
+          debug: {
+            receivedUrl: request.url,
+            rawId: id
+          }
         }), {
           status: 400,
           headers
