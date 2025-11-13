@@ -163,6 +163,16 @@ async function loadProposalFromNotion(tableId) {
             addDebug(`📋 Primeiro item chaves: ${Object.keys(data[0]).join(', ')}`);
             addDebug(`📋 Primeiro emissora: ${data[0].emissora || 'SEM NOME'}`);
             
+            // Log detalhado dos nomes dos campos
+            addDebug('');
+            addDebug('🔍 NOMES EXATOS DOS CAMPOS:');
+            const firstRecord = data[0];
+            Object.keys(firstRecord).sort().forEach(key => {
+                const value = firstRecord[key];
+                addDebug(`  "${key}": ${JSON.stringify(value).substring(0, 50)}`);
+            });
+            addDebug('');
+            
             proposalData.emissoras = data.map(row => ({
                 id: row.id,
                 emissora: row.emissora || '',
