@@ -21,7 +21,7 @@ export async function onRequest(context) {
 
   try {
     // ===== BUSCAR TOKEN NOTION_TOKEN =====
-    const notionToken = 'ntn_f87800291734GyPAJt4xGruOe0MmceMvZ3QjljC0ddNdaU';
+    const notionToken = 'ntn_d87800291735CSok9UAEgUkUBpPCLBjfwhuLV2HJG9c4cS';
     
     console.log('=== DEBUG CLOUDFLARE ===');
     console.log('1. Token existe?', !!notionToken);
