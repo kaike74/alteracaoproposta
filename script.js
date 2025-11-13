@@ -284,9 +284,11 @@ function getApiUrl() {
 
 function renderInterface() {
     console.log('🎨 Renderizando interface...');
+    console.log('📊 Emissoras disponíveis:', proposalData.emissoras.length);
     
     // Atualizar título com a primeira emissora como referência
     const firstEmissora = proposalData.emissoras[0];
+    console.log('🏢 Primeira emissora:', firstEmissora);
     document.getElementById('proposalTitle').textContent = firstEmissora ? firstEmissora.emissora : 'Proposta de Mídia';
     document.getElementById('locationInfo').textContent = firstEmissora ? `${firstEmissora.uf}` : '';
     
@@ -308,6 +310,8 @@ function renderSpotsTable() {
     
     // Renderizar cada emissora como um grupo
     proposalData.emissoras.forEach((emissora, index) => {
+        console.log(`  📍 Emissora ${index}: ${emissora.emissora} (Dial: ${emissora.dial})`);
+        
         // Header com info da emissora
         const headerRow = document.createElement('tr');
         headerRow.className = 'emissora-header-row';
