@@ -181,22 +181,40 @@ export async function onRequest(context) {
       const emissoras = notionData.results.map((row, rowIndex) => {
         const properties = row.properties || {};
         
-        // Log apenas do primeiro registro para não poluir o console
+        // Log detalhado apenas do primeiro registro
         if (rowIndex === 0) {
           console.log('');
-          console.log('═══════════════════════════════════════════════════════');
-          console.log('🔍 NOMES EXATOS DOS CAMPOS NO NOTION:');
-          console.log('═══════════════════════════════════════════════════════');
-          const fieldNames = Object.keys(properties).sort();
-          fieldNames.forEach(name => {
-            const prop = properties[name];
-            let sampleValue = '';
-            if (prop.type === 'number') sampleValue = prop.number || '(vazio)';
-            if (prop.type === 'title') sampleValue = prop.title?.[0]?.text?.content || '(vazio)';
-            if (prop.type === 'rich_text') sampleValue = prop.rich_text?.[0]?.text?.content || '(vazio)';
-            console.log(`  "${name}" [${prop.type}] = ${sampleValue}`);
+          console.log('═══════════════════════════════════════════════════════════');
+          console.log('🔍 DEBUG: CAMPOS ENCONTRADOS vs PROCURADOS');
+          console.log('═══════════════════════════════════════════════════════════');
+          
+          const fieldsToProcure = [
+            'Spots 30"', 'Valor spot 30" (Tabela)', 'Valor spot 30"(Negociado)',
+            'Spots 60"', 'Valor spot 60" (Tabela)', 'Valor spot 60"(Negociado)',
+            'Blitz', 'Valor Blitz (Tabela)', 'Valor Blitz (Negociado)',
+            'Spots 15"', 'Valor spot 15" (Tabela)', 'Valor spot 15"(Negociado)',
+            'Spots 5"', 'Valor spot 5" (Tabela)', 'Valor spot 5"(Negociado)',
+            'Test 60"', 'Valor Test 60" (Tabela)', 'Valor Test 60" (Negociado)',
+            'Flash 30"', 'Valor Flash 30" (Tabela)', 'Valor Flash 30"(Negociado)',
+            'Flash 60"', 'Valor Flash 60" (Tabela)', 'Valor Flash 60"(Negociado)',
+            'Menshan 30"', 'Valor Mershan 30" (Tabela)', 'Valor Mershan 30" (Tabela)',
+            'Menshan 60"', 'Valor Mershan 60" (Tabela)', 'Valor Mershan 60" (Tabela)'
+          ];
+          
+          const actualFields = Object.keys(properties);
+          console.log('CAMPOS QUE EXISTEM NO NOTION:');
+          actualFields.sort().forEach(field => {
+            console.log(`  ✅ "${field}"`);
           });
-          console.log('═══════════════════════════════════════════════════════');
+          
+          console.log('');
+          console.log('CAMPOS QUE ESTAMOS PROCURANDO:');
+          fieldsToProcure.forEach(field => {
+            const found = properties[field];
+            const status = found ? '✅' : '❌';
+            console.log(`  ${status} "${field}"`);
+          });
+          console.log('═══════════════════════════════════════════════════════════');
           console.log('');
         }
         
