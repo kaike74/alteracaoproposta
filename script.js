@@ -1,31 +1,10 @@
 // =====================================================
-// PROPOSTA DE MÍDIA - JavaScript (NOVA VERSÃO)
+// PROPOSTA DE MÍDIA - JavaScript (MÚLTIPLAS EMISSORAS)
 // =====================================================
 
 let proposalData = {
-    id: null,
-    region: '',
-    uf: '',
-    praca: '',
-    emissora: '',
-    spots: {
-        spots30: 0,
-        valorTabela30: 0,
-        valorNegociado30: 0,
-        spots60: 0,
-        valorTabela60: 0,
-        valorNegociado60: 0,
-        spots5: 0,
-        valorTabela5: 0,
-        valorNegociado5: 0,
-        spotsBlitz: 0,
-        valorTabelaBlitz: 0,
-        valorNegociadoBlitz: 0,
-        spotsTest60: 0,
-        valorTabelaTest60: 0,
-        valorNegociadoTest60: 0
-    },
-    selected: true,
+    tableId: null,
+    emissoras: [],  // Array de emissoras
     changes: {}
 };
 
@@ -43,14 +22,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     try {
         const params = new URLSearchParams(window.location.search);
-        proposalData.id = params.get('id');
+        proposalData.tableId = params.get('id');
 
-        if (!proposalData.id) {
+        if (!proposalData.tableId) {
             showWelcomeMessage();
-            throw new Error('Nenhuma proposta selecionada. Aguardando ID da proposta na URL.');
+            throw new Error('Nenhuma tabela selecionada. Aguardando ID da tabela na URL.');
         }
 
-        await loadProposalFromNotion(proposalData.id);
+        await loadProposalFromNotion(proposalData.tableId);
         renderInterface();
         console.log('✅ Página carregada com sucesso!');
     } catch (error) {
@@ -88,24 +67,19 @@ function showWelcomeMessage() {
 // CARREGAMENTO DE DADOS
 // =====================================================
 
-async function loadProposalFromNotion(notionId) {
-    console.log('📡 Carregando proposta do Notion:', notionId);
+async function loadProposalFromNotion(tableId) {
+    console.log('📡 Carregando tabela de emissoras do Notion:', tableId);
     console.log('📡 URL atual:', window.location.href);
-    console.log('📡 Params recebidos:', new URLSearchParams(window.location.search));
     
     const apiUrl = getApiUrl();
-    // Se a URL termina com /, não adiciona outro. Se não termina, adiciona
     const baseUrl = apiUrl.endsWith('/') ? apiUrl : apiUrl + '/';
-    const finalUrl = `${baseUrl}?id=${notionId}`;
+    const finalUrl = `${baseUrl}?id=${tableId}`;
     
-    console.log('📡 Base URL:', baseUrl);
     console.log('📡 URL da API final:', finalUrl);
     
     const response = await fetch(finalUrl);
     
-    console.log('📊 Resposta bruta:', response);
     console.log('📊 Status:', response.status);
-    console.log('📊 OK?:', response.ok);
     
     if (!response.ok) {
         const errorBody = await response.json().catch(() => ({}));
@@ -116,29 +90,25 @@ async function loadProposalFromNotion(notionId) {
     const data = await response.json();
     console.log('📊 Dados recebidos:', data);
     
-    proposalData.region = data.region || '';
-    proposalData.uf = data.uf || '';
-    proposalData.praca = data.praca || '';
-    proposalData.emissora = data.emissora || 'Proposta';
-    proposalData.selected = data.selected !== false;
-    
-    proposalData.spots = {
-        spots30: data.spots30 || 0,
-        valorTabela30: data.valorTabela30 || 0,
-        valorNegociado30: data.valorNegociado30 || 0,
-        spots60: data.spots60 || 0,
-        valorTabela60: data.valorTabela60 || 0,
-        valorNegociado60: data.valorNegociado60 || 0,
-        spots5: data.spots5 || 0,
-        valorTabela5: data.valorTabela5 || 0,
-        valorNegociado5: data.valorNegociado5 || 0,
-        spotsBlitz: data.spotsBlitz || 0,
-        valorTabelaBlitz: data.valorTabelaBlitz || 0,
-        valorNegociadoBlitz: data.valorNegociadoBlitz || 0,
-        spotsTest60: data.spotsTest60 || 0,
-        valorTabelaTest60: data.valorTabelaTest60 || 0,
-        valorNegociadoTest60: data.valorNegociadoTest60 || 0
-    };
+    // Espera um array de emissoras
+    if (Array.isArray(data)) {
+        proposalData.emissoras = data.map(row => ({
+            id: row.id,
+            emissora: row.emissora || '',
+            uf: row.uf || '',
+            spots30: parseFloat(row.spots30) || 0,
+            valorTabela30: parseFloat(row.valorTabela30) || 0,
+            valorNegociado30: parseFloat(row.valorNegociado30) || 0,
+            spotsTest60: parseFloat(row.spotsTest60) || 0,
+            valorTabelaTest60: parseFloat(row.valorTabelaTest60) || 0,
+            valorNegociadoTest60: parseFloat(row.valorNegociadoTest60) || 0,
+            investimento: parseFloat(row.investimento) || 0,
+            investimentoTabela: parseFloat(row.investimentoTabela) || 0
+        }));
+        console.log('✅ Emissoras carregadas:', proposalData.emissoras);
+    } else {
+        throw new Error('Formato de dados inválido. Esperado array de emissoras.');
+    }
 }
 
 function getApiUrl() {
@@ -170,9 +140,10 @@ function getApiUrl() {
 function renderInterface() {
     console.log('🎨 Renderizando interface...');
     
-    document.getElementById('proposalTitle').textContent = proposalData.emissora;
-    document.getElementById('locationInfo').textContent = 
-        `${proposalData.region} / ${proposalData.uf} / ${proposalData.praca}`;
+    // Atualizar título com a primeira emissora como referência
+    const firstEmissora = proposalData.emissoras[0];
+    document.getElementById('proposalTitle').textContent = firstEmissora ? firstEmissora.emissora : 'Proposta de Mídia';
+    document.getElementById('locationInfo').textContent = firstEmissora ? `${firstEmissora.uf}` : '';
     
     renderSpotsTable();
     updateStats();
@@ -183,50 +154,57 @@ function renderSpotsTable() {
     const tbody = document.getElementById('spotsTableBody');
     tbody.innerHTML = '';
     
-    const spotTypes = [
-        { key: 'spots30', label: 'Spots 30"', tabelaKey: 'valorTabela30', negKey: 'valorNegociado30' },
-        { key: 'spots60', label: 'Spots 60"', tabelaKey: 'valorTabela60', negKey: 'valorNegociado60' },
-        { key: 'spots5', label: 'Spots 5"', tabelaKey: 'valorTabela5', negKey: 'valorNegociado5' },
-        { key: 'spotsBlitz', label: 'Blitz', tabelaKey: 'valorTabelaBlitz', negKey: 'valorNegociadoBlitz' },
-        { key: 'spotsTest60', label: 'Testemunhal 60"', tabelaKey: 'valorTabelaTest60', negKey: 'valorNegociadoTest60' }
-    ];
-    
-    spotTypes.forEach(type => {
-        const spots = proposalData.spots[type.key] || 0;
-        const valorTabela = proposalData.spots[type.tabelaKey] || 0;
-        const valorNegociado = proposalData.spots[type.negKey] || 0;
-        
-        if (spots === 0 && valorTabela === 0 && valorNegociado === 0) {
-            return;
-        }
-        
-        const investimentoTabela = spots * valorTabela;
-        const investimentoNegociado = spots * valorNegociado;
+    proposalData.emissoras.forEach((emissora, index) => {
+        const investimentoTabela = (emissora.spots30 * emissora.valorTabela30) + 
+                                  (emissora.spotsTest60 * emissora.valorTabelaTest60);
+        const investimentoNegociado = (emissora.spots30 * emissora.valorNegociado30) + 
+                                     (emissora.spotsTest60 * emissora.valorNegociadoTest60);
         
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><strong>${type.label}</strong></td>
+            <td><strong>${emissora.emissora}</strong></td>
+            <td>${emissora.uf}</td>
             <td>
                 <input 
                     type="number" 
-                    value="${spots}" 
-                    onchange="updateSpots('${type.key}', this.value)"
+                    value="${emissora.spots30}" 
+                    onchange="updateEmissora(${index}, 'spots30', this.value)"
                     class="input-spots"
                     min="0"
                 >
             </td>
-            <td class="value-cell">R$ ${valorTabela.toFixed(2)}</td>
-            <td class="value-cell">R$ ${investimentoTabela.toFixed(2)}</td>
+            <td class="value-cell">R$ ${emissora.valorTabela30.toFixed(2)}</td>
             <td>
                 <input 
                     type="number" 
-                    value="${valorNegociado.toFixed(2)}" 
-                    onchange="updateValor('${type.negKey}', this.value)"
+                    value="${emissora.valorNegociado30.toFixed(2)}" 
+                    onchange="updateEmissora(${index}, 'valorNegociado30', this.value)"
                     class="input-valor"
                     min="0"
                     step="0.01"
                 >
             </td>
+            <td>
+                <input 
+                    type="number" 
+                    value="${emissora.spotsTest60}" 
+                    onchange="updateEmissora(${index}, 'spotsTest60', this.value)"
+                    class="input-spots"
+                    min="0"
+                >
+            </td>
+            <td class="value-cell">R$ ${emissora.valorTabelaTest60.toFixed(2)}</td>
+            <td>
+                <input 
+                    type="number" 
+                    value="${emissora.valorNegociadoTest60.toFixed(2)}" 
+                    onchange="updateEmissora(${index}, 'valorNegociadoTest60', this.value)"
+                    class="input-valor"
+                    min="0"
+                    step="0.01"
+                >
+            </td>
+            <td class="value-cell">R$ ${investimentoTabela.toFixed(2)}</td>
             <td class="value-cell">R$ ${investimentoNegociado.toFixed(2)}</td>
         `;
         tbody.appendChild(row);
@@ -297,22 +275,17 @@ function renderInvestmentChart() {
 function renderSpotTypesChart() {
     const ctx = document.getElementById('spotsChart').getContext('2d');
     
-    const spotTypes = [
-        { key: 'spots30', label: 'Spots 30"' },
-        { key: 'spots60', label: 'Spots 60"' },
-        { key: 'spots5', label: 'Spots 5"' },
-        { key: 'spotsBlitz', label: 'Blitz' },
-        { key: 'spotsTest60', label: 'Test 60"' }
-    ];
-    
     const labels = [];
     const data = [];
     
-    spotTypes.forEach(type => {
-        const spots = proposalData.spots[type.key] || 0;
-        if (spots > 0) {
-            labels.push(type.label);
-            data.push(spots);
+    proposalData.emissoras.forEach(emissora => {
+        if (emissora.spots30 > 0) {
+            labels.push(`${emissora.emissora} (30")`);
+            data.push(emissora.spots30);
+        }
+        if (emissora.spotsTest60 > 0) {
+            labels.push(`${emissora.emissora} (60")`);
+            data.push(emissora.spotsTest60);
         }
     });
     
@@ -349,49 +322,25 @@ function renderSpotTypesChart() {
 // =====================================================
 
 function calculateTotalSpots() {
-    return (proposalData.spots.spots30 || 0) +
-           (proposalData.spots.spots60 || 0) +
-           (proposalData.spots.spots5 || 0) +
-           (proposalData.spots.spotsBlitz || 0) +
-           (proposalData.spots.spotsTest60 || 0);
+    return proposalData.emissoras.reduce((total, emissora) => {
+        return total + (emissora.spots30 || 0) + (emissora.spotsTest60 || 0);
+    }, 0);
 }
 
 function calculateTotalInvestimentoTabela() {
-    const spotTypes = [
-        { key: 'spots30', valorKey: 'valorTabela30' },
-        { key: 'spots60', valorKey: 'valorTabela60' },
-        { key: 'spots5', valorKey: 'valorTabela5' },
-        { key: 'spotsBlitz', valorKey: 'valorTabelaBlitz' },
-        { key: 'spotsTest60', valorKey: 'valorTabelaTest60' }
-    ];
-    
-    let total = 0;
-    spotTypes.forEach(type => {
-        const spots = proposalData.spots[type.key] || 0;
-        const valor = proposalData.spots[type.valorKey] || 0;
-        total += spots * valor;
-    });
-    
-    return total;
+    return proposalData.emissoras.reduce((total, emissora) => {
+        const inv30 = (emissora.spots30 || 0) * (emissora.valorTabela30 || 0);
+        const invTest60 = (emissora.spotsTest60 || 0) * (emissora.valorTabelaTest60 || 0);
+        return total + inv30 + invTest60;
+    }, 0);
 }
 
 function calculateTotalInvestimentoNegociado() {
-    const spotTypes = [
-        { key: 'spots30', valorKey: 'valorNegociado30' },
-        { key: 'spots60', valorKey: 'valorNegociado60' },
-        { key: 'spots5', valorKey: 'valorNegociado5' },
-        { key: 'spotsBlitz', valorKey: 'valorNegociadoBlitz' },
-        { key: 'spotsTest60', valorKey: 'valorNegociadoTest60' }
-    ];
-    
-    let total = 0;
-    spotTypes.forEach(type => {
-        const spots = proposalData.spots[type.key] || 0;
-        const valor = proposalData.spots[type.valorKey] || 0;
-        total += spots * valor;
-    });
-    
-    return total;
+    return proposalData.emissoras.reduce((total, emissora) => {
+        const inv30 = (emissora.spots30 || 0) * (emissora.valorNegociado30 || 0);
+        const invTest60 = (emissora.spotsTest60 || 0) * (emissora.valorNegociadoTest60 || 0);
+        return total + inv30 + invTest60;
+    }, 0);
 }
 
 function calculateCPM() {
@@ -406,37 +355,28 @@ function calculateCPM() {
 // EDIÇÃO E ATUALIZAÇÃO
 // =====================================================
 
-function updateSpots(key, value) {
-    const oldValue = proposalData.spots[key];
+function updateEmissora(index, field, value) {
+    const emissora = proposalData.emissoras[index];
+    if (!emissora) return;
+    
+    const oldValue = emissora[field];
     const newValue = parseFloat(value) || 0;
     
-    proposalData.spots[key] = newValue;
+    emissora[field] = newValue;
     
-    if (!proposalData.changes[key]) {
-        proposalData.changes[key] = { old: oldValue, new: newValue };
+    const changeKey = `${index}-${field}`;
+    if (!proposalData.changes[changeKey]) {
+        proposalData.changes[changeKey] = { 
+            emissoraIndex: index,
+            field: field,
+            old: oldValue, 
+            new: newValue 
+        };
     } else {
-        proposalData.changes[key].new = newValue;
+        proposalData.changes[changeKey].new = newValue;
     }
     
-    console.log(`📝 ${key}: ${oldValue} → ${newValue}`);
-    updateStats();
-    renderCharts();
-    showUnsavedChanges();
-}
-
-function updateValor(key, value) {
-    const oldValue = proposalData.spots[key];
-    const newValue = parseFloat(value) || 0;
-    
-    proposalData.spots[key] = newValue;
-    
-    if (!proposalData.changes[key]) {
-        proposalData.changes[key] = { old: oldValue, new: newValue };
-    } else {
-        proposalData.changes[key].new = newValue;
-    }
-    
-    console.log(`💰 ${key}: ${oldValue} → ${newValue}`);
+    console.log(`📝 Emissora ${index} - ${field}: ${oldValue} → ${newValue}`);
     updateStats();
     renderCharts();
     showUnsavedChanges();
@@ -469,20 +409,12 @@ async function saveChanges() {
     try {
         const apiUrl = getApiUrl();
         const dataToSave = {
-            spots30: proposalData.spots.spots30,
-            valorNegociado30: proposalData.spots.valorNegociado30,
-            spots60: proposalData.spots.spots60,
-            valorNegociado60: proposalData.spots.valorNegociado60,
-            spots5: proposalData.spots.spots5,
-            valorNegociado5: proposalData.spots.valorNegociado5,
-            spotsBlitz: proposalData.spots.spotsBlitz,
-            valorNegociadoBlitz: proposalData.spots.valorNegociadoBlitz,
-            spotsTest60: proposalData.spots.spotsTest60,
-            valorNegociadoTest60: proposalData.spots.valorNegociadoTest60,
+            tableId: proposalData.tableId,
+            emissoras: proposalData.emissoras,
             changes: proposalData.changes
         };
         
-        const response = await fetch(`${apiUrl}?id=${proposalData.id}`, {
+        const response = await fetch(`${apiUrl}?id=${proposalData.tableId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dataToSave)
