@@ -164,12 +164,20 @@ export async function onRequest(context) {
         
         // Log apenas do primeiro registro para não poluir o console
         if (rowIndex === 0) {
+          console.log('');
+          console.log('═══════════════════════════════════════════════════════');
           console.log('🔍 NOMES EXATOS DOS CAMPOS NO NOTION:');
+          console.log('═══════════════════════════════════════════════════════');
           const fieldNames = Object.keys(properties).sort();
           fieldNames.forEach(name => {
             const prop = properties[name];
-            console.log(`  "${name}" (tipo: ${prop.type})`);
+            let sampleValue = '';
+            if (prop.type === 'number') sampleValue = prop.number || '(vazio)';
+            if (prop.type === 'title') sampleValue = prop.title?.[0]?.text?.content || '(vazio)';
+            if (prop.type === 'rich_text') sampleValue = prop.rich_text?.[0]?.text?.content || '(vazio)';
+            console.log(`  "${name}" [${prop.type}] = ${sampleValue}`);
           });
+          console.log('═══════════════════════════════════════════════════════');
           console.log('');
         }
         
