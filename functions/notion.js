@@ -45,7 +45,7 @@ export async function onRequest(context) {
 
     // MÉTODO GET - BUSCAR DADOS DA PROPOSTA
     if (request.method === 'GET') {
-      const id = url.searchParams.get('id');
+      let id = url.searchParams.get('id');
       
       console.log('⚠️ DEBUG GET REQUEST');
       console.log('URL completa:', request.url);
@@ -65,6 +65,9 @@ export async function onRequest(context) {
         });
       }
 
+      // Notion API espera ID sem hífens
+      id = id.replace(/-/g, '');
+      console.log('🔍 ID formatado para Notion:', id);
       console.log('🔍 Buscando proposta:', id);
 
       // Buscar dados da página no Notion
@@ -76,13 +79,21 @@ export async function onRequest(context) {
         }
       });
 
+      console.log('📡 Resposta Notion - Status:', response.status);
+      console.log('📡 Resposta Notion - OK:', response.ok);
+
       if (!response.ok) {
         let errorDetails = response.statusText;
+        let errorBody = {};
+        
         try {
-          errorDetails = JSON.stringify(await response.json());
+          errorBody = await response.json();
+          console.log('📡 Erro Notion JSON:', errorBody);
+          errorDetails = JSON.stringify(errorBody, null, 2);
         } catch (e) {
           try {
             errorDetails = await response.text();
+            console.log('📡 Erro Notion texto:', errorDetails);
           } catch (e2) {
             console.log('Não foi possível ler corpo do erro');
           }
@@ -90,7 +101,11 @@ export async function onRequest(context) {
         
         return new Response(JSON.stringify({ 
           error: `Erro ao buscar proposta: ${response.status}`,
-          details: errorDetails
+          details: errorDetails,
+          debug: {
+            id: id,
+            notionError: errorBody
+          }
         }), {
           status: response.status,
           headers
