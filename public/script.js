@@ -46,7 +46,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         proposalData.id = params.get('id');
 
         if (!proposalData.id) {
-            throw new Error('ID da proposta não fornecido na URL');
+            showWelcomeMessage();
+            throw new Error('Nenhuma proposta selecionada. Aguardando ID da proposta na URL.');
         }
 
         await loadProposalFromNotion(proposalData.id);
@@ -57,6 +58,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         showError(error.message);
     }
 });
+
+function showWelcomeMessage() {
+    const container = document.querySelector('.container');
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <h1 style="font-size: 2.5rem; color: #6366f1; margin-bottom: 20px;">
+                    📋 E-MÍDIAS
+                </h1>
+                <p style="font-size: 1.1rem; color: #6b7280; margin-bottom: 30px;">
+                    Plataforma de Gestão de Propostas Radiofônicas
+                </p>
+                <div style="background: #f3f4f6; padding: 30px; border-radius: 12px; max-width: 600px; margin: 0 auto;">
+                    <p style="color: #374151; font-size: 1rem; line-height: 1.6;">
+                        ℹ️ Nenhuma proposta foi carregada.<br><br>
+                        Para visualizar e editar uma proposta, acesse a URL com o ID:<br><br>
+                        <code style="background: white; padding: 10px; border-radius: 6px; display: inline-block; margin: 10px 0;">
+                            ?id=SEU_ID_AQUI
+                        </code>
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+}
 
 // =====================================================
 // CARREGAMENTO DE DADOS
