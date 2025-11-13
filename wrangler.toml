@@ -3,31 +3,10 @@ main = "functions/notion.js"
 compatibility_date = "2024-01-01"
 type = "javascript"
 
-[env.production]
-name = "alteracaoproposta"
-routes = [
-  { pattern = "example.com/admin/*", zone_name = "example.com" }
-]
-
 [build]
 command = ""
 cwd = "."
-watch_paths = []
 
-[build.upload]
-format = "service-worker"
+[env.production]
+name = "alteracaoproposta"
 
-[[build.upload.rules]]
-type = "CompiledContentType"
-globs = ["**/*.wasm"]
-fallthrough = true
-
-[[build.upload.rules]]
-type = "Text"
-globs = ["**/*.txt", "**/*.html"]
-fallthrough = true
-
-[[env.production.build.upload.rules]]
-type = "CompiledContentType"
-globs = ["**/*.wasm"]
-fallthrough = true

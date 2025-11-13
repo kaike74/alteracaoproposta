@@ -102,15 +102,23 @@ async function loadProposalFromNotion(notionId) {
 
 function getApiUrl() {
     const hostname = window.location.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return '/.netlify/functions/notion';
-    }
-    if (hostname.includes('netlify.app')) {
-        return '/.netlify/functions/notion';
-    }
+    
+    // Cloudflare Pages
     if (hostname.includes('pages.dev')) {
         return '/notion';
     }
+    
+    // Netlify
+    if (hostname.includes('netlify.app')) {
+        return '/.netlify/functions/notion';
+    }
+    
+    // Local
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://localhost:8787/notion';
+    }
+    
+    // Default
     return '/notion';
 }
 
