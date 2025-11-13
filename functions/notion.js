@@ -119,7 +119,26 @@ export async function onRequest(context) {
       console.log('✅ Tabela recebida com sucesso!');
       console.log('📝 Total de registros:', notionData.results?.length || 0);
       console.log('📝 Primeiro registro ID:', notionData.results?.[0]?.id || 'nenhum');
-      console.log('📝 Propriedades do primeiro registro:', Object.keys(notionData.results?.[0]?.properties || {}));
+      
+      // Log detalhado dos campos do primeiro registro
+      const firstRecord = notionData.results?.[0];
+      if (firstRecord?.properties) {
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log('🔍 CAMPOS ENCONTRADOS NO NOTION (PRIMEIRO REGISTRO):');
+        console.log('═══════════════════════════════════════════════════════════');
+        const fieldNames = Object.keys(firstRecord.properties).sort();
+        fieldNames.forEach(fieldName => {
+          const prop = firstRecord.properties[fieldName];
+          let value = '(vazio)';
+          if (prop.type === 'number' && prop.number !== null) value = prop.number;
+          if (prop.type === 'title' && prop.title?.length) value = prop.title[0].text.content;
+          if (prop.type === 'rich_text' && prop.rich_text?.length) value = prop.rich_text[0].text.content;
+          console.log(`  "${fieldName}": ${value}`);
+        });
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log('');
+      }
       
       if (!notionData.results || notionData.results.length === 0) {
         console.log('⚠️ AVISO: Database retornou vazio!');
