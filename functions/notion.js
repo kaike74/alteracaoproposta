@@ -156,7 +156,7 @@ export async function onRequest(context) {
       }
 
       // Função melhorada para extrair valores com fallbacks e logging
-      const extractValue = (defaultValue = 0, propName = '', ...possibleKeys) => {
+      const extractValue = (properties, defaultValue = 0, propName = '', ...possibleKeys) => {
         // Tenta cada chave possível em sequência
         for (const key of possibleKeys) {
           const prop = properties[key];
@@ -237,60 +237,60 @@ export async function onRequest(context) {
         
         return {
           id: row.id,
-          emissora: extractValue('', 'Emissora', 'Emissora'),
-          praca: extractValue('', 'Praça', 'Praça', 'Praca'),
-          dial: extractValue('', 'Dial', 'Dial'),
-          uf: extractValue('', 'UF', 'UF'),
+          emissora: extractValue(properties, '', 'Emissora', 'Emissora'),
+          praca: extractValue(properties, '', 'Praça', 'Praça', 'Praca'),
+          dial: extractValue(properties, '', 'Dial', 'Dial'),
+          uf: extractValue(properties, '', 'UF', 'UF'),
           
           // Spots 30"
-          spots30: extractValue(0, 'Spots 30', 'Spots 30"', 'Spots 30ʺ', 'Spots 30', 'spots30'),
-          valorTabela30: extractValue(0, 'Valor spot 30 (Tabela)', 'Valor spot 30" (Tabela)', 'Valor spot 30ʺ (Tabela)', 'Valor spot 30 (Tabela)', 'valorTabela30'),
-          valorNegociado30: extractValue(0, 'Valor spot 30 (Negociado)', 'Valor spot 30"(Negociado)', 'Valor spot 30ʺ(Negociado)', 'Valor spot 30 (Negociado)', 'valorNegociado30'),
+          spots30: extractValue(properties, 0, 'Spots 30', 'Spots 30"', 'Spots 30ʺ', 'Spots 30', 'spots30'),
+          valorTabela30: extractValue(properties, 0, 'Valor spot 30 (Tabela)', 'Valor spot 30" (Tabela)', 'Valor spot 30ʺ (Tabela)', 'Valor spot 30 (Tabela)', 'valorTabela30'),
+          valorNegociado30: extractValue(properties, 0, 'Valor spot 30 (Negociado)', 'Valor spot 30"(Negociado)', 'Valor spot 30ʺ(Negociado)', 'Valor spot 30 (Negociado)', 'valorNegociado30'),
           
           // Spots 60"
-          spots60: extractValue(0, 'Spots 60', 'Spots 60"', 'Spots 60ʺ', 'Spots 60', 'spots60'),
-          valorTabela60: extractValue(0, 'Valor spot 60 (Tabela)', 'Valor spot 60" (Tabela)', 'Valor spot 60ʺ (Tabela)', 'Valor spot 60 (Tabela)', 'valorTabela60'),
-          valorNegociado60: extractValue(0, 'Valor spot 60 (Negociado)', 'Valor spot 60"(Negociado)', 'Valor spot 60ʺ(Negociado)', 'Valor spot 60 (Negociado)', 'valorNegociado60'),
+          spots60: extractValue(properties, 0, 'Spots 60', 'Spots 60"', 'Spots 60ʺ', 'Spots 60', 'spots60'),
+          valorTabela60: extractValue(properties, 0, 'Valor spot 60 (Tabela)', 'Valor spot 60" (Tabela)', 'Valor spot 60ʺ (Tabela)', 'Valor spot 60 (Tabela)', 'valorTabela60'),
+          valorNegociado60: extractValue(properties, 0, 'Valor spot 60 (Negociado)', 'Valor spot 60"(Negociado)', 'Valor spot 60ʺ(Negociado)', 'Valor spot 60 (Negociado)', 'valorNegociado60'),
           
           // Blitz
-          spotsBlitz: extractValue(0, 'Blitz', 'Blitz', 'blitz'),
-          valorTabelaBlitz: extractValue(0, 'Valor Blitz (Tabela)', 'Valor Blitz (Tabela)', 'valorTabelaBlitz'),
-          valorNegociadoBlitz: extractValue(0, 'Valor Blitz (Negociado)', 'Valor Blitz (Negociado)', 'valorNegociadoBlitz'),
+          spotsBlitz: extractValue(properties, 0, 'Blitz', 'Blitz', 'blitz'),
+          valorTabelaBlitz: extractValue(properties, 0, 'Valor Blitz (Tabela)', 'Valor Blitz (Tabela)', 'valorTabelaBlitz'),
+          valorNegociadoBlitz: extractValue(properties, 0, 'Valor Blitz (Negociado)', 'Valor Blitz (Negociado)', 'valorNegociadoBlitz'),
           
           // Spots 15"
-          spots15: extractValue(0, 'Spots 15', 'Spots 15"', 'Spots 15ʺ', 'Spots 15', 'spots15'),
-          valorTabela15: extractValue(0, 'Valor spot 15 (Tabela)', 'Valor spot 15" (Tabela)', 'Valor spot 15ʺ (Tabela)', 'Valor spot 15 (Tabela)', 'valorTabela15'),
-          valorNegociado15: extractValue(0, 'Valor spot 15 (Negociado)', 'Valor spot 15"(Negociado)', 'Valor spot 15ʺ(Negociado)', 'Valor spot 15 (Negociado)', 'valorNegociado15'),
+          spots15: extractValue(properties, 0, 'Spots 15', 'Spots 15"', 'Spots 15ʺ', 'Spots 15', 'spots15'),
+          valorTabela15: extractValue(properties, 0, 'Valor spot 15 (Tabela)', 'Valor spot 15" (Tabela)', 'Valor spot 15ʺ (Tabela)', 'Valor spot 15 (Tabela)', 'valorTabela15'),
+          valorNegociado15: extractValue(properties, 0, 'Valor spot 15 (Negociado)', 'Valor spot 15"(Negociado)', 'Valor spot 15ʺ(Negociado)', 'Valor spot 15 (Negociado)', 'valorNegociado15'),
           
           // Spots 5"
-          spots5: extractValue(0, 'Spots 5', 'Spots 5"', 'Spots 5ʺ', 'Spots 5', 'spots5'),
-          valorTabela5: extractValue(0, 'Valor spot 5 (Tabela)', 'Valor spot 5" (Tabela)', 'Valor spot 5ʺ (Tabela)', 'Valor spot 5 (Tabela)', 'valorTabela5'),
-          valorNegociado5: extractValue(0, 'Valor spot 5 (Negociado)', 'Valor spot 5"(Negociado)', 'Valor spot 5ʺ(Negociado)', 'Valor spot 5 (Negociado)', 'valorNegociado5'),
+          spots5: extractValue(properties, 0, 'Spots 5', 'Spots 5"', 'Spots 5ʺ', 'Spots 5', 'spots5'),
+          valorTabela5: extractValue(properties, 0, 'Valor spot 5 (Tabela)', 'Valor spot 5" (Tabela)', 'Valor spot 5ʺ (Tabela)', 'Valor spot 5 (Tabela)', 'valorTabela5'),
+          valorNegociado5: extractValue(properties, 0, 'Valor spot 5 (Negociado)', 'Valor spot 5"(Negociado)', 'Valor spot 5ʺ(Negociado)', 'Valor spot 5 (Negociado)', 'valorNegociado5'),
           
           // Test 60"
-          spotsTest60: extractValue(0, 'Test 60', 'Test 60"', 'Test 60ʺ', 'Test. 60ʺ', 'Test 60', 'spotsTest60'),
-          valorTabelaTest60: extractValue(0, 'Valor Test 60 (Tabela)', 'Valor Test 60" (Tabela)', 'Valor Test 60ʺ (Tabela)', 'Valor Test 60 (Tabela)', 'valorTabelaTest60'),
-          valorNegociadoTest60: extractValue(0, 'Valor Test 60 (Negociado)', 'Valor Test 60" (Negociado)', 'Valor Test 60ʺ (Negociado)', 'Valor Test 60 (Negociado)', 'valorNegociadoTest60'),
+          spotsTest60: extractValue(properties, 0, 'Test 60', 'Test 60"', 'Test 60ʺ', 'Test. 60ʺ', 'Test 60', 'spotsTest60'),
+          valorTabelaTest60: extractValue(properties, 0, 'Valor Test 60 (Tabela)', 'Valor Test 60" (Tabela)', 'Valor Test 60ʺ (Tabela)', 'Valor Test 60 (Tabela)', 'valorTabelaTest60'),
+          valorNegociadoTest60: extractValue(properties, 0, 'Valor Test 60 (Negociado)', 'Valor Test 60" (Negociado)', 'Valor Test 60ʺ (Negociado)', 'Valor Test 60 (Negociado)', 'valorNegociadoTest60'),
           
           // Flash 30"
-          spotsFlash30: extractValue(0, 'Flash 30', 'Flash 30"', 'Flash 30ʺ', 'Flash 30', 'spotsFlash30'),
-          valorTabelaFlash30: extractValue(0, 'Valor Flash 30 (Tabela)', 'Valor Flash 30" (Tabela)', 'Valor Flash 30ʺ (Tabela)', 'Valor Flash 30 (Tabela)', 'valorTabelaFlash30'),
-          valorNegociadoFlash30: extractValue(0, 'Valor Flash 30 (Negociado)', 'Valor Flash 30"(Negociado)', 'Valor Flash 30ʺ(Negociado)', 'Valor Flash 30 (Negociado)', 'valorNegociadoFlash30'),
+          spotsFlash30: extractValue(properties, 0, 'Flash 30', 'Flash 30"', 'Flash 30ʺ', 'Flash 30', 'spotsFlash30'),
+          valorTabelaFlash30: extractValue(properties, 0, 'Valor Flash 30 (Tabela)', 'Valor Flash 30" (Tabela)', 'Valor Flash 30ʺ (Tabela)', 'Valor Flash 30 (Tabela)', 'valorTabelaFlash30'),
+          valorNegociadoFlash30: extractValue(properties, 0, 'Valor Flash 30 (Negociado)', 'Valor Flash 30"(Negociado)', 'Valor Flash 30ʺ(Negociado)', 'Valor Flash 30 (Negociado)', 'valorNegociadoFlash30'),
           
           // Flash 60"
-          spotsFlash60: extractValue(0, 'Flash 60', 'Flash 60"', 'Flash 60ʺ', 'Flash 60', 'spotsFlash60'),
-          valorTabelaFlash60: extractValue(0, 'Valor Flash 60 (Tabela)', 'Valor Flash 60" (Tabela)', 'Valor Flash 60ʺ (Tabela)', 'Valor Flash 60 (Tabela)', 'valorTabelaFlash60'),
-          valorNegociadoFlash60: extractValue(0, 'Valor Flash 60 (Negociado)', 'Valor Flash 60"(Negociado)', 'Valor Flash 60ʺ(Negociado)', 'Valor Flash 60 (Negociado)', 'valorNegociadoFlash60'),
+          spotsFlash60: extractValue(properties, 0, 'Flash 60', 'Flash 60"', 'Flash 60ʺ', 'Flash 60', 'spotsFlash60'),
+          valorTabelaFlash60: extractValue(properties, 0, 'Valor Flash 60 (Tabela)', 'Valor Flash 60" (Tabela)', 'Valor Flash 60ʺ (Tabela)', 'Valor Flash 60 (Tabela)', 'valorTabelaFlash60'),
+          valorNegociadoFlash60: extractValue(properties, 0, 'Valor Flash 60 (Negociado)', 'Valor Flash 60"(Negociado)', 'Valor Flash 60ʺ(Negociado)', 'Valor Flash 60 (Negociado)', 'valorNegociadoFlash60'),
           
           // Menshan 30"
-          spotsMensham30: extractValue(0, 'Menshan 30', 'Menshan 30"', 'Menshan 30ʺ', 'Menshan 30', 'spotsMensham30'),
-          valorTabelaMensham30: extractValue(0, 'Valor Mershan 30 (Tabela)', 'Valor Mershan 30" (Tabela)', 'Valor Mershan 30ʺ (Tabela)', 'Valor Mershan 30 (Tabela)', 'valorTabelaMensham30'),
-          valorNegociadoMensham30: extractValue(0, 'Valor Mershan 30 (Tabela)', 'Valor Mershan 30" (Tabela)', 'Valor Mershan 30ʺ (Tabela)', 'Valor Mershan 30 (Tabela)', 'valorNegociadoMensham30'),
+          spotsMensham30: extractValue(properties, 0, 'Menshan 30', 'Menshan 30"', 'Menshan 30ʺ', 'Menshan 30', 'spotsMensham30'),
+          valorTabelaMensham30: extractValue(properties, 0, 'Valor Mershan 30 (Tabela)', 'Valor Mershan 30" (Tabela)', 'Valor Mershan 30ʺ (Tabela)', 'Valor Mershan 30 (Tabela)', 'valorTabelaMensham30'),
+          valorNegociadoMensham30: extractValue(properties, 0, 'Valor Mershan 30 (Tabela)', 'Valor Mershan 30" (Tabela)', 'Valor Mershan 30ʺ (Tabela)', 'Valor Mershan 30 (Tabela)', 'valorNegociadoMensham30'),
           
           // Menshan 60"
-          spotsMensham60: extractValue(0, 'Menshan 60', 'Menshan 60"', 'Menshan 60ʺ', 'Menshan 60', 'spotsMensham60'),
-          valorTabelaMensham60: extractValue(0, 'Valor Mershan 60 (Tabela)', 'Valor Mershan 60" (Tabela)', 'Valor Mershan 60ʺ (Tabela)', 'Valor Mershan 60 (Tabela)', 'valorTabelaMensham60'),
-          valorNegociadoMensham60: extractValue(0, 'Valor Mershan 60 (Tabela)', 'Valor Mershan 60" (Tabela)', 'Valor Mershan 60ʺ (Tabela)', 'Valor Mershan 60 (Tabela)', 'valorNegociadoMensham60')
+          spotsMensham60: extractValue(properties, 0, 'Menshan 60', 'Menshan 60"', 'Menshan 60ʺ', 'Menshan 60', 'spotsMensham60'),
+          valorTabelaMensham60: extractValue(properties, 0, 'Valor Mershan 60 (Tabela)', 'Valor Mershan 60" (Tabela)', 'Valor Mershan 60ʺ (Tabela)', 'Valor Mershan 60 (Tabela)', 'valorTabelaMensham60'),
+          valorNegociadoMensham60: extractValue(properties, 0, 'Valor Mershan 60 (Tabela)', 'Valor Mershan 60" (Tabela)', 'Valor Mershan 60ʺ (Tabela)', 'Valor Mershan 60 (Tabela)', 'valorNegociadoMensham60')
         };
       });
 
