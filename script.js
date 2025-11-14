@@ -318,6 +318,7 @@ function renderSpotsTable() {
         
         // Renderizar cada produto para essa emissora
         PRODUTOS.forEach((produto, produtoIndex) => {
+            // Puxar valores diretos do objeto emissora (vindo do Notion)
             const spots = emissora[produto.key] || 0;
             const valorTabela = emissora[produto.tabelaKey] || 0;
             const valorNegociado = emissora[produto.negKey] || 0;
@@ -341,9 +342,9 @@ function renderSpotsTable() {
                         style="cursor: pointer;"
                     >
                 </td>
-                <td>${emissora.uf || ''}</td>
-                <td>${emissora.praca || ''}</td>
-                <td><strong>${emissora.emissora}</strong></td>
+                <td>${emissora.uf || '-'}</td>
+                <td>${emissora.praca || '-'}</td>
+                <td><strong>${emissora.emissora || '-'}</strong></td>
                 <td><strong>${produto.label}</strong></td>
                 <td>
                     <input 
@@ -352,13 +353,14 @@ function renderSpotsTable() {
                         onchange="updateEmissora(${emissoraIndex}, '${produto.key}', this.value)"
                         class="input-spots"
                         min="0"
+                        step="1"
                         style="width: 70px; padding: 4px; text-align: center;"
                     >
                 </td>
-                <td class="value-cell">R$ ${valorTabela.toFixed(2)}</td>
-                <td class="value-cell">R$ ${valorNegociado.toFixed(2)}</td>
-                <td class="value-cell investment-tabela">R$ ${invTabela.toFixed(2)}</td>
-                <td class="value-cell investment-negociado">R$ ${invNegociado.toFixed(2)}</td>
+                <td class="value-cell">R$ ${valorTabela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="value-cell">R$ ${valorNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="value-cell investment-tabela">R$ ${invTabela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="value-cell investment-negociado">R$ ${invNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
             `;
             tbody.appendChild(row);
         });
@@ -367,6 +369,7 @@ function renderSpotsTable() {
     });
     
     addDebug(`✅ Tabela renderizada com sucesso!`);
+    updateStats();
 }
 
 function updateStats() {
