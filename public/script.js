@@ -15,6 +15,7 @@ const PRODUTOS = [
     { key: 'spotsBlitz', label: 'Blitz', tabelaKey: 'valorTabelaBlitz', negKey: 'valorNegociadoBlitz' },
     { key: 'spots15', label: 'Spots 15"', tabelaKey: 'valorTabela15', negKey: 'valorNegociado15' },
     { key: 'spots5', label: 'Spots 5"', tabelaKey: 'valorTabela5', negKey: 'valorNegociado5' },
+    { key: 'spotsTest30', label: 'Test 30"', tabelaKey: 'valorTabelaTest30', negKey: 'valorNegociadoTest30' },
     { key: 'spotsTest60', label: 'Test 60"', tabelaKey: 'valorTabelaTest60', negKey: 'valorNegociadoTest60' },
     { key: 'spotsFlash30', label: 'Flash 30"', tabelaKey: 'valorTabelaFlash30', negKey: 'valorNegociadoFlash30' },
     { key: 'spotsFlash60', label: 'Flash 60"', tabelaKey: 'valorTabelaFlash60', negKey: 'valorNegociadoFlash60' },
@@ -249,11 +250,31 @@ function renderInterface() {
     console.log('🎨 Renderizando interface...');
     console.log('📊 Emissoras disponíveis:', proposalData.emissoras.length);
     
-    // Atualizar título com a primeira emissora como referência
+    // Atualizar título com informações da proposta
+    // Procura por um campo que indique o nome da empresa/proposta
+    let proposalName = 'Proposta de Mídia';
     const firstEmissora = proposalData.emissoras[0];
-    console.log('🏢 Primeira emissora:', firstEmissora);
-    document.getElementById('proposalTitle').textContent = firstEmissora ? firstEmissora.emissora : 'Proposta de Mídia';
-    document.getElementById('locationInfo').textContent = firstEmissora ? `${firstEmissora.uf}` : '';
+    
+    if (firstEmissora) {
+        // Tenta encontrar um campo com informação de empresa/proposta
+        if (firstEmissora.empresa) {
+            proposalName = firstEmissora.empresa;
+        } else if (firstEmissora.nomePropost) {
+            proposalName = firstEmissora.nomePropost;
+        } else {
+            // Se não tiver, usa a primeira emissora como referência
+            proposalName = firstEmissora.emissora || 'Proposta de Mídia';
+        }
+    }
+    
+    console.log('🏢 Nome da proposta:', proposalName);
+    document.getElementById('proposalTitle').textContent = proposalName;
+    
+    // Remover a seção de localização (já não será exibida)
+    const locationInfo = document.getElementById('locationInfo');
+    if (locationInfo && locationInfo.parentElement) {
+        locationInfo.parentElement.style.display = 'none';
+    }
     
     console.log('🎯 Chamando renderSpotsTable...');
     renderSpotsTable();
@@ -267,19 +288,19 @@ function renderInterface() {
 function renderSpotsTable() {
     console.log('\n🎯🎯🎯 renderSpotsTable() INICIADA 🎯🎯🎯');
     
+    const thead = document.querySelector('#spotsTable thead tr');
     const tbody = document.getElementById('spotsTableBody');
     
     console.log('\n╔════════════════════════════════════════════════════════════════╗');
     console.log('║ 📍 INICIANDO: renderSpotsTable()');
     console.log('╚════════════════════════════════════════════════════════════════╝');
-    console.log('✅ Procurando tbody #spotsTableBody...');
+    console.log('✅ Procurando elementos...');
+    console.log('✅ thead encontrado?', !!thead);
     console.log('✅ tbody encontrado?', !!tbody);
-    console.log('✅ proposalData:', proposalData);
-    console.log('✅ proposalData.emissoras:', proposalData.emissoras);
     console.log('✅ proposalData.emissoras.length:', proposalData.emissoras.length);
     
-    if (!tbody) {
-        console.error('❌ CRÍTICO: Elemento spotsTableBody não encontrado no DOM!');
+    if (!tbody || !thead) {
+        console.error('❌ CRÍTICO: Elementos da tabela não encontrados no DOM!');
         return;
     }
     
@@ -288,54 +309,106 @@ function renderSpotsTable() {
         return;
     }
     
-    console.log('✅ Iniciando limpeza e preenchimento da tabela...');
+    // Encontra quais produtos têm dados (spots > 0) em qualquer emissora
+    const produtosAtivos = new Set();
+    proposalData.emissoras.forEach(emissora => {
+        PRODUTOS.forEach(produto => {
+            const spots = emissora[produto.key] || 0;
+            if (spots > 0) {
+                produtosAtivos.add(produto.key);
+            }
+        });
+    });
+    
+    console.log('🔍 Produtos ativos encontrados:', Array.from(produtosAtivos));
+    
+    // Reconstrói o header da tabela dinamicamente
+    thead.innerHTML = `
+        <th style="width: 40px;">✓</th>
+        <th>Região</th>
+        <th>Praça</th>
+        <th style="min-width: 150px;">Emissora</th>
+    `;
+    
+    // Adiciona colunas para cada produto ativo
+    produtosAtivos.forEach(produtoKey => {
+        const produto = PRODUTOS.find(p => p.key === produtoKey);
+        if (produto) {
+            thead.innerHTML += `
+                <th colspan="3" style="text-align: center; border-bottom: 2px solid #ddd;">
+                    ${produto.label}
+                </th>
+            `;
+        }
+    });
+    
+    thead.innerHTML += `
+        <th>Investimento Tabela</th>
+        <th>Investimento Negociado</th>
+    `;
+    
+    // Cria sub-header para as colunas dos produtos
+    let subHeaderHTML = '<tr style="background-color: #f9fafb;">';
+    subHeaderHTML += '<th colspan="4"></th>'; // Colunas de Região, Praça, Emissora
+    
+    produtosAtivos.forEach(produtoKey => {
+        subHeaderHTML += `
+            <th style="padding: 8px; font-size: 0.85rem; border-bottom: 1px solid #ddd;">Qtd</th>
+            <th style="padding: 8px; font-size: 0.85rem; border-bottom: 1px solid #ddd;">V. Tabela</th>
+            <th style="padding: 8px; font-size: 0.85rem; border-bottom: 1px solid #ddd;">V. Neg</th>
+        `;
+    });
+    
+    subHeaderHTML += '<th></th><th></th></tr>';
+    
+    // Insere sub-header após o header principal
+    const firstTr = thead.parentElement.querySelector('tr');
+    firstTr.insertAdjacentHTML('afterend', subHeaderHTML);
+    
+    // Limpa o tbody
     tbody.innerHTML = '';
     
     let totalLinhasAdicionadas = 0;
     
-    // Renderizar cada emissora + cada produto como uma linha
+    // Renderiza uma linha por emissora (não por produto)
     proposalData.emissoras.forEach((emissora, emissoraIndex) => {
         console.log(`\n📍 Processando emissora ${emissoraIndex}: ${emissora.emissora}`);
         
-        // Renderizar cada produto para essa emissora
-        PRODUTOS.forEach((produto, produtoIndex) => {
-            // Puxar valores diretos do objeto emissora (vindo do Notion)
+        // Calcula investimentos para esta emissora
+        let investimentoTabelaEmissora = 0;
+        let investimentoNegociadoEmissora = 0;
+        
+        const row = document.createElement('tr');
+        row.className = 'spots-data-row';
+        row.innerHTML = `
+            <td>
+                <input 
+                    type="checkbox" 
+                    onchange="updateRowSelection()"
+                    style="cursor: pointer;"
+                    checked
+                >
+            </td>
+            <td>${emissora.uf || '-'}</td>
+            <td>${emissora.praca || '-'}</td>
+            <td><strong>${emissora.emissora || '-'}</strong></td>
+        `;
+        
+        // Adiciona colunas para cada produto ativo
+        produtosAtivos.forEach(produtoKey => {
+            const produto = PRODUTOS.find(p => p.key === produtoKey);
             const spots = emissora[produto.key] || 0;
             const valorTabela = emissora[produto.tabelaKey] || 0;
             const valorNegociado = emissora[produto.negKey] || 0;
             
-            // PULAR se spots é 0 ou vazio
-            if (!spots || spots === 0) {
-                console.log(`  ⏭️ ${produto.label}: spots=${spots} (pulado - vazio)`);
-                return;
-            }
-            
             const invTabela = spots * valorTabela;
             const invNegociado = spots * valorNegociado;
             
-            console.log(`  📦 ${produto.label}: spots=${spots}, tab=${valorTabela}, neg=${valorNegociado}`);
+            investimentoTabelaEmissora += invTabela;
+            investimentoNegociadoEmissora += invNegociado;
             
-            const rowId = `row-${emissoraIndex}-${produtoIndex}`;
-            const checkboxId = `check-${emissoraIndex}-${produtoIndex}`;
-            
-            const row = document.createElement('tr');
-            row.id = rowId;
-            row.className = 'spots-data-row';
-            row.innerHTML = `
-                <td>
-                    <input 
-                        type="checkbox" 
-                        id="${checkboxId}"
-                        checked
-                        onchange="updateRowSelection()"
-                        style="cursor: pointer;"
-                    >
-                </td>
-                <td>${emissora.uf || '-'}</td>
-                <td>${emissora.praca || '-'}</td>
-                <td><strong>${emissora.emissora || '-'}</strong></td>
-                <td><strong>${produto.label}</strong></td>
-                <td>
+            row.innerHTML += `
+                <td style="text-align: center; padding: 8px;">
                     <input 
                         type="number" 
                         value="${spots}" 
@@ -343,23 +416,27 @@ function renderSpotsTable() {
                         class="input-spots"
                         min="0"
                         step="1"
-                        style="width: 70px; padding: 4px; text-align: center;"
+                        style="width: 50px; padding: 4px; text-align: center;"
                     >
                 </td>
-                <td class="value-cell">R$ ${valorTabela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                <td class="value-cell">R$ ${valorNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                <td class="value-cell investment-tabela">R$ ${invTabela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                <td class="value-cell investment-negociado">R$ ${invNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td style="text-align: right; padding: 8px;">R$ ${valorTabela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td style="text-align: right; padding: 8px;">R$ ${valorNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
             `;
-            tbody.appendChild(row);
-            totalLinhasAdicionadas++;
         });
+        
+        // Adiciona colunas de investimento total
+        row.innerHTML += `
+            <td class="value-cell" style="text-align: right;">R$ ${investimentoTabelaEmissora.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            <td class="value-cell" style="text-align: right;">R$ ${investimentoNegociadoEmissora.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        `;
+        
+        tbody.appendChild(row);
+        totalLinhasAdicionadas++;
     });
     
     console.log('═══════════════════════════════════════════════════════════');
-    console.log(`✅ Tabela renderizada com sucesso! ${totalLinhasAdicionadas} linhas adicionadas`);
+    console.log(`✅ Tabela renderizada com sucesso! ${totalLinhasAdicionadas} emissoras exibidas`);
     console.log('═══════════════════════════════════════════════════════════');
-    updateStats();
 }
 
 function updateStats() {
@@ -368,15 +445,32 @@ function updateStats() {
     console.log('╚════════════════════════════════════════════════════════════════╝');
     console.log('✅ Iniciando cálculos...');
     
-    const totalInvTabela = calculateTotalInvestimentoTabela();
-    const totalInvNegociado = calculateTotalInvestimentoNegociado();
-    const totalSpots = calculateTotalSpots();
-    const cpm = calculateCPM();
-    const economia = totalInvTabela - totalInvNegociado;
+    // Calcula o investimento total (soma de todos os produtos × valores)
+    let totalInvestimentoTabela = 0;
+    let totalInvestimentoNegociado = 0;
+    let totalSpots = 0;
+    
+    // Percorre todas as emissoras e produtos para calcular totais
+    proposalData.emissoras.forEach(emissora => {
+        PRODUTOS.forEach(produto => {
+            const spots = emissora[produto.key] || 0;
+            if (spots > 0) {
+                const valorTabela = emissora[produto.tabelaKey] || 0;
+                const valorNegociado = emissora[produto.negKey] || 0;
+                
+                totalInvestimentoTabela += spots * valorTabela;
+                totalInvestimentoNegociado += spots * valorNegociado;
+                totalSpots += spots;
+            }
+        });
+    });
+    
+    const cpm = totalSpots > 0 ? (totalInvestimentoNegociado / totalSpots) * 1000 : 0;
+    const economia = totalInvestimentoTabela - totalInvestimentoNegociado;
     
     console.log('📊 Total Spots:', totalSpots);
-    console.log('💰 Total Investimento Tabela:', totalInvTabela);
-    console.log('💰 Total Investimento Negociado:', totalInvNegociado);
+    console.log('💰 Total Investimento Tabela:', totalInvestimentoTabela);
+    console.log('💰 Total Investimento Negociado:', totalInvestimentoNegociado);
     console.log('📈 CPM:', cpm);
     console.log('💵 Economia:', economia);
     
@@ -395,8 +489,8 @@ function updateStats() {
     });
     
     if (statTotalSpots) statTotalSpots.textContent = totalSpots;
-    if (statTabelaValue) statTabelaValue.textContent = formatCurrency(totalInvTabela);
-    if (statNegociadoValue) statNegociadoValue.textContent = formatCurrency(totalInvNegociado);
+    if (statTabelaValue) statTabelaValue.textContent = formatCurrency(totalInvestimentoTabela);
+    if (statNegociadoValue) statNegociadoValue.textContent = formatCurrency(totalInvestimentoNegociado);
     if (statCPM) statCPM.textContent = `R$ ${cpm.toFixed(2)}`;
     if (statEconomia) statEconomia.textContent = formatCurrency(economia);
     

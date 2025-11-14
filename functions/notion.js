@@ -253,9 +253,9 @@ export async function onRequest(context) {
           valorNegociado60: extractValue(properties, 0, 'Valor spot 60ʺ (Negociado)', 'Valor spot 60ʺ (Negociado)'),
           
           // Blitz
-          spotsBlitz: extractValue(properties, 0, 'Blitz', 'Blitz'),
-          valorTabelaBlitz: extractValue(properties, 0, 'Valor Blitz (Tabela)', 'Valor Blitz (Tabela)'),
-          valorNegociadoBlitz: extractValue(properties, 0, 'Valor Blitz (Negociado)', 'Valor Blitz (Negociado)'),
+          spotsBlitz: extractValue(properties, 0, 'Blitz', 'Blitz', 'blitz'),
+          valorTabelaBlitz: extractValue(properties, 0, 'Valor Blitz (Tabela)', 'Valor Blitz (Tabela)', 'valorTabelaBlitz'),
+          valorNegociadoBlitz: extractValue(properties, 0, 'Valor Blitz (Negociado)', 'Valor Blitz (Negociado)', 'valorNegociadoBlitz'),
           
           // Spots 15"
           spots15: extractValue(properties, 0, 'Spots 15', 'Spots 15"', 'Spots 15ʺ', 'Spots 15', 'spots15'),
@@ -266,6 +266,11 @@ export async function onRequest(context) {
           spots5: extractValue(properties, 0, 'Spots 5ʺ', 'Spots 5ʺ'),
           valorTabela5: extractValue(properties, 0, 'Valor spot 5ʺ (Tabela)', 'Valor spot 5ʺ (Tabela)'),
           valorNegociado5: extractValue(properties, 0, 'Valor spot 5ʺ (Negociado)', 'Valor spot 5ʺ (Negociado)'),
+          
+          // Test. 30ʺ
+          spotsTest30: extractValue(properties, 0, 'Test. 30ʺ', 'Test. 30ʺ'),
+          valorTabelaTest30: extractValue(properties, 0, 'Valor test. 30ʺ (Tabela)', 'Valor test. 30ʺ (Tabela)'),
+          valorNegociadoTest30: extractValue(properties, 0, 'Valor test. 30ʺ (Negociado)', 'Valor test. 30ʺ (Negociado)'),
           
           // Test. 60ʺ
           spotsTest60: extractValue(properties, 0, 'Test. 60ʺ', 'Test. 60ʺ'),
@@ -366,6 +371,9 @@ export async function onRequest(context) {
           'spots5': 'Spots 5"',
           'valorTabela5': 'Valor spot 5" (Tabela)',
           'valorNegociado5': 'Valor spot 5" (Negociado)',
+          'spotsTest30': 'Test 30"',
+          'valorTabelaTest30': 'Valor Test 30" (Tabela)',
+          'valorNegociadoTest30': 'Valor Test 30" (Negociado)',
           'spotsTest60': 'Test 60"',
           'valorTabelaTest60': 'Valor Test 60" (Tabela)',
           'valorNegociadoTest60': 'Valor Test 60" (Negociado)',
