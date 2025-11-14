@@ -186,65 +186,12 @@ async function loadProposalFromNotion(tableId) {
             });
             addDebug('');
             
-            proposalData.emissoras = data.map(row => ({
-                id: row.id,
-                emissora: row.emissora || '',
-                praca: row.praca || '',
-                dial: row.dial || '',
-                uf: row.uf || '',
-                
-                // Spots 30"
-                spots30: parseFloat(row.spots30) || 0,
-                valorTabela30: parseFloat(row.valorTabela30) || 0,
-                valorNegociado30: parseFloat(row.valorNegociado30) || 0,
-                
-                // Spots 60"
-                spots60: parseFloat(row.spots60) || 0,
-                valorTabela60: parseFloat(row.valorTabela60) || 0,
-                valorNegociado60: parseFloat(row.valorNegociado60) || 0,
-                
-                // Blitz
-                spotsBlitz: parseFloat(row.spotsBlitz) || 0,
-                valorTabelaBlitz: parseFloat(row.valorTabelaBlitz) || 0,
-                valorNegociadoBlitz: parseFloat(row.valorNegociadoBlitz) || 0,
-                
-                // Spots 15"
-                spots15: parseFloat(row.spots15) || 0,
-                valorTabela15: parseFloat(row.valorTabela15) || 0,
-                valorNegociado15: parseFloat(row.valorNegociado15) || 0,
-                
-                // Spots 5"
-                spots5: parseFloat(row.spots5) || 0,
-                valorTabela5: parseFloat(row.valorTabela5) || 0,
-                valorNegociado5: parseFloat(row.valorNegociado5) || 0,
-                
-                // Test 60"
-                spotsTest60: parseFloat(row.spotsTest60) || 0,
-                valorTabelaTest60: parseFloat(row.valorTabelaTest60) || 0,
-                valorNegociadoTest60: parseFloat(row.valorNegociadoTest60) || 0,
-                
-                // Flash 30"
-                spotsFlash30: parseFloat(row.spotsFlash30) || 0,
-                valorTabelaFlash30: parseFloat(row.valorTabelaFlash30) || 0,
-                valorNegociadoFlash30: parseFloat(row.valorNegociadoFlash30) || 0,
-                
-                // Flash 60"
-                spotsFlash60: parseFloat(row.spotsFlash60) || 0,
-                valorTabelaFlash60: parseFloat(row.valorTabelaFlash60) || 0,
-                valorNegociadoFlash60: parseFloat(row.valorNegociadoFlash60) || 0,
-                
-                // Mensham 30"
-                spotsMensham30: parseFloat(row.spotsMensham30) || 0,
-                valorTabelaMensham30: parseFloat(row.valorTabelaMensham30) || 0,
-                valorNegociadoMensham30: parseFloat(row.valorNegociadoMensham30) || 0,
-                
-                // Mensham 60"
-                spotsMensham60: parseFloat(row.spotsMensham60) || 0,
-                valorTabelaMensham60: parseFloat(row.valorTabelaMensham60) || 0,
-                valorNegociadoMensham60: parseFloat(row.valorNegociadoMensham60) || 0
-            }));
+            // Usar os dados diretamente do Notion, sem transformação
+            proposalData.emissoras = data;
             
             addDebug(`✅ ${proposalData.emissoras.length} emissoras carregadas com sucesso!`);
+            addDebug(`✅ Primeira emissora: ${proposalData.emissoras[0].emissora}`);
+            addDebug(`✅ Primeira emissora spots30: ${proposalData.emissoras[0].spots30}`);
         } else {
             addDebug('⚠️ Array vazio ou inválido');
             throw new Error('Nenhuma emissora encontrada');
