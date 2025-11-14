@@ -121,6 +121,11 @@ function loadFromWelcome() {
 // =====================================================
 
 async function loadProposalFromNotion(tableId) {
+    console.log('\n╔════════════════════════════════════════════════════════════════╗');
+    console.log('║ 📍 INICIANDO: loadProposalFromNotion()');
+    console.log('╚════════════════════════════════════════════════════════════════╝');
+    console.log('Parâmetro tableId:', tableId);
+    
     addDebug('🚀 Iniciando carregamento...');
     addDebug(`📌 ID da tabela: ${tableId}`);
     
@@ -230,6 +235,12 @@ function getApiUrl() {
 // =====================================================
 
 function renderInterface() {
+    console.log('\n╔════════════════════════════════════════════════════════════════╗');
+    console.log('║ 📍 INICIANDO: renderInterface()');
+    console.log('╚════════════════════════════════════════════════════════════════╝');
+    console.log('proposalData.emissoras:', proposalData.emissoras);
+    console.log('proposalData.emissoras.length:', proposalData.emissoras ? proposalData.emissoras.length : 'UNDEFINED');
+    
     console.log('🎨 Renderizando interface...');
     console.log('📊 Emissoras disponíveis:', proposalData.emissoras.length);
     
@@ -251,12 +262,14 @@ function renderInterface() {
 function renderSpotsTable() {
     const tbody = document.getElementById('spotsTableBody');
     
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log('🔍 INICIANDO renderSpotsTable()');
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log('1️⃣ tbody encontrado?', !!tbody);
-    console.log('2️⃣ proposalData.emissoras:', proposalData.emissoras);
-    console.log('3️⃣ proposalData.emissoras.length:', proposalData.emissoras.length);
+    console.log('\n╔════════════════════════════════════════════════════════════════╗');
+    console.log('║ 📍 INICIANDO: renderSpotsTable()');
+    console.log('╚════════════════════════════════════════════════════════════════╝');
+    console.log('✅ Procurando tbody #spotsTableBody...');
+    console.log('✅ tbody encontrado?', !!tbody);
+    console.log('✅ proposalData:', proposalData);
+    console.log('✅ proposalData.emissoras:', proposalData.emissoras);
+    console.log('✅ proposalData.emissoras.length:', proposalData.emissoras.length);
     
     if (!tbody) {
         console.error('❌ CRÍTICO: Elemento spotsTableBody não encontrado no DOM!');
@@ -337,9 +350,10 @@ function renderSpotsTable() {
 }
 
 function updateStats() {
-    console.log('\n╔═══════════════════════════════════╗');
-    console.log('║ ATUALIZANDO ESTATÍSTICAS (updateStats)');
-    console.log('╚═══════════════════════════════════╝');
+    console.log('\n╔════════════════════════════════════════════════════════════════╗');
+    console.log('║ 📍 INICIANDO: updateStats()');
+    console.log('╚════════════════════════════════════════════════════════════════╝');
+    console.log('✅ Iniciando cálculos...');
     
     const totalInvTabela = calculateTotalInvestimentoTabela();
     const totalInvNegociado = calculateTotalInvestimentoNegociado();
@@ -491,12 +505,15 @@ function renderSpotTypesChart() {
 // =====================================================
 
 function getSelectedRows() {
+    console.log('  ↳ getSelectedRows() chamada');
     // Retorna array de checkboxes selecionados
     const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]:checked');
+    console.log('  ↳ Checkboxes selecionados:', checkboxes.length);
     return checkboxes;
 }
 
 function calculateTotalSpots() {
+    console.log('  ↳ calculateTotalSpots() chamada');
     let total = 0;
     getSelectedRows().forEach(checkbox => {
         const row = checkbox.closest('tr');
@@ -505,10 +522,12 @@ function calculateTotalSpots() {
             total += parseFloat(input.value) || 0;
         }
     });
+    console.log('  ↳ Total spots calculado:', total);
     return total;
 }
 
 function calculateTotalInvestimentoTabela() {
+    console.log('  ↳ calculateTotalInvestimentoTabela() chamada');
     let total = 0;
     getSelectedRows().forEach(checkbox => {
         const row = checkbox.closest('tr');
@@ -518,10 +537,12 @@ function calculateTotalInvestimentoTabela() {
             total += parseFloat(value) || 0;
         }
     });
+    console.log('  ↳ Total investimento tabela calculado:', total);
     return total;
 }
 
 function calculateTotalInvestimentoNegociado() {
+    console.log('  ↳ calculateTotalInvestimentoNegociado() chamada');
     let total = 0;
     getSelectedRows().forEach(checkbox => {
         const row = checkbox.closest('tr');
@@ -531,12 +552,16 @@ function calculateTotalInvestimentoNegociado() {
             total += parseFloat(value) || 0;
         }
     });
+    console.log('  ↳ Total investimento negociado calculado:', total);
     return total;
 }
 
 function calculateCPM() {
+    console.log('  ↳ calculateCPM() chamada');
     const totalSpots = calculateTotalSpots();
     const totalInvestimento = calculateTotalInvestimentoNegociado();
+    
+    console.log('  ↳ CPM: spots=', totalSpots, 'investimento=', totalInvestimento);
     
     if (totalSpots === 0 || totalInvestimento === 0) return 0;
     return (totalInvestimento / totalSpots) * 1000;
