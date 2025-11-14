@@ -312,63 +312,58 @@ function renderSpotsTable() {
     addDebug(`📊 Renderizando ${proposalData.emissoras.length} emissoras`);
     tbody.innerHTML = '';
     
-    // Renderizar cada emissora como um grupo
-    proposalData.emissoras.forEach((emissora, index) => {
-        console.log(`  📍 Emissora ${index}: ${emissora.emissora} (Dial: ${emissora.dial})`);
+    // Renderizar cada emissora + cada produto como uma linha
+    proposalData.emissoras.forEach((emissora, emissoraIndex) => {
+        console.log(`  📍 Emissora ${emissoraIndex}: ${emissora.emissora} (Dial: ${emissora.dial})`);
         
-        // Header com info da emissora
-        const headerRow = document.createElement('tr');
-        headerRow.className = 'emissora-header-row';
-        headerRow.innerHTML = `
-            <td colspan="6" style="background: #f3f4f6; font-weight: bold; padding: 12px; border-top: 2px solid #6366f1;">
-                📻 ${emissora.emissora} | 📍 ${emissora.praca} | 📡 ${emissora.dial || 'N/A'}
-            </td>
-        `;
-        tbody.appendChild(headerRow);
-        addDebug(`  ✅ Emissora renderizada: ${emissora.emissora}`);
-        
-        // Linhas de produtos
-        let produtosRenderizados = 0;
-        PRODUTOS.forEach(produto => {
+        // Renderizar cada produto para essa emissora
+        PRODUTOS.forEach((produto, produtoIndex) => {
             const spots = emissora[produto.key] || 0;
             const valorTabela = emissora[produto.tabelaKey] || 0;
             const valorNegociado = emissora[produto.negKey] || 0;
             
-            produtosRenderizados++;
-            
             const invTabela = spots * valorTabela;
             const invNegociado = spots * valorNegociado;
             
+            const rowId = `row-${emissoraIndex}-${produtoIndex}`;
+            const checkboxId = `check-${emissoraIndex}-${produtoIndex}`;
+            
             const row = document.createElement('tr');
+            row.id = rowId;
+            row.className = 'spots-data-row';
             row.innerHTML = `
+                <td>
+                    <input 
+                        type="checkbox" 
+                        id="${checkboxId}"
+                        checked
+                        onchange="updateRowSelection()"
+                        style="cursor: pointer;"
+                    >
+                </td>
+                <td>${emissora.uf || ''}</td>
+                <td>${emissora.praca || ''}</td>
+                <td><strong>${emissora.emissora}</strong></td>
                 <td><strong>${produto.label}</strong></td>
                 <td>
                     <input 
                         type="number" 
                         value="${spots}" 
-                        onchange="updateEmissora(${index}, '${produto.key}', this.value)"
+                        onchange="updateEmissora(${emissoraIndex}, '${produto.key}', this.value)"
                         class="input-spots"
                         min="0"
+                        style="width: 70px; padding: 4px; text-align: center;"
                     >
                 </td>
                 <td class="value-cell">R$ ${valorTabela.toFixed(2)}</td>
-                <td class="value-cell">R$ ${invTabela.toFixed(2)}</td>
-                <td>
-                    <input 
-                        type="number" 
-                        value="${valorNegociado.toFixed(2)}" 
-                        onchange="updateEmissora(${index}, '${produto.negKey}', this.value)"
-                        class="input-valor"
-                        min="0"
-                        step="0.01"
-                    >
-                </td>
-                <td class="value-cell">R$ ${invNegociado.toFixed(2)}</td>
+                <td class="value-cell">R$ ${valorNegociado.toFixed(2)}</td>
+                <td class="value-cell investment-tabela">R$ ${invTabela.toFixed(2)}</td>
+                <td class="value-cell investment-negociado">R$ ${invNegociado.toFixed(2)}</td>
             `;
             tbody.appendChild(row);
         });
         
-        addDebug(`  📦 Produtos renderizados: ${produtosRenderizados}`);
+        addDebug(`  📦 ${PRODUTOS.length} produtos renderizados para ${emissora.emissora}`);
     });
     
     addDebug(`✅ Tabela renderizada com sucesso!`);
@@ -490,32 +485,48 @@ function renderSpotTypesChart() {
 // CÁLCULOS
 // =====================================================
 
+function getSelectedRows() {
+    // Retorna array de checkboxes selecionados
+    const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]:checked');
+    return checkboxes;
+}
+
 function calculateTotalSpots() {
-    return proposalData.emissoras.reduce((total, emissora) => {
-        return total + PRODUTOS.reduce((subtotal, produto) => {
-            return subtotal + (emissora[produto.key] || 0);
-        }, 0);
-    }, 0);
+    let total = 0;
+    getSelectedRows().forEach(checkbox => {
+        const row = checkbox.closest('tr');
+        const input = row.querySelector('input[type="number"]');
+        if (input) {
+            total += parseFloat(input.value) || 0;
+        }
+    });
+    return total;
 }
 
 function calculateTotalInvestimentoTabela() {
-    return proposalData.emissoras.reduce((total, emissora) => {
-        return total + PRODUTOS.reduce((subtotal, produto) => {
-            const spots = emissora[produto.key] || 0;
-            const valor = emissora[produto.tabelaKey] || 0;
-            return subtotal + (spots * valor);
-        }, 0);
-    }, 0);
+    let total = 0;
+    getSelectedRows().forEach(checkbox => {
+        const row = checkbox.closest('tr');
+        const investCell = row.querySelector('.investment-tabela');
+        if (investCell) {
+            const value = investCell.textContent.replace('R$ ', '').replace(',', '.');
+            total += parseFloat(value) || 0;
+        }
+    });
+    return total;
 }
 
 function calculateTotalInvestimentoNegociado() {
-    return proposalData.emissoras.reduce((total, emissora) => {
-        return total + PRODUTOS.reduce((subtotal, produto) => {
-            const spots = emissora[produto.key] || 0;
-            const valor = emissora[produto.negKey] || 0;
-            return subtotal + (spots * valor);
-        }, 0);
-    }, 0);
+    let total = 0;
+    getSelectedRows().forEach(checkbox => {
+        const row = checkbox.closest('tr');
+        const investCell = row.querySelector('.investment-negociado');
+        if (investCell) {
+            const value = investCell.textContent.replace('R$ ', '').replace(',', '.');
+            total += parseFloat(value) || 0;
+        }
+    });
+    return total;
 }
 
 function calculateCPM() {
@@ -552,6 +563,13 @@ function updateEmissora(index, field, value) {
     }
     
     console.log(`📝 Emissora ${index} - ${field}: ${oldValue} → ${newValue}`);
+    renderSpotsTable();
+    updateStats();
+}
+
+function updateRowSelection() {
+    // Função chamada quando um checkbox é marcado/desmarcado
+    // Recalcula os totais baseado nas linhas selecionadas
     updateStats();
     renderCharts();
     showUnsavedChanges();
