@@ -265,6 +265,8 @@ function renderInterface() {
 }
 
 function renderSpotsTable() {
+    console.log('\n🎯🎯🎯 renderSpotsTable() INICIADA 🎯🎯🎯');
+    
     const tbody = document.getElementById('spotsTableBody');
     
     console.log('\n╔════════════════════════════════════════════════════════════════╗');
