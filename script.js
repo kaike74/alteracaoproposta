@@ -246,22 +246,32 @@ function renderInterface() {
 
 function renderSpotsTable() {
     const tbody = document.getElementById('spotsTableBody');
-    addDebug(`🔍 Procurando tbody: ${tbody ? 'ENCONTRADO' : 'NÃO ENCONTRADO'}`);
+    
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('🔍 INICIANDO renderSpotsTable()');
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('1️⃣ tbody encontrado?', !!tbody);
+    console.log('2️⃣ proposalData.emissoras:', proposalData.emissoras);
+    console.log('3️⃣ proposalData.emissoras.length:', proposalData.emissoras.length);
+    
     if (!tbody) {
-        addDebug('❌ Elemento spotsTableBody não encontrado!');
+        console.error('❌ CRÍTICO: Elemento spotsTableBody não encontrado no DOM!');
         return;
     }
     
-    console.log('📊 proposalData:', proposalData);
-    console.log('📊 emissoras array:', proposalData.emissoras);
-    console.log('📊 emissoras length:', proposalData.emissoras.length);
+    if (!proposalData.emissoras || proposalData.emissoras.length === 0) {
+        console.error('❌ CRÍTICO: proposalData.emissoras vazio ou indefinido!');
+        return;
+    }
     
-    addDebug(`📊 Renderizando ${proposalData.emissoras.length} emissoras`);
+    console.log('✅ Iniciando limpeza e preenchimento da tabela...');
     tbody.innerHTML = '';
+    
+    let totalLinhasAdicionadas = 0;
     
     // Renderizar cada emissora + cada produto como uma linha
     proposalData.emissoras.forEach((emissora, emissoraIndex) => {
-        console.log(`  📍 Emissora ${emissoraIndex}: ${emissora.emissora} (Dial: ${emissora.dial})`);
+        console.log(`\n📍 Processando emissora ${emissoraIndex}: ${emissora.emissora}`);
         
         // Renderizar cada produto para essa emissora
         PRODUTOS.forEach((produto, produtoIndex) => {
@@ -272,6 +282,8 @@ function renderSpotsTable() {
             
             const invTabela = spots * valorTabela;
             const invNegociado = spots * valorNegociado;
+            
+            console.log(`  📦 ${produto.label}: spots=${spots}, tab=${valorTabela}, neg=${valorNegociado}`);
             
             const rowId = `row-${emissoraIndex}-${produtoIndex}`;
             const checkboxId = `check-${emissoraIndex}-${produtoIndex}`;
@@ -310,26 +322,54 @@ function renderSpotsTable() {
                 <td class="value-cell investment-negociado">R$ ${invNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
             `;
             tbody.appendChild(row);
+            totalLinhasAdicionadas++;
         });
-        
-        addDebug(`  📦 ${PRODUTOS.length} produtos renderizados para ${emissora.emissora}`);
     });
     
-    addDebug(`✅ Tabela renderizada com sucesso!`);
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log(`✅ Tabela renderizada com sucesso! ${totalLinhasAdicionadas} linhas adicionadas`);
+    console.log('═══════════════════════════════════════════════════════════');
     updateStats();
 }
 
 function updateStats() {
+    console.log('\n╔═══════════════════════════════════╗');
+    console.log('║ ATUALIZANDO ESTATÍSTICAS (updateStats)');
+    console.log('╚═══════════════════════════════════╝');
+    
     const totalInvTabela = calculateTotalInvestimentoTabela();
     const totalInvNegociado = calculateTotalInvestimentoNegociado();
     const totalSpots = calculateTotalSpots();
     const cpm = calculateCPM();
+    const economia = totalInvTabela - totalInvNegociado;
     
-    document.getElementById('statTotalSpots').textContent = totalSpots;
-    document.getElementById('statTabelaValue').textContent = formatCurrency(totalInvTabela);
-    document.getElementById('statNegociadoValue').textContent = formatCurrency(totalInvNegociado);
-    document.getElementById('statCPM').textContent = `R$ ${cpm.toFixed(2)}`;
-    document.getElementById('statEconomia').textContent = formatCurrency(totalInvTabela - totalInvNegociado);
+    console.log('📊 Total Spots:', totalSpots);
+    console.log('💰 Total Investimento Tabela:', totalInvTabela);
+    console.log('💰 Total Investimento Negociado:', totalInvNegociado);
+    console.log('📈 CPM:', cpm);
+    console.log('💵 Economia:', economia);
+    
+    const statTotalSpots = document.getElementById('statTotalSpots');
+    const statTabelaValue = document.getElementById('statTabelaValue');
+    const statNegociadoValue = document.getElementById('statNegociadoValue');
+    const statCPM = document.getElementById('statCPM');
+    const statEconomia = document.getElementById('statEconomia');
+    
+    console.log('🔍 Elementos encontrados:', {
+        statTotalSpots: !!statTotalSpots,
+        statTabelaValue: !!statTabelaValue,
+        statNegociadoValue: !!statNegociadoValue,
+        statCPM: !!statCPM,
+        statEconomia: !!statEconomia
+    });
+    
+    if (statTotalSpots) statTotalSpots.textContent = totalSpots;
+    if (statTabelaValue) statTabelaValue.textContent = formatCurrency(totalInvTabela);
+    if (statNegociadoValue) statNegociadoValue.textContent = formatCurrency(totalInvNegociado);
+    if (statCPM) statCPM.textContent = `R$ ${cpm.toFixed(2)}`;
+    if (statEconomia) statEconomia.textContent = formatCurrency(economia);
+    
+    console.log('✅ Estatísticas atualizadas!\n');
 }
 
 function renderCharts() {
