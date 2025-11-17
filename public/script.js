@@ -280,6 +280,14 @@ function renderSpotsTable() {
         return;
     }
     
+    // LOG: Verificar se campo 'impactos' existe nos dados
+    console.log('\n╔═══════════════════════════════════════════════════════════════╗');
+    console.log('║ 🔍 VERIFICANDO CAMPO IMPACTOS NOS DADOS');
+    console.log('╚═══════════════════════════════════════════════════════════════╝');
+    proposalData.emissoras.forEach((emissora, idx) => {
+        console.log(`  [${idx}] ${emissora.emissora}: impactos = "${emissora.impactos}" (tipo: ${typeof emissora.impactos})`);
+    });
+    
     // Encontra quais produtos têm dados (spots > 0) em qualquer emissora
     const produtosAtivos = new Set();
     proposalData.emissoras.forEach(emissora => {
@@ -557,46 +565,80 @@ function renderInvestmentChart() {
 }
 
 function renderImpactsChart() {
+    console.log('\n╔═══════════════════════════════════════════════════════════════╗');
+    console.log('║ 📊 renderImpactsChart() INICIADA');
+    console.log('╚═══════════════════════════════════════════════════════════════╝');
+    
     const ctx = document.getElementById('impactsChart');
-    if (!ctx) return;
+    if (!ctx) {
+        console.error('❌ Canvas #impactsChart não encontrado!');
+        return;
+    }
+    
+    console.log('✅ Canvas #impactsChart encontrado');
     
     const canvasCtx = ctx.getContext('2d');
     
     const labels = [];
     const data = [];
     
+    console.log('\n🔍 Buscando emissoras selecionadas...');
+    
     // Coleta impactos das emissoras selecionadas
     const rows = document.querySelectorAll('#spotsTableBody tr');
+    console.log(`📋 Total de linhas na tabela: ${rows.length}`);
     
-    rows.forEach(row => {
+    let processadas = 0;
+    rows.forEach((row, rowIdx) => {
         const checkbox = row.querySelector('input[type="checkbox"]');
+        const isChecked = checkbox && checkbox.checked;
+        
+        console.log(`  [Linha ${rowIdx}] Checkbox marcado? ${isChecked}`);
+        
         if (checkbox && checkbox.checked) {
             const cells = row.querySelectorAll('td');
+            console.log(`    ↳ Células encontradas: ${cells.length}`);
+            
             if (cells.length >= 4) {
                 const emissoraName = cells[3].textContent.trim();
+                console.log(`    ↳ Emissora: ${emissoraName}`);
                 
                 // Encontra a emissora correspondente
                 const emissora = proposalData.emissoras.find(e => e.emissora === emissoraName);
+                
                 if (emissora) {
+                    console.log(`    ✅ Emissora encontrada em proposalData`);
+                    console.log(`    📦 Dados brutos: impactos = "${emissora.impactos}" (tipo: ${typeof emissora.impactos})`);
+                    
                     // Converte impactos do formato brasileiro (com vírgula) para número
                     let impactos = emissora.impactos || 0;
+                    const impactosOriginal = impactos;
                     
                     // Se for string, converte o formato brasileiro
                     if (typeof impactos === 'string') {
+                        console.log(`    🔄 Convertendo de string: "${impactos}"`);
                         impactos = parseFloat(impactos.replace('.', '').replace(',', '.')) || 0;
+                        console.log(`    ✅ Convertido para: ${impactos}`);
                     }
                     
                     labels.push(emissoraName);
                     data.push(impactos);
+                    processadas++;
                     
-                    console.log(`  📊 ${emissoraName}: ${impactos} impactos`);
+                    console.log(`    💾 Adicionado ao gráfico: ${emissoraName} = ${impactos} impactos`);
+                } else {
+                    console.log(`    ❌ Emissora NÃO encontrada em proposalData!`);
                 }
+            } else {
+                console.log(`    ⚠️ Linha tem menos de 4 células`);
             }
         }
     });
     
+    console.log(`\n✅ Emissoras processadas: ${processadas}`);
     console.log('📊 Gráfico impactos - Emissoras encontradas:', labels.length);
-    console.log('📊 Dados impactos:', data);
+    console.log('📊 Labels:', labels);
+    console.log('📊 Dados:', data);
     
     // Destrói o gráfico anterior se existir
     if (charts.impacts) {
