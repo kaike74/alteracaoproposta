@@ -217,26 +217,28 @@ function renderInterface() {
     console.log('\n╔════════════════════════════════════════════════════════════════╗');
     console.log('║ 📍 INICIANDO: renderInterface()');
     console.log('╚════════════════════════════════════════════════════════════════╝');
-    console.log('proposalData.emissoras:', proposalData.emissoras);
-    console.log('proposalData.emissoras.length:', proposalData.emissoras ? proposalData.emissoras.length : 'UNDEFINED');
+    console.log('proposalData.emissoras.length:', proposalData.emissoras.length);
     
     console.log('🎨 Renderizando interface...');
     console.log('📊 Emissoras disponíveis:', proposalData.emissoras.length);
     
-    // Atualizar título com informações da proposta
-    // Procura por um campo que indique o nome da empresa/proposta
+    // Buscar o nome da proposta
     let proposalName = 'Proposta de Mídia';
-    const firstEmissora = proposalData.emissoras[0];
     
-    if (firstEmissora) {
-        // Tenta encontrar um campo com informação de empresa/proposta
-        if (firstEmissora.empresa) {
+    if (proposalData.emissoras && proposalData.emissoras.length > 0) {
+        const firstEmissora = proposalData.emissoras[0];
+        
+        // Tenta encontrar o nome da proposta nos campos
+        if (firstEmissora.proposta && firstEmissora.proposta.trim()) {
+            proposalName = firstEmissora.proposta;
+            console.log('✅ Nome da proposta encontrado:', proposalName);
+        } else if (firstEmissora.empresa && firstEmissora.empresa.trim()) {
             proposalName = firstEmissora.empresa;
-        } else if (firstEmissora.nomePropost) {
-            proposalName = firstEmissora.nomePropost;
+            console.log('✅ Nome da empresa encontrado:', proposalName);
         } else {
-            // Se não tiver, usa a primeira emissora como referência
+            // Fallback: usa a primeira emissora
             proposalName = firstEmissora.emissora || 'Proposta de Mídia';
+            console.log('⚠️ Usando emissora como nome:', proposalName);
         }
     }
     
@@ -453,11 +455,36 @@ function renderInvestmentChart() {
     
     const canvasCtx = ctx.getContext('2d');
     
+    // Calcula investimentos apenas das linhas selecionadas
+    let totalTabela = 0;
+    let totalNegociado = 0;
+    
+    const rows = document.querySelectorAll('#spotsTableBody tr');
+    rows.forEach(row => {
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        if (checkbox && checkbox.checked) {
+            // Encontra as células de investimento nesta linha
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 2) {
+                // Pega as últimas 2 células (investimento tabela e negociado)
+                const investTabelaCell = cells[cells.length - 2];
+                const investNegociadoCell = cells[cells.length - 1];
+                
+                if (investTabelaCell && investNegociadoCell) {
+                    const tabelaText = investTabelaCell.textContent.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
+                    const negociadoText = investNegociadoCell.textContent.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
+                    
+                    totalTabela += parseFloat(tabelaText) || 0;
+                    totalNegociado += parseFloat(negociadoText) || 0;
+                }
+            }
+        }
+    });
+    
     const labels = ['Tabela', 'Negociado'];
-    const data = [
-        calculateTotalInvestimentoTabela(),
-        calculateTotalInvestimentoNegociado()
-    ];
+    const data = [totalTabela, totalNegociado];
+    
+    console.log('📊 Gráfico investimento - Tabela:', totalTabela, 'Negociado:', totalNegociado);
     
     charts.investment = new Chart(canvasCtx, {
         type: 'doughnut',
@@ -496,19 +523,53 @@ function renderSpotTypesChart() {
     const labels = [];
     const data = [];
     
+    // Itera apenas pelas linhas selecionadas
+    const rows = document.querySelectorAll('#spotsTableBody tr');
+    const produtosAtivos = new Set();
+    
+    // Primeiro, descobre quais produtos têm dados
     proposalData.emissoras.forEach(emissora => {
         PRODUTOS.forEach(produto => {
             const spots = emissora[produto.key] || 0;
             if (spots > 0) {
-                labels.push(`${emissora.emissora} - ${produto.label}`);
-                data.push(spots);
+                produtosAtivos.add(produto.label);
             }
         });
     });
     
-    if (charts.impacts) {
-        charts.impacts.destroy();
-    }
+    // Agora conta spots apenas das linhas selecionadas
+    const spotsPorProduto = {};
+    
+    rows.forEach(row => {
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        if (checkbox && checkbox.checked) {
+            // Obtém o nome da emissora (4ª coluna)
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 4) {
+                const emissoraName = cells[3].textContent.trim();
+                
+                // Encontra a emissora correspondente
+                const emissora = proposalData.emissoras.find(e => e.emissora === emissoraName);
+                if (emissora) {
+                    PRODUTOS.forEach(produto => {
+                        const spots = emissora[produto.key] || 0;
+                        if (spots > 0) {
+                            const chave = `${emissoraName} - ${produto.label}`;
+                            spotsPorProduto[chave] = spots;
+                        }
+                    });
+                }
+            }
+        }
+    });
+    
+    // Monta arrays de labels e data
+    Object.entries(spotsPorProduto).forEach(([label, spots]) => {
+        labels.push(label);
+        data.push(spots);
+    });
+    
+    console.log('📊 Gráfico spots - Produtos encontrados:', labels.length);
     
     charts.impacts = new Chart(canvasCtx, {
         type: 'bar',

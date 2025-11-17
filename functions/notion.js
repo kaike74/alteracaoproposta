@@ -237,6 +237,8 @@ export async function onRequest(context) {
         
         return {
           id: row.id,
+          proposta: extractValue(properties, '', 'Proposta', 'Proposta', 'Nome Proposta', 'Nome da Proposta'),
+          empresa: extractValue(properties, '', 'Empresa', 'Empresa', 'Cliente', 'Nome Empresa'),
           emissora: extractValue(properties, '', 'Emissora', 'Emissora'),
           praca: extractValue(properties, '', 'Praça', 'Praça', 'Praca'),
           dial: extractValue(properties, '', 'Dial', 'Dial'),
