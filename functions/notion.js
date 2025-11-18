@@ -295,7 +295,56 @@ export async function onRequest(context) {
           praca: extractValue(properties, '', 'Praça', 'Praça', 'Praca'),
           dial: extractValue(properties, '', 'Dial', 'Dial'),
           uf: extractValue(properties, '', 'UF', 'UF'),
-          impactos: extractValue(properties, 0, 'Impactos', 'Impactos', 'impactos', 'Quantidade de Impactos', 'IMPACTOS', 'Impacto', 'impacto', 'IMPACTO', 'Qtd Impactos', 'Quantidade Impactos', 'Total Impactos'),
+          impactos: (() => {
+            // Função especial para extrair impactos que aceita QUALQUER tipo de dados
+            const possibleKeys = ['Impactos', 'impactos', 'Quantidade de Impactos', 'IMPACTOS', 'Impacto', 'impacto', 'IMPACTO', 'Qtd Impactos', 'Quantidade Impactos', 'Total Impactos'];
+            
+            for (const key of possibleKeys) {
+              const prop = properties[key];
+              if (prop) {
+                console.log(`🎯 EXTRAÇÃO DE IMPACTOS - Campo encontrado: "${key}" (tipo: ${prop.type})`);
+                
+                // Tenta extrair de qualquer tipo de campo
+                if (prop.type === 'number' && prop.number !== null && prop.number !== undefined) {
+                  console.log(`   ✅ Valor (number): ${prop.number}`);
+                  return prop.number;
+                } else if (prop.type === 'title' && prop.title?.length) {
+                  const val = prop.title[0].text.content;
+                  console.log(`   ✅ Valor (title): ${val}`);
+                  return val;
+                } else if (prop.type === 'rich_text' && prop.rich_text?.length) {
+                  const val = prop.rich_text[0].text.content;
+                  console.log(`   ✅ Valor (rich_text): ${val}`);
+                  return val;
+                } else if (prop.type === 'formula' && prop.formula?.number !== null) {
+                  console.log(`   ✅ Valor (formula number): ${prop.formula.number}`);
+                  return prop.formula.number;
+                } else if (prop.type === 'formula' && prop.formula?.string) {
+                  console.log(`   ✅ Valor (formula string): ${prop.formula.string}`);
+                  return prop.formula.string;
+                } else if (prop.type === 'checkbox') {
+                  console.log(`   ✅ Valor (checkbox): ${prop.checkbox}`);
+                  return prop.checkbox;
+                } else if (prop.type === 'date' && prop.date?.start) {
+                  console.log(`   ✅ Valor (date): ${prop.date.start}`);
+                  return prop.date.start;
+                } else if (prop.type === 'select' && prop.select?.name) {
+                  console.log(`   ✅ Valor (select): ${prop.select.name}`);
+                  return prop.select.name;
+                } else if (prop.type === 'multi_select' && prop.multi_select?.length) {
+                  const val = prop.multi_select.map(item => item.name).join(',');
+                  console.log(`   ✅ Valor (multi_select): ${val}`);
+                  return val;
+                } else {
+                  console.log(`   ⚠️ Campo encontrado mas vazio ou tipo não suportado. Conteúdo:`, prop);
+                  return 0;
+                }
+              }
+            }
+            
+            console.log(`❌ Nenhum campo de impactos encontrado. Procurados:`, possibleKeys);
+            return 0;
+          })(),
           
           // Spots 30ʺ
           spots30: extractValue(properties, 0, 'Spots 30ʺ', 'Spots 30ʺ'),
