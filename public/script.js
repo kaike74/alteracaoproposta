@@ -637,8 +637,22 @@ function renderImpactsChart() {
     
     console.log(`\n✅ Emissoras processadas: ${processadas}`);
     console.log('📊 Gráfico impactos - Emissoras encontradas:', labels.length);
-    console.log('📊 Labels:', labels);
-    console.log('📊 Dados:', data);
+    console.log('📊 Labels (antes de ordenar):', labels);
+    console.log('📊 Dados (antes de ordenar):', data);
+    
+    // Ordena em ordem decrescente (maior para menor, esquerda para direita)
+    const pairedData = labels.map((label, index) => ({
+        label: label,
+        value: data[index]
+    }));
+    
+    pairedData.sort((a, b) => b.value - a.value);
+    
+    const sortedLabels = pairedData.map(item => item.label);
+    const sortedData = pairedData.map(item => item.value);
+    
+    console.log('📊 Labels (após ordenar):', sortedLabels);
+    console.log('📊 Dados (após ordenar):', sortedData);
     
     // Destrói o gráfico anterior se existir
     if (charts.impacts) {
@@ -648,10 +662,10 @@ function renderImpactsChart() {
     charts.impacts = new Chart(canvasCtx, {
         type: 'bar',
         data: {
-            labels: labels,
+            labels: sortedLabels,
             datasets: [{
                 label: 'Quantidade de Impactos',
-                data: data,
+                data: sortedData,
                 backgroundColor: [
                     'rgba(139, 92, 246, 0.8)',
                     'rgba(167, 139, 250, 0.8)',
