@@ -30,12 +30,15 @@ body {
     background: linear-gradient(135deg, #f3f0ff 0%, #ede9fe 100%);
     color: var(--dark);
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 30px 20px;
+    flex: 1;
 }
 
 /* =====================================================
@@ -455,7 +458,8 @@ tr.radio-disabled .value-cell {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
-    text-align: left;
+    text-align: center;
+    font-family: 'Space Grotesk', sans-serif;
 }
 
 .charts-grid {
@@ -514,7 +518,8 @@ tr.radio-disabled .value-cell {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    text-align: left;
+    text-align: center;
+    font-family: 'Space Grotesk', sans-serif;
 }
 
 .stats-grid {
@@ -629,6 +634,12 @@ tr.radio-disabled .value-cell {
     background: linear-gradient(135deg, #1e1b4b 0%, #2d1b69 100%);
     font-size: 0.85rem;
     border-top: 3px solid #8b5cf6;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
 }
 
 .footer-logo {
