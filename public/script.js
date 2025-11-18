@@ -664,7 +664,6 @@ function renderImpactsChart() {
             }]
         },
         options: {
-            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
             plugins: { 
@@ -672,7 +671,7 @@ function renderImpactsChart() {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            const value = context.parsed.x;
+                            const value = context.parsed.y;
                             // Formata com separador de milhar
                             return `${value.toLocaleString('pt-BR', { 
                                 minimumFractionDigits: 0,
@@ -683,7 +682,7 @@ function renderImpactsChart() {
                 }
             },
             scales: {
-                x: {
+                y: {
                     beginAtZero: true,
                     ticks: { 
                         callback: function(value) {
