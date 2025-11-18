@@ -442,34 +442,52 @@ function updateStats() {
         }
     });
     
-    const cpm = totalSpots > 0 ? (totalInvestimentoNegociado / totalSpots) * 1000 : 0;
+    // Calcula total de impactos das emissoras selecionadas
+    let totalImpactos = 0;
+    proposalData.emissoras.forEach((emissora, index) => {
+        const checkbox = document.querySelector(`input[type="checkbox"][data-emissora-index="${index}"]`);
+        if (checkbox && checkbox.checked) {
+            const impactosValue = emissora.impactos || 0;
+            // Se for string, converte do formato brasileiro
+            const impactosNum = typeof impactosValue === 'string' 
+                ? parseFloat(impactosValue.replace('.', '').replace(',', '.')) || 0
+                : impactosValue;
+            totalImpactos += impactosNum;
+        }
+    });
+    
+    // Calcula percentual de desconto
     const economia = totalInvestimentoTabela - totalInvestimentoNegociado;
+    const percentualDesconto = totalInvestimentoTabela > 0 
+        ? ((economia / totalInvestimentoTabela) * 100).toFixed(2)
+        : 0;
     
     console.log('📊 Total Spots:', totalSpots);
     console.log('💰 Total Investimento Tabela:', totalInvestimentoTabela);
     console.log('💰 Total Investimento Negociado:', totalInvestimentoNegociado);
-    console.log('📈 CPM:', cpm);
-    console.log('💵 Economia:', economia);
+    console.log('📈 Total Impactos:', totalImpactos);
+    console.log('💵 Economia (R$):', economia);
+    console.log('💵 Desconto (%):', percentualDesconto);
     
     const statTotalSpots = document.getElementById('statTotalSpots');
     const statTabelaValue = document.getElementById('statTabelaValue');
     const statNegociadoValue = document.getElementById('statNegociadoValue');
-    const statCPM = document.getElementById('statCPM');
+    const statTotalImpacts = document.getElementById('statTotalImpacts');
     const statEconomia = document.getElementById('statEconomia');
     
     console.log('🔍 Elementos encontrados:', {
         statTotalSpots: !!statTotalSpots,
         statTabelaValue: !!statTabelaValue,
         statNegociadoValue: !!statNegociadoValue,
-        statCPM: !!statCPM,
+        statTotalImpacts: !!statTotalImpacts,
         statEconomia: !!statEconomia
     });
     
     if (statTotalSpots) statTotalSpots.textContent = totalSpots;
     if (statTabelaValue) statTabelaValue.textContent = formatCurrency(totalInvestimentoTabela);
     if (statNegociadoValue) statNegociadoValue.textContent = formatCurrency(totalInvestimentoNegociado);
-    if (statCPM) statCPM.textContent = formatCurrency(cpm);
-    if (statEconomia) statEconomia.textContent = formatCurrency(economia);
+    if (statTotalImpacts) statTotalImpacts.textContent = totalImpactos.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    if (statEconomia) statEconomia.textContent = percentualDesconto + '%';
     
     console.log('✅ Estatísticas atualizadas!\n');
 }
