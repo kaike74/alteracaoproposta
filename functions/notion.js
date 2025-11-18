@@ -142,9 +142,14 @@ export async function onRequest(context) {
           impactFields.forEach(field => {
             const prop = firstRecord.properties[field];
             console.log(`  ✅ ENCONTRADO: "${field}" (tipo: ${prop.type})`);
+            console.log(`     Conteúdo bruto:`, JSON.stringify(prop));
           });
         } else {
           console.log('  ❌ NENHUM CAMPO COM "IMPACTO" ENCONTRADO');
+          console.log('  💡 DICA: Os campos encontrados são:');
+          fieldNames.forEach(fieldName => {
+            console.log(`     - "${fieldName}"`);
+          });
         }
         console.log('');
         
@@ -184,11 +189,19 @@ export async function onRequest(context) {
         for (const key of possibleKeys) {
           const prop = properties[key];
           if (prop) {
+            if (propName === 'impactos') {
+              console.log(`\n🎯 EXTRAÇÃO DE IMPACTOS:`);
+              console.log(`  Campo encontrado como: "${key}"`);
+              console.log(`  Tipo: ${prop.type}`);
+              console.log(`  Conteúdo bruto:`, JSON.stringify(prop));
+            }
+            
             console.log(`✅ Campo "${propName}" encontrado como: "${key}"`);
             
             switch (prop.type) {
               case 'number':
                 const numValue = prop.number !== null && prop.number !== undefined ? prop.number : defaultValue;
+                if (propName === 'impactos') console.log(`  ✅ Valor extraído (number): ${numValue}`);
                 console.log(`   Valor: ${numValue}`);
                 return numValue;
               case 'title':
@@ -213,6 +226,11 @@ export async function onRequest(context) {
         }
         
         // Se nenhuma chave foi encontrada
+        if (propName === 'impactos') {
+          console.log(`\n❌ ERRO: Campo "impactos" NÃO encontrado!`);
+          console.log(`  Chaves procuradas:`, possibleKeys);
+          console.log(`  Valor padrão retornado: ${defaultValue}`);
+        }
         console.log(`❌ Campo "${propName}" NÃO encontrado. Chaves procuradas:`, possibleKeys);
         return defaultValue;
       };
