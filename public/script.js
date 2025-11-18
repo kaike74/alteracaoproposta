@@ -243,7 +243,7 @@ function renderInterface() {
     }
     
     console.log('🏢 Nome da proposta:', proposalName);
-    document.getElementById('proposalTitle').textContent = proposalName;
+    // Título não é mais atualizado dinamicamente
     
     // Remover a seção de localização (já não será exibida)
     const locationInfo = document.getElementById('locationInfo');
