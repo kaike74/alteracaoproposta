@@ -628,27 +628,29 @@ tr.radio-disabled .value-cell {
    ===================================================== */
 .footer {
     text-align: center;
-    padding: 20px 30px;
-    color: #e9d5ff;
-    margin: 50px calc(-50vw + 50%) 0 calc(-50vw + 50%);
-    background: linear-gradient(135deg, #1e1b4b 0%, #2d1b69 100%);
-    font-size: 0.85rem;
-    border-top: 3px solid #8b5cf6;
-    width: 100vw;
+    padding: 40px 30px;
+    color: #6d28d9;
+    margin: 50px 0 0 0;
+    background: transparent;
+    font-size: 0.9rem;
+    border-top: none;
+    width: 100%;
     position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -50vw;
-    margin-right: -50vw;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .footer-logo {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: 0.5px;
 }
 
 .footer-logo strong {
+    color: #6d28d9;
+    font-weight: 700;
+}.footer-logo strong {
     color: #c4b5fd;
     font-weight: 700;
 }
