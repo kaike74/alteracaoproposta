@@ -714,19 +714,8 @@ function renderImpactsChart() {
     console.log('📊 Labels (após ordenar):', sortedLabels);
     console.log('📊 Dados (após ordenar):', sortedData);
     
-    // Calcula a altura mínima para as barras pequenas
-    // Se há muita diferença entre max e min, aumenta o y.min para dar espaço visual
-    const maxVal = Math.max(...sortedData);
-    const minVal = Math.min(...sortedData.filter(v => v > 0));
-    const ratio = maxVal / minVal;
-    
-    // Se a razão é grande, define um y.min que deixa espaço para as barras pequenas
-    let yMin = 0;
-    let yMax = calculateChartMax(sortedData);
-    if (ratio > 50) {
-        // A menor barra ocupará pelo menos 10% do gráfico
-        yMin = minVal * 0.5; // Espaço mínimo visual
-    }
+    // Calcula o máximo de escala redondo
+    const yMax = calculateChartMax(sortedData);
     
     // Destrói o gráfico anterior se existir
     if (charts.impacts) {
@@ -749,8 +738,8 @@ function renderImpactsChart() {
                 borderColor: '#8b5cf6',
                 borderWidth: 2,
                 borderRadius: 8,
-                barPercentage: 0.7,
-                categoryPercentage: 0.8
+                barPercentage: 0.85,
+                categoryPercentage: 0.9
             }]
         },
         options: {
@@ -785,7 +774,6 @@ function renderImpactsChart() {
                 },
                 y: {
                     beginAtZero: true,
-                    min: yMin,
                     max: yMax,
                     ticks: { 
                         font: { size: 12 },
