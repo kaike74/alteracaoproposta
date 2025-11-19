@@ -477,7 +477,7 @@ tr.radio-disabled .value-cell {
 
 .chart-container {
     position: relative;
-    height: 320px;
+    height: 450px;
     background: var(--white);
     border-radius: 0;
     padding: 30px;

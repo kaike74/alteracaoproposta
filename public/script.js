@@ -714,7 +714,9 @@ function renderImpactsChart() {
                 ],
                 borderColor: '#8b5cf6',
                 borderWidth: 2,
-                borderRadius: 8
+                borderRadius: 8,
+                barPercentage: 0.7,
+                categoryPercentage: 0.8
             }]
         },
         options: {
@@ -726,28 +728,42 @@ function renderImpactsChart() {
                     callbacks: {
                         label: function(context) {
                             const value = context.parsed.y;
-                            // Formata com separador de milhar
                             return `${value.toLocaleString('pt-BR', { 
                                 minimumFractionDigits: 0,
                                 maximumFractionDigits: 0
                             })} impactos`;
                         }
-                    }
+                    },
+                    padding: 12,
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 13 }
                 }
             },
             scales: {
+                x: {
+                    ticks: {
+                        font: { size: 13, weight: 'bold' },
+                        maxRotation: 45,
+                        minRotation: 45,
+                        padding: 8
+                    },
+                    grid: { display: false }
+                },
                 y: {
                     beginAtZero: false,
                     min: Math.max(0, minValue - padding),
                     max: maxValue + padding,
                     ticks: { 
+                        font: { size: 12 },
                         callback: function(value) {
                             return value.toLocaleString('pt-BR', {
                                 minimumFractionDigits: 0,
                                 maximumFractionDigits: 0
                             });
-                        }
-                    }
+                        },
+                        padding: 10
+                    },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
                 }
             }
         }
