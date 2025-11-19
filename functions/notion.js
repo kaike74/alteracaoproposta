@@ -523,24 +523,33 @@ export async function onRequest(context) {
           body: JSON.stringify({ properties: updateProperties })
         });
 
-        updatePromises.push({
-          field: change.field,
-          emissoraId: emissora.id,
-          promise: updateResponse.ok
-        });
+        const updateData = await updateResponse.json();
 
         if (!updateResponse.ok) {
-          console.error(`❌ Erro ao atualizar ${emissora.emissora}:`, updateResponse.status);
+          console.error(`❌ Erro ao atualizar ${emissora.emissora}:`, updateResponse.status, updateData);
+          updatePromises.push({
+            field: change.field,
+            emissoraId: emissora.id,
+            success: false,
+            error: updateData.message
+          });
         } else {
           console.log(`✅ ${emissora.emissora} - ${change.field} atualizado`);
+          updatePromises.push({
+            field: change.field,
+            emissoraId: emissora.id,
+            success: true
+          });
         }
       }
 
       return new Response(JSON.stringify({ 
         success: true, 
         message: 'Alterações processadas',
-        updated: updatePromises.length,
-        changes: Object.keys(changes).length
+        totalChanges: Object.keys(changes).length,
+        successfulUpdates: updatePromises.filter(p => p.success).length,
+        failedUpdates: updatePromises.filter(p => !p.success).length,
+        details: updatePromises
       }), {
         status: 200,
         headers
