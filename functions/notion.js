@@ -492,9 +492,10 @@ export async function onRequest(context) {
 
       log('🔄 Atualizando múltiplas emissoras');
       log('📝 Dados recebidos: ' + JSON.stringify(requestBody));
-      log('📝 ocultasEmissoras recebido: ' + JSON.stringify(ocultasEmissoras));
 
       const { emissoras, changes, ocultasEmissoras } = requestBody;
+      log('📝 ocultasEmissoras recebido: ' + JSON.stringify(ocultasEmissoras));
+      
       if (!emissoras || !Array.isArray(emissoras)) {
         return new Response(JSON.stringify({ 
           error: 'Emissoras deve ser um array' 
