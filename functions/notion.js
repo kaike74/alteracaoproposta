@@ -421,13 +421,25 @@ export async function onRequest(context) {
           // Menshan 60"
           spotsMensham60: extractValue(properties, 0, 'Menshan 60', 'Menshan 60"', 'Menshan 60ʺ', 'Menshan 60', 'spotsMensham60'),
           valorTabelaMensham60: extractValue(properties, 0, 'Valor Mershan 60 (Tabela)', 'Valor Mershan 60" (Tabela)', 'Valor Mershan 60ʺ (Tabela)', 'Valor Mershan 60 (Tabela)', 'valorTabelaMensham60'),
-          valorNegociadoMensham60: extractValue(properties, 0, 'Valor Mershan 60 (Tabela)', 'Valor Mershan 60" (Tabela)', 'Valor Mershan 60ʺ (Tabela)', 'Valor Mershan 60 (Tabela)', 'valorNegociadoMensham60')
+          valorNegociadoMensham60: extractValue(properties, 0, 'Valor Mershan 60 (Tabela)', 'Valor Mershan 60" (Tabela)', 'Valor Mershan 60ʺ (Tabela)', 'Valor Mershan 60 (Tabela)', 'valorNegociadoMensham60'),
+          
+          // Coluna "Excluir" para filtro no site
+          excluir: (() => {
+            const excludeField = properties['Excluir'];
+            if (excludeField && excludeField.checkbox !== null && excludeField.checkbox !== undefined) {
+              return excludeField.checkbox === true;
+            }
+            return false;
+          })()
         };
       });
 
       console.log('✅ Emissoras mapeadas:', emissoras);
       
-      // Nota: ocultasEmissoras agora é apenas frontend (visual), não carregamos do backend
+      // Carregar estado de exclusão do Notion
+      const ocultasEmissoras = emissoras
+        .filter(e => e.excluir === true)
+        .map(e => e.id);
       console.log('');
       console.log('═══════════════════════════════════════════════════════════');
       console.log('✅ EMISSORAS MAPEADAS - PRIMEIRA EMISSORA:');
@@ -439,7 +451,8 @@ export async function onRequest(context) {
       console.log('');
 
       return new Response(JSON.stringify({
-        emissoras: emissoras
+        emissoras: emissoras,
+        ocultasEmissoras: ocultasEmissoras
       }), {
         status: 200,
         headers
@@ -481,7 +494,8 @@ export async function onRequest(context) {
       log('🔄 Atualizando múltiplas emissoras');
       log('📝 Dados recebidos: ' + JSON.stringify(requestBody));
 
-      const { emissoras, changes } = requestBody;
+      const { emissoras, changes, ocultasEmissoras } = requestBody;
+      log('📝 ocultasEmissoras recebido: ' + JSON.stringify(ocultasEmissoras));
       
       if (!emissoras || !Array.isArray(emissoras)) {
         return new Response(JSON.stringify({ 
@@ -492,9 +506,42 @@ export async function onRequest(context) {
         });
       }
 
-      // Nota: ocultasEmissoras agora é apenas usado no frontend para filtros visuais
-      // Não fazemos nada no backend com isso
-      log(`ℹ️ Ocultamento é apenas visual no frontend (não sincronizamos com Notion)`);
+      // Sincronizar o status "Excluir" com Notion
+      if (ocultasEmissoras && Array.isArray(ocultasEmissoras)) {
+        log(`🔄 Sincronizando status "Excluir" para ${ocultasEmissoras.length} emissoras`);
+        
+        for (const emissora of emissoras) {
+          const isExcluida = ocultasEmissoras.includes(emissora.id);
+          const wasPreviouslyExcluida = emissora.excluir || false;
+          
+          if (isExcluida !== wasPreviouslyExcluida) {
+            log(`  🔄 Atualizando ${emissora.emissora}: Excluir = ${isExcluida}`);
+            
+            const excludeResponse = await fetch(`https://api.notion.com/v1/pages/${emissora.id}`, {
+              method: 'PATCH',
+              headers: {
+                'Authorization': `Bearer ${notionToken.trim()}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                properties: {
+                  'Excluir': {
+                    checkbox: isExcluida
+                  }
+                }
+              })
+            });
+            
+            if (excludeResponse.ok) {
+              log(`    ✅ Excluir atualizado para ${isExcluida}`);
+            } else {
+              const error = await excludeResponse.json();
+              log(`    ❌ Erro ao atualizar Excluir: ${JSON.stringify(error)}`);
+            }
+          }
+        }
+      }
 
       // Processar cada alteração
       const updatePromises = [];

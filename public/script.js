@@ -1105,12 +1105,12 @@ async function confirmAndSave() {
         const apiUrl = getApiUrl();
         console.log('📡 API URL:', apiUrl);
         
-        // Nota: ocultasEmissoras agora é apenas filtro visual no cliente
-        // Não é enviado para o backend
+        // Sincronizar o estado "Excluir" com o Notion
         const dataToSave = {
             tableId: proposalData.tableId,
             emissoras: proposalData.emissoras,
-            changes: proposalData.changes
+            changes: proposalData.changes,
+            ocultasEmissoras: Array.from(proposalData.ocultasEmissoras)  // Converter Set para Array
         };
         
         console.log('📤 Enviando dados:', dataToSave);
