@@ -903,6 +903,9 @@ function updateEmissora(index, field, value) {
     // NÃO chama renderSpotsTable, apenas atualiza estatísticas e gráficos
     updateStats();
     renderCharts();
+    
+    // Mostrar botão de salvar quando há alterações
+    showUnsavedChanges();
 }
 
 function updateRowSelection() {
@@ -911,6 +914,9 @@ function updateRowSelection() {
     console.log('📝 Linha selecionada/desmarcada');
     updateStats();
     renderCharts();
+    
+    // Mostrar botão de salvar quando há seleção de linhas
+    showUnsavedChanges();
 }
 
 function toggleOcultarEmissora(checkbox) {
@@ -1177,7 +1183,15 @@ function showUnsavedChanges() {
     if (saveBtn) {
         const temMudancas = Object.keys(proposalData.changes).length > 0;
         const temRemocoes = proposalData.ocultasEmissoras.size > 0;
-        saveBtn.style.display = (temMudancas || temRemocoes) ? 'block' : 'none';
+        const shouldShow = temMudancas || temRemocoes;
+        
+        console.log(`💾 showUnsavedChanges - Mudanças: ${temMudancas}, Remoções: ${temRemocoes}, Mostrar: ${shouldShow}`);
+        console.log(`   Changes: ${JSON.stringify(proposalData.changes)}`);
+        console.log(`   Ocultas: ${Array.from(proposalData.ocultasEmissoras)}`);
+        
+        saveBtn.style.display = shouldShow ? 'block' : 'none';
+    } else {
+        console.warn('❌ Botão saveBtn não encontrado!');
     }
 }
 
