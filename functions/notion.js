@@ -462,6 +462,13 @@ export async function onRequest(context) {
     if (request.method === 'PATCH') {
       const tableId = url.searchParams.get('id');
       
+      // Array para guardar logs
+      const debugLogs = [];
+      const log = (msg) => {
+        console.log(msg);
+        debugLogs.push(msg);
+      };
+      
       if (!tableId) {
         return new Response(JSON.stringify({ 
           error: 'ID da tabela obrigatório' 
@@ -483,8 +490,8 @@ export async function onRequest(context) {
         });
       }
 
-      console.log('🔄 Atualizando múltiplas emissoras');
-      console.log('📝 Dados recebidos:', requestBody);
+      log('🔄 Atualizando múltiplas emissoras');
+      log('📝 Dados recebidos: ' + JSON.stringify(requestBody));
 
       const { emissoras, changes, ocultasEmissoras } = requestBody;
       if (!emissoras || !Array.isArray(emissoras)) {
@@ -498,42 +505,42 @@ export async function onRequest(context) {
 
       // Processar ocultamento de emissoras (Liga/desliga)
       if (ocultasEmissoras && Array.isArray(ocultasEmissoras) && ocultasEmissoras.length > 0) {
-        console.log(`👤 Processando ${ocultasEmissoras.length} emissoras para alternantes...`);
-        console.log(`📋 IDs a ocultar:`, ocultasEmissoras);
+        log(`👤 Processando ${ocultasEmissoras.length} emissoras para alternantes...`);
+        log(`📋 IDs a ocultar: ${JSON.stringify(ocultasEmissoras)}`);
         
         try {
           let alternantesDbId = await getOrCreateAlternantesDatabase(notionToken, 'e-radios');
-          console.log(`🔎 alternantesDbId obtido:`, alternantesDbId);
+          log(`🔎 alternantesDbId obtido: ${alternantesDbId}`);
           
           // Se não encontrou, criar agora
           if (!alternantesDbId) {
-            console.log('📝 Criando database "Lista de alternantes" agora...');
+            log('📝 Criando database "Lista de alternantes" agora...');
             alternantesDbId = await createAlternantesDatabase(notionToken);
-            console.log(`✅ Database criada:`, alternantesDbId);
+            log(`✅ Database criada: ${alternantesDbId}`);
           }
           
           if (alternantesDbId) {
-            console.log(`🔄 Iniciando movimento de ${ocultasEmissoras.length} emissoras...`);
+            log(`🔄 Iniciando movimento de ${ocultasEmissoras.length} emissoras...`);
             for (const emissoraId of ocultasEmissoras) {
               const emissora = emissoras.find(e => e.id === emissoraId);
-              console.log(`  ↳ Processando: ${emissoraId} - ${emissora?.emissora || 'NÃO ENCONTRADA'}`);
+              log(`  ↳ Processando: ${emissoraId} - ${emissora?.emissora || 'NÃO ENCONTRADA'}`);
               if (emissora) {
                 const result = await moveToAlternantes(notionToken, emissora, tableId, alternantesDbId);
-                console.log(`  ↳ Resultado:`, result);
+                log(`  ↳ Resultado: ${result}`);
               } else {
-                console.warn(`  ⚠️ Emissora ${emissoraId} não encontrada nos dados`);
+                log(`  ⚠️ Emissora ${emissoraId} não encontrada nos dados`);
               }
             }
           } else {
-            console.error('❌ Não foi possível criar/obter database de alternantes');
+            log('❌ Não foi possível criar/obter database de alternantes');
           }
         } catch (ocultError) {
-          console.error('⚠️ Erro ao processar ocultamento:', ocultError.message);
-          console.error('⚠️ Stack:', ocultError.stack);
+          log('⚠️ Erro ao processar ocultamento: ' + ocultError.message);
+          log('⚠️ Stack: ' + ocultError.stack);
           // Continua mesmo se houver erro no ocultamento
         }
       } else {
-        console.log(`ℹ️ Nenhuma emissora para ocultar (${ocultasEmissoras?.length || 0})`);
+        log(`ℹ️ Nenhuma emissora para ocultar (${ocultasEmissoras?.length || 0})`);
       }
 
       // Processar cada alteração
@@ -640,7 +647,8 @@ export async function onRequest(context) {
         totalChanges: Object.keys(changes).length,
         successfulUpdates: updatePromises.filter(p => p.success).length,
         failedUpdates: updatePromises.filter(p => !p.success).length,
-        details: updatePromises
+        details: updatePromises,
+        debugLogs: debugLogs
       }), {
         status: 200,
         headers

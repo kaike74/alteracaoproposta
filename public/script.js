@@ -1195,6 +1195,15 @@ async function confirmAndSave() {
         const result = await response.json();
         console.log('✅ Alterações salvas!', result);
         
+        // Exibir logs do servidor no console
+        if (result.debugLogs && Array.isArray(result.debugLogs)) {
+            console.log('═══════════════════════════════════════════════════════════');
+            console.log('📋 LOGS DO SERVIDOR (Notion.js):');
+            console.log('═══════════════════════════════════════════════════════════');
+            result.debugLogs.forEach(log => console.log(log));
+            console.log('═══════════════════════════════════════════════════════════');
+        }
+        
         proposalData.changes = {};
         showUnsavedChanges();
         
