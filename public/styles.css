@@ -2,9 +2,8 @@
    PROPOSTA DE MÍDIA - Stylesheet Global
    E-MÍDIAS | Tecnologia em Publicidade
    
-   RESOLUÇÃO PADRÃO: 1920x1080
-   Base design escalada proporcionalmente para outros tamanhos
-   via media queries e font-size relativo (REM)
+   RESOLUÇÃO PADRONIZADA: 1920x1080 FULL
+   Layout fixo sem responsividade
    ===================================================== */
 
 
@@ -37,61 +36,15 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    /* Padronizar para 1920x1080 */
     font-size: 16px;
 }
 
 .container {
-    max-width: 1920px;
-    width: 100%;
+    width: 1920px;
     margin: 0 auto;
     padding: 30px 40px;
     flex: 1;
     box-sizing: border-box;
-}
-
-/* Media queries para manter proporção em 1920x1080 */
-@media (max-width: 1920px) {
-    html {
-        font-size: 16px;
-    }
-    
-    .container {
-        padding: 30px 40px;
-    }
-}
-
-@media (max-width: 1440px) {
-    html {
-        font-size: 14px;
-    }
-    
-    .container {
-        padding: 24px 32px;
-        max-width: 1400px;
-    }
-}
-
-@media (max-width: 1024px) {
-    html {
-        font-size: 13px;
-    }
-    
-    .container {
-        padding: 20px 24px;
-        max-width: 100%;
-    }
-}
-
-@media (max-width: 768px) {
-    html {
-        font-size: 12px;
-    }
-    
-    .container {
-        padding: 16px 16px;
-        max-width: 100%;
-    }
 }
 
 /* =====================================================
@@ -267,27 +220,6 @@ body {
     margin-bottom: 30px;
 }
 
-@media (max-width: 1440px) {
-    .main-grid {
-        grid-template-columns: 1fr 280px;
-        gap: 24px;
-    }
-}
-
-@media (max-width: 1024px) {
-    .main-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-}
-
-@media (max-width: 768px) {
-    .main-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-}
-
 /* =====================================================
    CARDS
    ===================================================== */
@@ -330,7 +262,7 @@ body {
 .table-wrapper {
     overflow-x: auto;
     overflow-y: auto;
-    max-height: 500px;
+    max-height: 600px;
     background: var(--white);
     border-radius: 0;
     box-shadow: none;
@@ -338,20 +270,6 @@ body {
     border: none;
     padding: 0 30px 30px 30px;
     box-sizing: border-box;
-}
-
-/* Ajuste responsivo para altura da tabela em 1920x1080 */
-@media (min-width: 1920px) {
-    .table-wrapper {
-        max-height: 600px;
-    }
-}
-
-@media (max-width: 1440px) {
-    .table-wrapper {
-        max-height: 500px;
-        padding: 0 24px 24px 24px;
-    }
 }
 
 /* Estilo da scrollbar */
@@ -574,12 +492,6 @@ tr.radio-disabled .value-cell {
     grid-column: 1 / -1;
 }
 
-@media (max-width: 768px) {
-    .charts-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
 .chart-container {
     position: relative;
     height: 450px;
@@ -632,41 +544,6 @@ tr.radio-disabled .value-cell {
     grid-template-columns: repeat(5, 1fr);
     gap: 20px;
     margin-bottom: 30px;
-}
-
-@media (max-width: 1920px) {
-    .stats-grid {
-        grid-template-columns: repeat(5, 1fr);
-        gap: 20px;
-    }
-}
-
-@media (max-width: 1440px) {
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-    }
-}
-
-@media (max-width: 1024px) {
-    .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-    }
-}
-
-@media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-}
-
-@media (max-width: 480px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
 }
 
 .stat-card {
@@ -857,43 +734,6 @@ tr.radio-disabled .value-cell {
     gap: 10px;
     justify-content: flex-end;
     margin-top: 30px;
-}
-
-/* =====================================================
-   RESPONSIVO
-   ===================================================== */
-@media (max-width: 768px) {
-    .header {
-        padding: 20px;
-    }
-
-    .header-title {
-        font-size: 1.8rem;
-    }
-
-    .header-top {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .header-actions {
-        width: 100%;
-        gap: 8px;
-    }
-
-    .btn {
-        flex: 1;
-        justify-content: center;
-        padding: 12px 16px;
-    }
-
-    .main-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .card {
-        padding: 20px;
-    }
 }
 
 /* =====================================================
