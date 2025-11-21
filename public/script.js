@@ -7,7 +7,8 @@ let proposalData = {
     tableId: null,
     emissoras: [],  // Array de emissoras
     changes: {},
-    ocultasEmissoras: new Set()  // Rastreia emissoras ocultas (por ID)
+    ocultasEmissoras: new Set(),  // Rastreia emissoras ocultas (por ID)
+    initialOcultasEmissoras: new Set()  // Estado inicial para detectar mudanças
 };
 
 // Definição de todos os produtos disponíveis
@@ -197,6 +198,7 @@ async function loadProposalFromNotion(tableId) {
             
             // Carregar emissoras ocultas no Set
             proposalData.ocultasEmissoras = new Set(ocultasEmissoras);
+            proposalData.initialOcultasEmissoras = new Set(ocultasEmissoras);  // Guardar estado inicial
             console.log(`👤 ${proposalData.ocultasEmissoras.size} emissoras marcadas como ocultas`);
             
             console.log(`✅ ${proposalData.emissoras.length} emissoras carregadas com sucesso!`);
@@ -1184,12 +1186,21 @@ function showUnsavedChanges() {
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
         const temMudancas = Object.keys(proposalData.changes).length > 0;
-        const temRemocoes = proposalData.ocultasEmissoras.size > 0;
-        const shouldShow = temMudancas || temRemocoes;
         
-        console.log(`💾 showUnsavedChanges - Mudanças: ${temMudancas}, Remoções: ${temRemocoes}, Mostrar: ${shouldShow}`);
+        // Verificar se as emissoras ocultas mudaram em relação ao estado inicial
+        const ocultasAtuais = Array.from(proposalData.ocultasEmissoras).sort();
+        const ocultasIniciais = Array.from(proposalData.initialOcultasEmissoras).sort();
+        const temMudancasEmissoras = JSON.stringify(ocultasAtuais) !== JSON.stringify(ocultasIniciais);
+        
+        const shouldShow = temMudancas || temMudancasEmissoras;
+        
+        console.log(`💾 showUnsavedChanges:`);
+        console.log(`   Mudanças em campos: ${temMudancas}`);
+        console.log(`   Mudanças em emissoras: ${temMudancasEmissoras} (${ocultasAtuais.length} vs ${ocultasIniciais.length})`);
+        console.log(`   Mostrar botão: ${shouldShow}`);
         console.log(`   Changes: ${JSON.stringify(proposalData.changes)}`);
-        console.log(`   Ocultas: ${Array.from(proposalData.ocultasEmissoras)}`);
+        console.log(`   Ocultas atuais: ${ocultasAtuais}`);
+        console.log(`   Ocultas iniciais: ${ocultasIniciais}`);
         
         saveBtn.style.display = shouldShow ? 'block' : 'none';
     } else {
@@ -1251,6 +1262,9 @@ async function confirmAndSave() {
         }
         
         proposalData.changes = {};
+        
+        // Atualizar estado inicial das emissoras ocultas após salvar
+        proposalData.initialOcultasEmissoras = new Set(proposalData.ocultasEmissoras);
         
         // Ocultar botão de salvar já que não há mais alterações
         showUnsavedChanges();
