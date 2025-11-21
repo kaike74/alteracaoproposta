@@ -1,7 +1,12 @@
 /* =====================================================
    PROPOSTA DE MÍDIA - Stylesheet Global
    E-MÍDIAS | Tecnologia em Publicidade
+   
+   RESOLUÇÃO PADRÃO: 1920x1080
+   Base design escalada proporcionalmente para outros tamanhos
+   via media queries e font-size relativo (REM)
    ===================================================== */
+
 
 * {
     margin: 0;
@@ -32,13 +37,61 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    /* Padronizar para 1920x1080 */
+    font-size: 16px;
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 1920px;
+    width: 100%;
     margin: 0 auto;
-    padding: 30px 20px;
+    padding: 30px 40px;
     flex: 1;
+    box-sizing: border-box;
+}
+
+/* Media queries para manter proporção em 1920x1080 */
+@media (max-width: 1920px) {
+    html {
+        font-size: 16px;
+    }
+    
+    .container {
+        padding: 30px 40px;
+    }
+}
+
+@media (max-width: 1440px) {
+    html {
+        font-size: 14px;
+    }
+    
+    .container {
+        padding: 24px 32px;
+        max-width: 1400px;
+    }
+}
+
+@media (max-width: 1024px) {
+    html {
+        font-size: 13px;
+    }
+    
+    .container {
+        padding: 20px 24px;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 12px;
+    }
+    
+    .container {
+        padding: 16px 16px;
+        max-width: 100%;
+    }
 }
 
 /* =====================================================
@@ -214,9 +267,24 @@ body {
     margin-bottom: 30px;
 }
 
+@media (max-width: 1440px) {
+    .main-grid {
+        grid-template-columns: 1fr 280px;
+        gap: 24px;
+    }
+}
+
 @media (max-width: 1024px) {
     .main-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
     }
 }
 
@@ -269,6 +337,21 @@ body {
     width: 100%;
     border: none;
     padding: 0 30px 30px 30px;
+    box-sizing: border-box;
+}
+
+/* Ajuste responsivo para altura da tabela em 1920x1080 */
+@media (min-width: 1920px) {
+    .table-wrapper {
+        max-height: 600px;
+    }
+}
+
+@media (max-width: 1440px) {
+    .table-wrapper {
+        max-height: 500px;
+        padding: 0 24px 24px 24px;
+    }
 }
 
 /* Estilo da scrollbar */
@@ -551,21 +634,38 @@ tr.radio-disabled .value-cell {
     margin-bottom: 30px;
 }
 
-@media (max-width: 1400px) {
+@media (max-width: 1920px) {
+    .stats-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 1440px) {
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+}
+
+@media (max-width: 1024px) {
     .stats-grid {
         grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
     }
 }
 
 @media (max-width: 768px) {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
 }
 
 @media (max-width: 480px) {
     .stats-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
     }
 }
 
