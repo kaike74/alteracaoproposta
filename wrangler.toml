@@ -2,9 +2,9 @@ name = "alteracaoproposta"
 pages_build_output_dir = "public"
 compatibility_date = "2024-01-01"
 
-vars = { NOTION_TOKEN = "ntn_d87800291735CSok9UAEgUkUBpPCLBjfwhuLV2HJG9c4cS" }
+vars = { NOTION_TOKEN = "ntn_d87800291735CSok9UAEgUkUBpPCLBjfwhuLV2HJG9c4cS", RESEND_API_KEY = "seu_resend_api_key_aqui" }
 
 [env.production]
 name = "alteracaoproposta"
-vars = { NOTION_TOKEN = "ntn_d87800291735CSok9UAEgUkUBpPCLBjfwhuLV2HJG9c4cS" }
+vars = { NOTION_TOKEN = "ntn_d87800291735CSok9UAEgUkUBpPCLBjfwhuLV2HJG9c4cS", RESEND_API_KEY = "seu_resend_api_key_aqui" }
 

@@ -568,6 +568,19 @@ export async function onRequest(context) {
         }
       }
 
+      // Enviar email com as alterações
+      try {
+        await sendNotificationEmail(env, {
+          tableId: id,
+          changes: updatePromises,
+          emissoras: emissoras,
+          requestIP: request.headers.get('cf-connecting-ip') || 'desconhecido'
+        });
+      } catch (emailError) {
+        console.error('⚠️ Erro ao enviar email:', emailError.message);
+        // Não interrompe o fluxo se falhar o email
+      }
+
       return new Response(JSON.stringify({ 
         success: true, 
         message: 'Alterações processadas',
@@ -582,7 +595,7 @@ export async function onRequest(context) {
     }
 
     // Método não suportado
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({  
       error: 'Método não permitido' 
     }), {
       status: 405,
@@ -600,4 +613,148 @@ export async function onRequest(context) {
       headers
     });
   }
+}
+
+// =====================================================
+// FUNÇÃO DE ENVIO DE EMAIL
+// =====================================================
+
+async function sendNotificationEmail(env, data) {
+  const { tableId, changes, emissoras, requestIP } = data;
+  const resendApiKey = env.RESEND_API_KEY;
+  
+  if (!resendApiKey) {
+    console.warn('⚠️ RESEND_API_KEY não configurada. Email não será enviado.');
+    return;
+  }
+
+  // Agrupar alterações por emissora
+  const changesByEmissora = {};
+  changes.forEach(change => {
+    if (change.success) {
+      const emissoraIndex = findEmissoraIndexById(change.emissoraId, emissoras);
+      if (emissoraIndex !== -1) {
+        if (!changesByEmissora[emissoraIndex]) {
+          changesByEmissora[emissoraIndex] = [];
+        }
+        changesByEmissora[emissoraIndex].push(change);
+      }
+    }
+  });
+
+  // Gerar HTML do email
+  let emailHTML = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Alteração de Proposta</title>
+      <style>
+        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #06055b 0%, #1a0f4f 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .content { background: #f9f9f9; padding: 20px; border: 1px solid #e0e0e0; }
+        .change-group { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #6366f1; border-radius: 4px; }
+        .change-group h3 { margin-top: 0; color: #06055b; }
+        .change-item { padding: 8px 0; font-size: 14px; }
+        .old-value { color: #ef4444; font-weight: bold; }
+        .new-value { color: #10b981; font-weight: bold; }
+        .info-box { background: #ede9fe; padding: 12px; border-radius: 4px; font-size: 12px; color: #666; margin: 15px 0; }
+        .footer { background: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #999; border-radius: 0 0 8px 8px; }
+        .link { color: #6366f1; text-decoration: none; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>📋 Alteração de Proposta Radiofônica</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">E-MÍDIAS | Sistema de Gestão de Propostas</p>
+        </div>
+        
+        <div class="content">
+          <p>Olá,</p>
+          <p>Uma proposta foi alterada no sistema E-MÍDIAS. Confira os detalhes abaixo:</p>
+          
+          <div class="info-box">
+            <strong>📅 Data/Hora:</strong> ${new Date().toLocaleString('pt-BR')}<br>
+            <strong>🌐 IP do Responsável:</strong> ${requestIP}
+          </div>
+  `;
+
+  // Adicionar alterações por emissora
+  for (const emissoraIndex in changesByEmissora) {
+    const emissora = emissoras[emissoraIndex];
+    const emissoras_changes = changesByEmissora[emissoraIndex];
+    
+    emailHTML += `
+      <div class="change-group">
+        <h3>📻 ${emissora.emissora}</h3>
+    `;
+    
+    emissoras_changes.forEach(change => {
+      emailHTML += `
+        <div class="change-item">
+          <strong>${change.notionField}:</strong> 
+          <span class="old-value">${change.oldValue || change.old}</span> 
+          → 
+          <span class="new-value">${change.newValue || change.new}</span>
+        </div>
+      `;
+    });
+    
+    emailHTML += '</div>';
+  }
+
+  // Link da proposta
+  emailHTML += `
+          <div class="info-box">
+            <strong>🔗 Link da Proposta:</strong><br>
+            <a href="https://seu-dominio.pages.dev/?id=${tableId}" class="link">Abrir Proposta no E-MÍDIAS</a>
+          </div>
+          
+          <p style="color: #999; font-size: 12px; margin-top: 20px;">
+            Este é um email automático. Não responda este message.
+          </p>
+        </div>
+        
+        <div class="footer">
+          <p>© 2025 HUB RÁDIOS - E-MÍDIAS. Todos os direitos reservados.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  // Enviar via Resend
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'noreply@hubradios.com',
+        to: 'tatico5@hubradios.com',
+        subject: `[E-MÍDIAS] Alteração de Proposta - ${new Date().toLocaleDateString('pt-BR')}`,
+        html: emailHTML
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ Email enviado com sucesso:', result.id);
+    } else {
+      const error = await response.json();
+      console.error('❌ Erro ao enviar email via Resend:', error);
+    }
+  } catch (error) {
+    console.error('❌ Erro na requisição Resend:', error);
+  }
+}
+
+function findEmissoraIndexById(id, emissoras) {
+  return emissoras.findIndex(e => e.id === id);
 }
