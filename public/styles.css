@@ -2,8 +2,8 @@
    PROPOSTA DE MÍDIA - Stylesheet Global
    E-MÍDIAS | Tecnologia em Publicidade
    
-   RESOLUÇÃO PADRONIZADA: 1920x1080 FULL
-   Layout fixo sem responsividade
+   RESOLUÇÃO PADRÃO: 1920x1080
+   Layout com zoom-out responsivo mantendo proporções
    ===================================================== */
 
 
@@ -37,6 +37,7 @@ body {
     display: flex;
     flex-direction: column;
     font-size: 16px;
+    overflow-x: hidden;
 }
 
 .container {
@@ -45,6 +46,49 @@ body {
     padding: 30px 40px;
     flex: 1;
     box-sizing: border-box;
+}
+
+/* Responsivo com zoom-out mantendo proporções */
+@media (max-width: 1920px) {
+    body {
+        transform: scale(1);
+        transform-origin: top center;
+    }
+}
+
+@media (max-width: 1600px) {
+    body {
+        transform: scale(0.83);
+        transform-origin: top center;
+    }
+}
+
+@media (max-width: 1440px) {
+    body {
+        transform: scale(0.75);
+        transform-origin: top center;
+    }
+}
+
+@media (max-width: 1280px) {
+    body {
+        transform: scale(0.67);
+        transform-origin: top center;
+    }
+}
+
+@media (max-width: 1024px) {
+    body {
+        transform: scale(0.53);
+        transform-origin: top center;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        transform: scale(0.4);
+        transform-origin: top center;
+    }
 }
 
 /* =====================================================
