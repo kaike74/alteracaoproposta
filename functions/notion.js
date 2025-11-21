@@ -47,11 +47,13 @@ export async function onRequest(context) {
     // MÉTODO GET - BUSCAR DADOS DA TABELA DE EMISSORAS
     if (request.method === 'GET') {
       let id = url.searchParams.get('id');
+      const debugMode = url.searchParams.get('debug') === 'true';
       
       console.log('⚠️ DEBUG GET REQUEST - TABELA DE EMISSORAS');
       console.log('URL completa:', request.url);
       console.log('Query params:', [...url.searchParams.entries()]);
       console.log('ID extraído:', id);
+      console.log('Debug mode:', debugMode);
       
       if (!id || id.trim() === '') {
         return new Response(JSON.stringify({ 
@@ -122,18 +124,38 @@ export async function onRequest(context) {
       
       // Log detalhado dos campos do primeiro registro
       const firstRecord = notionData.results?.[0];
+      let allFields = [];
+      
       if (firstRecord?.properties) {
         console.log('');
         console.log('═══════════════════════════════════════════════════════════');
         console.log('🔍 TODOS OS CAMPOS ENCONTRADOS NO NOTION (PRIMEIRO REGISTRO):');
         console.log('═══════════════════════════════════════════════════════════');
         const fieldNames = Object.keys(firstRecord.properties).sort();
+        allFields = fieldNames.map(fieldName => ({
+          name: fieldName,
+          type: firstRecord.properties[fieldName].type
+        }));
+        
         fieldNames.forEach(fieldName => {
           const prop = firstRecord.properties[fieldName];
           console.log(`  "${fieldName}" (tipo: ${prop.type})`);
         });
         console.log('═══════════════════════════════════════════════════════════');
         console.log('');
+        
+        // Se for debug mode, retorna apenas a lista de campos
+        if (debugMode) {
+          return new Response(JSON.stringify({
+            debug: true,
+            fields: allFields,
+            total: allFields.length,
+            firstRecordId: firstRecord.id
+          }, null, 2), {
+            status: 200,
+            headers
+          });
+        }
         
         // Log específico para campos que contêm "impacto"
         console.log('🔍 PROCURANDO CAMPOS COM "IMPACTO":');
