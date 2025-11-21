@@ -1220,7 +1220,8 @@ async function confirmAndSave() {
         if (!response.ok) {
             const error = await response.json();
             console.error('❌ Erro na resposta:', error);
-            throw new Error(error.error || 'Erro ao salvar');
+            console.error('❌ Erro completo:', JSON.stringify(error, null, 2));
+            throw new Error(error.error || error.message || 'Erro ao salvar');
         }
         
         const result = await response.json();
