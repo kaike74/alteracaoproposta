@@ -879,6 +879,10 @@ async function getOrCreateAlternantesDatabase(notionToken, workspaceId) {
     return null;
   }
   
+  // ID fixo da database "Lista de alternantes" (configurar depois de criar)
+  // const ALTERNANTES_DB_ID = 'seu-id-aqui';
+  // if (ALTERNANTES_DB_ID) return ALTERNANTES_DB_ID;
+  
   try {
     // Procura por database chamada "Lista de alternantes" no workspace
     const searchResponse = await fetch('https://api.notion.com/v1/search', {
@@ -909,7 +913,8 @@ async function getOrCreateAlternantesDatabase(notionToken, workspaceId) {
       }
     }
 
-    console.log('ℹ️ Database "Lista de alternantes" não encontrada. Será criada ao primeiro ocultamento.');
+    console.log('⚠️ Database "Lista de alternantes" não encontrada');
+    console.log('📌 Para usar essa feature, crie manualmente no Notion uma database chamada "Lista de alternantes"');
     return null;
   } catch (error) {
     console.error('⚠️ Erro ao buscar database:', error.message);
@@ -918,55 +923,8 @@ async function getOrCreateAlternantesDatabase(notionToken, workspaceId) {
 }
 
 async function createAlternantesDatabase(notionToken) {
-  console.log('📝 Criando nova database "Lista de alternantes"...');
-  try {
-    const createResponse = await fetch('https://api.notion.com/v1/databases', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${notionToken.trim()}`,
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        parent: {
-          type: 'workspace',
-          workspace: true
-        },
-        title: [
-          {
-            type: 'text',
-            text: {
-              content: 'Lista de alternantes'
-            }
-          }
-        ],
-        properties: {
-          'Emissora': {
-            title: {}
-          },
-          'ID Emissora': {
-            rich_text: {}
-          },
-          'Data Adicionado': {
-            date: {}
-          }
-        }
-      })
-    });
-
-    if (createResponse.ok) {
-      const newDb = await createResponse.json();
-      console.log('✅ Database "Lista de alternantes" criada:', newDb.id);
-      return newDb.id;
-    } else {
-      const error = await createResponse.json();
-      console.error('❌ Erro ao criar database:', error);
-      return null;
-    }
-  } catch (error) {
-    console.error('❌ Erro na requisição de criação:', error);
-    return null;
-  }
+  console.log('⚠️ createAlternantesDatabase deprecado - crie a database manualmente no Notion');
+  return null;
 }
 
 
