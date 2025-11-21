@@ -964,8 +964,12 @@ async function saveChanges() {
     console.log('🔴 CLICOU EM SALVAR!');
     console.log('📊 proposalData.changes:', proposalData.changes);
     console.log('📊 Número de mudanças:', Object.keys(proposalData.changes).length);
+    console.log('👤 Emissoras ocultas:', proposalData.ocultasEmissoras.size);
     
-    if (Object.keys(proposalData.changes).length === 0) {
+    const temMudancas = Object.keys(proposalData.changes).length > 0;
+    const temOcultamentos = proposalData.ocultasEmissoras.size > 0;
+    
+    if (!temMudancas && !temOcultamentos) {
         console.warn('⚠️ Nenhuma alteração para salvar!');
         alert('Nenhuma alteração para salvar!');
         return;
@@ -1005,6 +1009,31 @@ function showConfirmModal() {
     // Montar HTML do modal
     let html = '';
     
+    // Primeiro, mostrar as emissoras que serão removidas (ocultas)
+    if (proposalData.ocultasEmissoras.size > 0) {
+        html += `
+            <div class="change-group" style="border-left-color: #dc2626; background-color: #fef2f2;">
+                <div class="change-group-title" style="color: #dc2626;">
+                    <i class="fas fa-trash"></i> Emissoras a Remover
+                </div>
+        `;
+        
+        for (const emissoraId of proposalData.ocultasEmissoras) {
+            const emissora = proposalData.emissoras.find(e => e.id === emissoraId);
+            if (emissora) {
+                html += `
+                    <div class="change-item" style="padding: 8px 0; color: #dc2626;">
+                        <strong>${emissora.emissora}</strong>
+                        <span style="font-size: 12px; color: #999;"> - será movida para "Lista de alternantes"</span>
+                    </div>
+                `;
+            }
+        }
+        
+        html += '</div>';
+    }
+    
+    // Depois, mostrar as mudanças de valores
     for (const emissoraIndex in changesByEmissora) {
         const changes = changesByEmissora[emissoraIndex];
         const emissora = proposalData.emissoras[emissoraIndex];
