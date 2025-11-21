@@ -397,7 +397,7 @@ function renderSpotsTable() {
                     data-emissora-id="${emissora.id}"
                     onchange="toggleOcultarEmissora(this)"
                     style="cursor: pointer;"
-                    ${isOculta ? 'checked' : ''}
+                    ${!isOculta ? 'checked' : ''}
                 >
             </td>
             <td>${emissora.uf || '-'}</td>
@@ -932,18 +932,11 @@ function toggleOcultarEmissora(checkbox) {
     console.log(`🔄 Alternando ocultamento de emissora: ${emissoraId}, marcado: ${checkbox.checked}`);
     
     if (checkbox.checked) {
-        // Marcar = ocultar (remover da proposta)
-        // Marcar ANTES de mostrar o modal para que o botão apareça
-        proposalData.changedEmissoras.add(emissoraId);
-        showUnsavedChanges();  // Mostrar botão de salvar
-        
-        console.log(`⚠️ Mostrando confirmação para remover ${emissoraId}`);
-        showConfirmRemovalModal(checkbox, emissora, emissoraId);
-        return;  // NÃO continua aqui, espera confirmação
-    } else {
-        // Desmarcar = mostrar (restaurar)
+        // Marcar = mostrar (ativar/restaurar)
+        // Marcar ANTES de continuar para que o botão apareça
         proposalData.ocultasEmissoras.delete(emissoraId);
         proposalData.changedEmissoras.add(emissoraId);  // Marcar como alterada
+        showUnsavedChanges();  // Mostrar botão de salvar
         
         // Atualizar visual da linha
         const row = document.getElementById(`emissora-row-${emissoraId}`);
@@ -956,9 +949,15 @@ function toggleOcultarEmissora(checkbox) {
         // Atualizar estatísticas
         updateStats();
         renderCharts();
+    } else {
+        // Desmarcar = mostrar confirmação ANTES de ocultar
+        // Marcar ANTES de mostrar o modal para que o botão apareça
+        proposalData.changedEmissoras.add(emissoraId);
+        showUnsavedChanges();  // Mostrar botão de salvar
         
-        // Mostrar botão de salvar
-        showUnsavedChanges();
+        console.log(`⚠️ Mostrando confirmação para remover ${emissoraId}`);
+        showConfirmRemovalModal(checkbox, emissora, emissoraId);
+        return;  // NÃO continua aqui, espera confirmação
     }
 }
 // =====================================================
