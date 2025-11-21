@@ -952,7 +952,9 @@ function toggleOcultarEmissora(checkbox) {
 function showUnsavedChanges() {
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
-        saveBtn.style.display = Object.keys(proposalData.changes).length > 0 ? 'block' : 'none';
+        const temMudancas = Object.keys(proposalData.changes).length > 0;
+        const temOcultamentos = proposalData.ocultasEmissoras.size > 0;
+        saveBtn.style.display = (temMudancas || temOcultamentos) ? 'block' : 'none';
     }
 }
 
