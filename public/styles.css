@@ -60,28 +60,28 @@ body {
 /* Responsivo com zoom-out mantendo proporções */
 @media (max-width: 1920px) {
     body {
-        transform: scale(0.95);
+        transform: scale(0.98);
         transform-origin: top center;
     }
 }
 
 @media (max-width: 1600px) {
     body {
-        transform: scale(0.80);
+        transform: scale(0.85);
         transform-origin: top center;
     }
 }
 
 @media (max-width: 1440px) {
     body {
-        transform: scale(0.72);
+        transform: scale(0.78);
         transform-origin: top center;
     }
 }
 
 @media (max-width: 1280px) {
     body {
-        transform: scale(0.64);
+        transform: scale(0.70);
         transform-origin: top center;
     }
 }
@@ -637,7 +637,7 @@ tr.radio-disabled .value-cell {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 20px;
-    margin: 0 40px 30px 40px;
+    margin: 0 auto 30px auto;
     width: calc(1920px - 80px);
     max-width: calc(1920px - 80px);
     box-sizing: border-box;
