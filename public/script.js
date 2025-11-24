@@ -344,9 +344,12 @@ function renderSpotsTable() {
     console.log('║ 🔍 VERIFICANDO CAMPOS NOS DADOS');
     console.log('╚═══════════════════════════════════════════════════════════════╝');
     proposalData.emissoras.forEach((emissora, idx) => {
+        const logoUrl = getLogoUrl(emissora.linkLogo);
         console.log(`  [${idx}] ${emissora.emissora}:`);
         console.log(`       - impactos: "${emissora.impactos}"`);
-        console.log(`       - linkLogo: "${emissora.linkLogo}"`);
+        console.log(`       - linkLogo (raw): ${JSON.stringify(emissora.linkLogo)}`);
+        console.log(`       - linkLogo (tipo): ${typeof emissora.linkLogo}`);
+        console.log(`       - linkLogo (extraído): "${logoUrl}"`);
         console.log(`       - logo: "${emissora.logo}"`);
         console.log(`       - Todas as chaves:`, Object.keys(emissora));
     });
