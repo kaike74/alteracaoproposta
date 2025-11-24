@@ -406,7 +406,7 @@ function renderSpotsTable() {
             <td>${emissora.uf || '-'}</td>
             <td>${emissora.praca || '-'}</td>
             <td class="emissora-cell">
-                ${emissora.logo ? `<img src="${emissora.logo}" alt="${emissora.emissora}" class="emissora-logo">` : ''}
+                ${emissora.linkLogo ? `<img src="${emissora.linkLogo}" alt="${emissora.emissora}" class="emissora-logo">` : ''}
                 <span class="emissora-name"><strong>${emissora.emissora || '-'}</strong></span>
             </td>
         `;
