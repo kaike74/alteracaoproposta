@@ -364,7 +364,6 @@ body {
 .container > .active-products-section {
     width: 100%;
     padding: inherit;
-    margin: inherit;
 }
 
 .info-item {
