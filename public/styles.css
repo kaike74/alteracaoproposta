@@ -709,7 +709,7 @@ tr.radio-disabled .value-cell {
    ===================================================== */
 .stats-header {
     background: #6366f1;
-    padding: 12px 30px;
+    padding: 12px 60px;
     border-radius: 12px;
     margin-bottom: 20px;
     box-shadow: none;
@@ -722,6 +722,7 @@ tr.radio-disabled .value-cell {
     font-family: 'Space Grotesk', sans-serif;
     width: 100%;
     box-sizing: border-box;
+    white-space: nowrap;
 }
 
 .stats-grid {
