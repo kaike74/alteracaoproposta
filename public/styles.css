@@ -81,7 +81,7 @@ body {
    ===================================================== */
 .top-header {
     background: var(--gradient-primary);
-    width: 100%;
+    width: 100vw;
     padding: 16px 0;
     display: flex;
     justify-content: center;
@@ -90,6 +90,7 @@ body {
     position: relative;
     overflow: hidden;
     margin-bottom: 40px;
+    margin-left: calc(-50vw + 50%);
 }
 
 .top-header::before {
