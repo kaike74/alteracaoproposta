@@ -847,28 +847,12 @@ tr.radio-disabled .value-cell {
     font-weight: 600;
 }
 
-.stat-card.accent {
-    background: linear-gradient(135deg, #c4b5fd 0%, #a8a0de 100%);
-    box-shadow: 0 8px 25px rgba(196, 181, 253, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.stat-card.success {
-    background: linear-gradient(135deg, #d8b4fe 0%, #c084fc 100%);
-    box-shadow: 0 8px 25px rgba(216, 180, 254, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.stat-card.economy {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
 .stat-value {
-    font-size: 1.7rem;
+    font-size: 28px;
     font-weight: 700;
-    margin-bottom: 10px;
+    color: #1f2937;
+    display: block;
+    margin-bottom: 8px;
     position: relative;
     z-index: 1;
     word-wrap: break-word;
