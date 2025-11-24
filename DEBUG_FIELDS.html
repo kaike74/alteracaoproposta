@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Campos Notion</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        h1 { color: #667eea; margin-bottom: 20px; }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        input:focus { outline: none; border-color: #667eea; }
+        button {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        button:hover { background: #764ba2; }
+        .status {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            display: none;
+        }
+        .status.show { display: block; }
+        .status.info { background: #e3f2fd; color: #1976d2; border-left: 4px solid #1976d2; }
+        .status.error { background: #ffebee; color: #c62828; border-left: 4px solid #c62828; }
+        .status.success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
+        .fields-list {
+            background: #f5f5f5;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        .fields-list.show { display: block; }
+        .field-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #667eea;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .field-type {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin-left: 10px;
+            font-size: 0.8rem;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-top: 20px;
+            font-size: 0.85rem;
+        }
+        code { font-family: 'Courier New', monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug - Campos do Notion</h1>
+        <p style="color: #666; margin-bottom: 20px;">
+            Use esta ferramenta para descobrir os nomes exatos dos campos na sua tabela Notion
+        </p>
+
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="tableId" 
+                placeholder="Cole o ID da tabela Notion aqui..."
+                value=""
+            >
+            <button onclick="loadFields()">Carregar Campos</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div id="fieldsList" class="fields-list">
+            <h2 style="margin-bottom: 20px; color: #333;">Campos Encontrados:</h2>
+            <div id="fieldsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status show ${type}`;
+        }
+
+        function hideStatus() {
+            document.getElementById('status').className = 'status';
+        }
+
+        async function loadFields() {
+            const tableId = document.getElementById('tableId').value.trim();
+            
+            if (!tableId) {
+                showStatus('❌ Por favor, insira o ID da tabela', 'error');
+                return;
+            }
+
+            showStatus('⏳ Carregando campos...', 'info');
+
+            try {
+                const response = await fetch(`/notion?id=${tableId}&debug=true`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Erro ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Se houver debug info
+                if (data.debug && data.debug.fields) {
+                    displayFields(data.debug.fields);
+                    showStatus(`✅ ${data.debug.total} campos encontrados!`, 'success');
+                } else {
+                    showStatus('⚠️ Nenhuma informação de debug disponível', 'info');
+                }
+            } catch (error) {
+                showStatus(`❌ Erro: ${error.message}`, 'error');
+                console.error('Erro completo:', error);
+            }
+        }
+
+        function displayFields(fields) {
+            const container = document.getElementById('fieldsContainer');
+            container.innerHTML = '';
+
+            const fieldsList = document.getElementById('fieldsList');
+            fieldsList.classList.add('show');
+
+            fields.forEach((field, index) => {
+                const item = document.createElement('div');
+                item.className = 'field-item';
+                item.innerHTML = `
+                    <strong>${field.name}</strong>
+                    <span class="field-type">${field.type}</span>
+                `;
+                container.appendChild(item);
+            });
+
+            // Também mostrar na forma de código
+            const code = document.createElement('h3');
+            code.textContent = 'Nomes dos campos (para copiar):';
+            code.style = 'margin-top: 30px; color: #333; margin-bottom: 10px;';
+            container.appendChild(code);
+
+            const preElement = document.createElement('pre');
+            const fieldNames = fields.map(f => f.name);
+            preElement.textContent = JSON.stringify(fieldNames, null, 2);
+            container.appendChild(preElement);
+        }
+
+        // Tentar carregar ID da URL
+        window.addEventListener('load', () => {
+            const params = new URLSearchParams(window.location.search);
+            const idFromUrl = params.get('id');
+            if (idFromUrl) {
+                document.getElementById('tableId').value = idFromUrl;
+                loadFields();
+            }
+        });
+    </script>
+</body>
+</html>

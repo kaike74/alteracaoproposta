@@ -1,4 +1,4 @@
-// Cloudflare Pages Function - NOTION API GATEWAY
+﻿// Cloudflare Pages Function - NOTION API GATEWAY
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -44,18 +44,18 @@ export async function onRequest(context) {
       });
     }
 
-    // MTODO GET - BUSCAR DADOS DA TABELA DE EMISSORAS
-    if (request.method === 'GET') {
-      let id = url.searchParams.get('id');
-      const debugMode = url.searchParams.get('debug') === 'true';
-      
-      console.log(' DEBUG GET REQUEST - TABELA DE EMISSORAS');
-      console.log('URL completa:', request.url);
-      console.log('Query params:', [...url.searchParams.entries()]);
-      console.log('ID extrado:', id);
-      console.log('Debug mode:', debugMode);
-      
-      if (!id || id.trim() === '') {
+      // MTODO GET - BUSCAR DADOS DA TABELA DE EMISSORAS
+      if (request.method === 'GET') {
+        let id = url.searchParams.get('id');
+        const debugMode = url.searchParams.get('debug') === 'true';
+        const listFieldsOnly = url.searchParams.get('listFields') === 'true';
+        
+        console.log(' DEBUG GET REQUEST - TABELA DE EMISSORAS');
+        console.log('URL completa:', request.url);
+        console.log('Query params:', [...url.searchParams.entries()]);
+        console.log('ID extrado:', id);
+        console.log('Debug mode:', debugMode);
+        console.log('List fields only:', listFieldsOnly);      if (!id || id.trim() === '') {
         return new Response(JSON.stringify({ 
           error: 'ID da tabela  obrigatrio',
           debug: {
@@ -121,6 +121,28 @@ export async function onRequest(context) {
       console.log(' Tabela recebida com sucesso!');
       console.log(' Total de registros:', notionData.results?.length || 0);
       console.log(' Primeiro registro ID:', notionData.results?.[0]?.id || 'nenhum');
+      
+      // Se solicitado, retornar APENAS lista de campos
+      if (listFieldsOnly) {
+        const firstRecord = notionData.results?.[0];
+        if (!firstRecord?.properties) {
+          return new Response(JSON.stringify({
+            error: 'Nenhum registro encontrado'
+          }), { status: 400, headers });
+        }
+        
+        const fields = Object.keys(firstRecord.properties).map(name => ({
+          name: name,
+          type: firstRecord.properties[name].type
+        }));
+        
+        return new Response(JSON.stringify({
+          success: true,
+          total: fields.length,
+          fields: fields,
+          firstRecordId: firstRecord.id
+        }), { status: 200, headers });
+      }
       
       // Log detalhado dos campos do primeiro registro
       const firstRecord = notionData.results?.[0];
@@ -205,7 +227,7 @@ export async function onRequest(context) {
         });
       }
 
-      // Funo melhorada para extrair valores com fallbacks e logging
+      // Funo melhorada para extrair valores com fallbacks, fuzzy matching e logging
       const extractValue = (properties, defaultValue = 0, propName = '', ...possibleKeys) => {
         // Tenta cada chave possvel em sequncia
         for (const key of possibleKeys) {
@@ -247,28 +269,36 @@ export async function onRequest(context) {
           }
         }
         
-        // FALLBACK: Tenta busca parcial (case-insensitive)
-        for (const key of Object.keys(properties)) {
-          const searchTerm = possibleKeys[0];
-          if (searchTerm && key.toLowerCase().includes(searchTerm.toLowerCase())) {
-            const prop = properties[key];
-            console.log(` FALLBACK (busca parcial): Campo "${propName}" encontrado como: "${key}"`);
+        // FALLBACK 1: Tenta busca parcial case-insensitive
+        const allKeys = Object.keys(properties);
+        for (const key of allKeys) {
+          for (const searchKey of possibleKeys) {
+            if (!searchKey) continue;
             
-            switch (prop.type) {
-              case 'number':
-                return prop.number !== null && prop.number !== undefined ? prop.number : defaultValue;
-              case 'title':
-                return prop.title?.[0]?.text?.content || defaultValue;
-              case 'rich_text':
-                return prop.rich_text?.[0]?.text?.content || defaultValue;
-              case 'date':
-                return prop.date?.start || defaultValue;
-              case 'select':
-                return prop.select?.name || defaultValue;
-              case 'multi_select':
-                return prop.multi_select?.map(item => item.name).join(',') || defaultValue;
-              default:
-                return defaultValue;
+            const keyLower = key.toLowerCase().replace(/[^\w]/g, '');
+            const searchLower = searchKey.toLowerCase().replace(/[^\w]/g, '');
+            
+            // Se 80% das letras correspondem, consideramos um match
+            if (keyLower.includes(searchLower) || searchLower.includes(keyLower)) {
+              const prop = properties[key];
+              console.log(` FALLBACK (fuzzy match): Campo "${propName}" encontrado como: "${key}"`);
+              
+              switch (prop.type) {
+                case 'number':
+                  return prop.number !== null && prop.number !== undefined ? prop.number : defaultValue;
+                case 'title':
+                  return prop.title?.[0]?.text?.content || defaultValue;
+                case 'rich_text':
+                  return prop.rich_text?.[0]?.text?.content || defaultValue;
+                case 'date':
+                  return prop.date?.start || defaultValue;
+                case 'select':
+                  return prop.select?.name || defaultValue;
+                case 'multi_select':
+                  return prop.multi_select?.map(item => item.name).join(',') || defaultValue;
+                default:
+                  return defaultValue;
+              }
             }
           }
         }
@@ -280,6 +310,7 @@ export async function onRequest(context) {
           console.log(`  Valor padro retornado: ${defaultValue}`);
         }
         console.log(` Campo "${propName}" NO encontrado. Chaves procuradas:`, possibleKeys);
+        console.log(`  Chaves disponveis:`, Object.keys(properties).slice(0, 10).join(', ') + (Object.keys(properties).length > 10 ? '...' : ''));
         return defaultValue;
       };
 
