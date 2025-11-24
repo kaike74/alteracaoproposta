@@ -241,14 +241,14 @@ body {
    SEÇÃO DE PRODUTOS ATIVOS
    ===================================================== */
 .active-products-section {
-    background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%);
-    border-radius: 12px;
+    background: var(--white);
     padding: 20px 24px;
-    margin-bottom: 28px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--primary-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
     width: 100%;
     box-sizing: border-box;
-    border: 2px solid #e0f2fe;
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08);
 }
 
 .active-products-inner {
@@ -258,38 +258,43 @@ body {
 }
 
 .products-title {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 700;
-    color: #6366f1;
+    color: var(--primary-color);
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 1px;
     display: flex;
     align-items: center;
     gap: 8px;
     font-family: 'Space Grotesk', sans-serif;
+    margin-bottom: 4px;
 }
 
 .products-title i {
-    color: #10b981;
+    color: #ec4899;
     font-size: 0.95rem;
 }
 
 .products-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
+    align-items: center;
 }
 
 .product-badge {
     background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
     color: white;
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
     white-space: nowrap;
     transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .product-badge:hover {
