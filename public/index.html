@@ -20,18 +20,22 @@
 </head>
 <body>
     <div class="container">
-        <!-- DEBUG PANEL - Mantém apenas para console, removido visualmente -->
+        <!-- DEBUG PANEL -->
         <div id="debugPanel" style="display: none !important;">
             <div id="debugContent"></div>
         </div>
 
-        <!-- HEADER -->
+        <!-- TOP HEADER COM LOGO -->
+        <div class="top-header">
+            <div class="top-header-inner">
+                <img src="https://raw.githubusercontent.com/kaike74/distribuicaoemidias/main/logo%20E-MIDIAS%20png%20fundo%20escuro%20HORIZONTAL%20(1).png" alt="E-MÍDIAS Logo" class="top-logo">
+            </div>
+        </div>
+
+        <!-- HEADER PRINCIPAL COM PROPOSTA E AÇÕES -->
         <div class="header">
             <div class="header-inner">
-                <div class="header-logo-section">
-                    <img src="https://raw.githubusercontent.com/kaike74/distribuicaoemidias/main/logo%20E-MIDIAS%20png%20fundo%20escuro%20HORIZONTAL%20(1).png" alt="E-MÍDIAS Logo" class="header-logo">
-                </div>
-                <div class="header-top">
+                <div class="header-content">
                     <h1 class="header-title" id="proposalTitle">Proposta</h1>
                     <div class="header-actions">
                         <button class="btn btn-primary" onclick="saveChanges()" id="saveBtn" style="display: none;">
@@ -42,9 +46,17 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div class="header-info">
-                    <!-- Localização removida conforme solicitado -->
+        <!-- SEÇÃO DE PRODUTOS ATIVOS -->
+        <div class="active-products-section">
+            <div class="active-products-inner">
+                <div class="products-title">
+                    <i class="fas fa-check-circle"></i> Produtos Ativos
+                </div>
+                <div class="products-list" id="activeProductsList">
+                    <!-- Preenchido por JavaScript -->
                 </div>
             </div>
         </div>

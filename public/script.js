@@ -453,6 +453,49 @@ function renderSpotsTable() {
     console.log('═══════════════════════════════════════════════════════════');
 }
 
+function updateActiveProducts() {
+    const activeProductsList = document.getElementById('activeProductsList');
+    if (!activeProductsList) return;
+    
+    // Contar quantidade de cada produto nas emissoras SELECIONADAS
+    const productCounts = {};
+    
+    proposalData.emissoras.forEach((emissora, index) => {
+        const checkbox = document.querySelector(`input[type="checkbox"][data-emissora-index="${index}"]`);
+        
+        // Apenas conta emissoras selecionadas
+        if (checkbox && checkbox.checked) {
+            PRODUTOS.forEach(produto => {
+                const spots = emissora[produto.key] || 0;
+                if (spots > 0) {
+                    if (!productCounts[produto.label]) {
+                        productCounts[produto.label] = 0;
+                    }
+                    productCounts[produto.label] += spots;
+                }
+            });
+        }
+    });
+    
+    // Renderizar badges com produtos ativos
+    const badgesHTML = Object.entries(productCounts)
+        .sort((a, b) => b[1] - a[1]) // Ordena por quantidade descendente
+        .map(([product, count]) => {
+            // Determinar classe de estilo baseado no tipo de produto
+            let styleClass = 'secondary';
+            if (product.includes('Spots') && product.includes('30')) styleClass = '';
+            if (product.includes('5"')) styleClass = 'secondary';
+            if (product.includes('15"')) styleClass = '';
+            if (product.includes('60"')) styleClass = 'accent';
+            if (product.includes('Test')) styleClass = 'secondary';
+            
+            return `<div class="product-badge ${styleClass}"><strong>${product}:</strong> ${count}</div>`;
+        })
+        .join('');
+    
+    activeProductsList.innerHTML = badgesHTML || '<div class="product-badge">Nenhum produto selecionado</div>';
+}
+
 function updateStats() {
     console.log('\n╔════════════════════════════════════════════════════════════════╗');
     console.log('║ 📍 INICIANDO: updateStats()');
@@ -530,6 +573,9 @@ function updateStats() {
     if (statNegociadoValue) statNegociadoValue.textContent = formatCurrency(totalInvestimentoNegociado);
     if (statTotalImpacts) statTotalImpacts.textContent = totalImpactos.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     if (statEconomia) statEconomia.textContent = percentualDesconto + '%';
+    
+    // Atualizar lista de produtos ativos
+    updateActiveProducts();
     
     console.log('✅ Estatísticas atualizadas!\n');
 }
