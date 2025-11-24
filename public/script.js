@@ -9,7 +9,13 @@ let proposalData = {
     changes: {},
     ocultasEmissoras: new Set(),  // Rastreia emissoras ocultas (por ID)
     initialOcultasEmissoras: new Set(),  // Estado inicial para detectar mudanças
-    changedEmissoras: new Set()  // Rastreia quais emissoras tiveram mudanças no status "Excluir"
+    changedEmissoras: new Set(),  // Rastreia quais emissoras tiveram mudanças no status "Excluir"
+    // Backup do último estado salvo com sucesso (para rollback em caso de erro)
+    lastSuccessfulState: {
+        ocultasEmissoras: new Set(),
+        changes: {},
+        emissoras: []
+    }
 };
 
 // Flag para ignorar o próximo evento de checkbox (evita double trigger)
@@ -337,6 +343,18 @@ function renderInterface() {
     updateStats();
     console.log('🎯 Chamando renderCharts...');
     renderCharts();
+    
+    // 💾 Criar backup do estado inicial (para rollback em caso de erro)
+    proposalData.lastSuccessfulState = {
+        ocultasEmissoras: new Set(proposalData.ocultasEmissoras),
+        changes: JSON.parse(JSON.stringify(proposalData.changes)),
+        emissoras: proposalData.emissoras.map(e => ({...e}))
+    };
+    console.log('💾 Estado inicial salvo para rollback:', {
+        ocultasEmissoras: Array.from(proposalData.lastSuccessfulState.ocultasEmissoras),
+        changesCount: Object.keys(proposalData.lastSuccessfulState.changes).length
+    });
+    
     console.log('🎯 Garantindo que botão de salvar está oculto (sem alterações)...');
     showUnsavedChanges();
     console.log('✅ renderInterface() finalizado!');
@@ -1284,11 +1302,18 @@ async function confirmAndSave() {
     const modal = document.getElementById('confirmModal');
     modal.style.display = 'none';
     
-    // ⚠️ BACKUP DOS ESTADOS ANTES DE SALVAR (para rollback em caso de erro)
-    const backupOcultasEmissoras = new Set(proposalData.ocultasEmissoras);
-    const backupChangedEmissoras = new Set(proposalData.changedEmissoras);
-    const backupChanges = JSON.parse(JSON.stringify(proposalData.changes));
-    const backupEmissoras = proposalData.emissoras.map(e => ({...e}));
+    // ⚠️ USAR O ÚLTIMO ESTADO SALVO COM SUCESSO PARA ROLLBACK
+    // Não criamos backup aqui, usamos o lastSuccessfulState que foi salvo
+    // na última operação bem-sucedida (ou no carregamento inicial)
+    console.log('🔄 Estado atual antes de salvar:', {
+        ocultasEmissoras: Array.from(proposalData.ocultasEmissoras),
+        changedEmissoras: Array.from(proposalData.changedEmissoras),
+        changesCount: Object.keys(proposalData.changes).length
+    });
+    console.log('💾 Último estado salvo com sucesso (fallback):', {
+        ocultasEmissoras: Array.from(proposalData.lastSuccessfulState.ocultasEmissoras),
+        changesCount: Object.keys(proposalData.lastSuccessfulState.changes).length
+    });
     
     try {
         const apiUrl = getApiUrl();
@@ -1320,18 +1345,24 @@ async function confirmAndSave() {
             console.error('❌ Erro na resposta:', errorData);
             console.error('❌ Erro completo:', JSON.stringify(errorData, null, 2));
             
-            // 🔄 ROLLBACK: Restaurar estado anterior
-            console.log('🔄 FAZENDO ROLLBACK DO ESTADO...');
-            proposalData.ocultasEmissoras = backupOcultasEmissoras;
-            proposalData.changedEmissoras = backupChangedEmissoras;
-            proposalData.changes = backupChanges;
-            proposalData.emissoras = backupEmissoras;
+            // 🔄 ROLLBACK: Restaurar último estado salvo com sucesso
+            console.log('🔄 FAZENDO ROLLBACK PARA ÚLTIMO ESTADO SALVO...');
+            proposalData.ocultasEmissoras = new Set(proposalData.lastSuccessfulState.ocultasEmissoras);
+            proposalData.changedEmissoras = new Set();  // Limpar mudanças pendentes
+            proposalData.changes = JSON.parse(JSON.stringify(proposalData.lastSuccessfulState.changes));
+            proposalData.emissoras = proposalData.lastSuccessfulState.emissoras.map(e => ({...e}));
             
-            // Restaurar visualmente todos os checkboxes
+            console.log('   Estado restaurado para:', {
+                ocultasEmissoras: Array.from(proposalData.ocultasEmissoras),
+                changesCount: Object.keys(proposalData.changes).length
+            });
+            
+            // Restaurar visualmente todos os checkboxes baseado no último estado salvo
             proposalData.emissoras.forEach((emissora, index) => {
                 const checkbox = document.querySelector(`input[type="checkbox"][data-emissora-index="${index}"]`);
                 if (checkbox) {
-                    const shouldBeChecked = !backupOcultasEmissoras.has(emissora.id);
+                    const shouldBeChecked = !proposalData.lastSuccessfulState.ocultasEmissoras.has(emissora.id);
+                    ignoreNextCheckboxChange = true;
                     checkbox.checked = shouldBeChecked;
                     
                     const row = document.getElementById(`emissora-row-${emissora.id}`);
@@ -1358,18 +1389,24 @@ async function confirmAndSave() {
         if (!result || result.success === false) {
             console.error('❌ Resposta indicou falha:', result);
             
-            // 🔄 ROLLBACK: Restaurar estado anterior
-            console.log('🔄 FAZENDO ROLLBACK DO ESTADO...');
-            proposalData.ocultasEmissoras = backupOcultasEmissoras;
-            proposalData.changedEmissoras = backupChangedEmissoras;
-            proposalData.changes = backupChanges;
-            proposalData.emissoras = backupEmissoras;
+            // 🔄 ROLLBACK: Restaurar último estado salvo com sucesso
+            console.log('🔄 FAZENDO ROLLBACK PARA ÚLTIMO ESTADO SALVO...');
+            proposalData.ocultasEmissoras = new Set(proposalData.lastSuccessfulState.ocultasEmissoras);
+            proposalData.changedEmissoras = new Set();  // Limpar mudanças pendentes
+            proposalData.changes = JSON.parse(JSON.stringify(proposalData.lastSuccessfulState.changes));
+            proposalData.emissoras = proposalData.lastSuccessfulState.emissoras.map(e => ({...e}));
             
-            // Restaurar visualmente todos os checkboxes
+            console.log('   Estado restaurado para:', {
+                ocultasEmissoras: Array.from(proposalData.ocultasEmissoras),
+                changesCount: Object.keys(proposalData.changes).length
+            });
+            
+            // Restaurar visualmente todos os checkboxes baseado no último estado salvo
             proposalData.emissoras.forEach((emissora, index) => {
                 const checkbox = document.querySelector(`input[type="checkbox"][data-emissora-index="${index}"]`);
                 if (checkbox) {
-                    const shouldBeChecked = !backupOcultasEmissoras.has(emissora.id);
+                    const shouldBeChecked = !proposalData.lastSuccessfulState.ocultasEmissoras.has(emissora.id);
+                    ignoreNextCheckboxChange = true;
                     checkbox.checked = shouldBeChecked;
                     
                     const row = document.getElementById(`emissora-row-${emissora.id}`);
@@ -1411,18 +1448,24 @@ async function confirmAndSave() {
                 }
             });
             
-            // 🔄 ROLLBACK PARCIAL: Restaurar estado anterior
-            console.log('🔄 FAZENDO ROLLBACK DO ESTADO (falhas detectadas)...');
-            proposalData.ocultasEmissoras = backupOcultasEmissoras;
-            proposalData.changedEmissoras = backupChangedEmissoras;
-            proposalData.changes = backupChanges;
-            proposalData.emissoras = backupEmissoras;
+            // 🔄 ROLLBACK PARCIAL: Restaurar último estado salvo com sucesso
+            console.log('🔄 FAZENDO ROLLBACK PARA ÚLTIMO ESTADO SALVO (falhas detectadas)...');
+            proposalData.ocultasEmissoras = new Set(proposalData.lastSuccessfulState.ocultasEmissoras);
+            proposalData.changedEmissoras = new Set();  // Limpar mudanças pendentes
+            proposalData.changes = JSON.parse(JSON.stringify(proposalData.lastSuccessfulState.changes));
+            proposalData.emissoras = proposalData.lastSuccessfulState.emissoras.map(e => ({...e}));
             
-            // Restaurar visualmente todos os checkboxes
+            console.log('   Estado restaurado para:', {
+                ocultasEmissoras: Array.from(proposalData.ocultasEmissoras),
+                changesCount: Object.keys(proposalData.changes).length
+            });
+            
+            // Restaurar visualmente todos os checkboxes baseado no último estado salvo
             proposalData.emissoras.forEach((emissora, index) => {
                 const checkbox = document.querySelector(`input[type="checkbox"][data-emissora-index="${index}"]`);
                 if (checkbox) {
-                    const shouldBeChecked = !backupOcultasEmissoras.has(emissora.id);
+                    const shouldBeChecked = !proposalData.lastSuccessfulState.ocultasEmissoras.has(emissora.id);
+                    ignoreNextCheckboxChange = true;
                     checkbox.checked = shouldBeChecked;
                     
                     const row = document.getElementById(`emissora-row-${emissora.id}`);
@@ -1467,6 +1510,17 @@ async function confirmAndSave() {
         proposalData.changes = {};
         proposalData.initialOcultasEmissoras = new Set(proposalData.ocultasEmissoras);
         proposalData.changedEmissoras = new Set();  // Limpar emissoras alteradas
+        
+        // 💾 ATUALIZAR BACKUP DO ÚLTIMO ESTADO SALVO COM SUCESSO
+        proposalData.lastSuccessfulState = {
+            ocultasEmissoras: new Set(proposalData.ocultasEmissoras),
+            changes: JSON.parse(JSON.stringify(proposalData.changes)),
+            emissoras: proposalData.emissoras.map(e => ({...e}))
+        };
+        console.log('💾 Novo estado salvo como backup para rollback futuro:', {
+            ocultasEmissoras: Array.from(proposalData.lastSuccessfulState.ocultasEmissoras),
+            changesCount: Object.keys(proposalData.lastSuccessfulState.changes).length
+        });
         
         // ✅ SALVAR O SALDO ATUAL COMO "SALDO ANTERIOR" PARA A PRÓXIMA PROPOSTA
         let totalInvestimentoTabela = 0;
