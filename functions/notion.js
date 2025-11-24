@@ -247,13 +247,39 @@ export async function onRequest(context) {
           }
         }
         
+        // FALLBACK: Tenta busca parcial (case-insensitive)
+        for (const key of Object.keys(properties)) {
+          const searchTerm = possibleKeys[0];
+          if (searchTerm && key.toLowerCase().includes(searchTerm.toLowerCase())) {
+            const prop = properties[key];
+            console.log(`âš¡ FALLBACK (busca parcial): Campo "${propName}" encontrado como: "${key}"`);
+            
+            switch (prop.type) {
+              case 'number':
+                return prop.number !== null && prop.number !== undefined ? prop.number : defaultValue;
+              case 'title':
+                return prop.title?.[0]?.text?.content || defaultValue;
+              case 'rich_text':
+                return prop.rich_text?.[0]?.text?.content || defaultValue;
+              case 'date':
+                return prop.date?.start || defaultValue;
+              case 'select':
+                return prop.select?.name || defaultValue;
+              case 'multi_select':
+                return prop.multi_select?.map(item => item.name).join(',') || defaultValue;
+              default:
+                return defaultValue;
+            }
+          }
+        }
+        
         // Se nenhuma chave foi encontrada
         if (propName === 'impactos') {
-          console.log(`\nâŒ ERRO: Campo "impactos" NÃƒO encontrado!`);
+          console.log(`\nâŒ ERRO: Campo "impactos" NÃƒO encontrado!`);
           console.log(`  Chaves procuradas:`, possibleKeys);
           console.log(`  Valor padrÃ£o retornado: ${defaultValue}`);
         }
-        console.log(`âŒ Campo "${propName}" NÃƒO encontrado. Chaves procuradas:`, possibleKeys);
+        console.log(`âŒ Campo "${propName}" NÃƒO encontrado. Chaves procuradas:`, possibleKeys);
         return defaultValue;
       };
 
@@ -370,14 +396,15 @@ export async function onRequest(context) {
           })(),
           
           // Spots 30
-          spots30: extractValue(properties, 0, 'Spots 30', 'Spots 30'),
-          valorTabela30: extractValue(properties, 0, 'Valor spot 30 (Tabela)', 'Valor spot 30 (Tabela)'),
-          valorNegociado30: extractValue(properties, 0, 'Valor spot 30 (Negociado)', 'Valor spot 30 (Negociado)'),
+          // Spots 30" - Tentar vários formatos possíveis
+          spots30: extractValue(properties, 0, 'Spots 30ʺ', 'Spots 30"', 'Spots 30´', 'Spots 30', 'spots30'),
+          valorTabela30: extractValue(properties, 0, 'Valor spot 30ʺ (Tabela)', 'Valor spot 30" (Tabela)', 'Valor spot 30 (Tabela)', 'valorTabela30'),
+          valorNegociado30: extractValue(properties, 0, 'Valor spot 30ʺ (Negociado)', 'Valor spot 30" (Negociado)', 'Valor spot 30 (Negociado)', 'valorNegociado30'),
           
-          // Spots 60
-          spots60: extractValue(properties, 0, 'Spots 60', 'Spots 60'),
-          valorTabela60: extractValue(properties, 0, 'Valor spot 60 (Tabela)', 'Valor spot 60 (Tabela)'),
-          valorNegociado60: extractValue(properties, 0, 'Valor spot 60 (Negociado)', 'Valor spot 60 (Negociado)'),
+          // Spots 60" - Tentar vários formatos possíveis
+          spots60: extractValue(properties, 0, 'Spots 60ʺ', 'Spots 60"', 'Spots 60´', 'Spots 60', 'spots60'),
+          valorTabela60: extractValue(properties, 0, 'Valor spot 60ʺ (Tabela)', 'Valor spot 60" (Tabela)', 'Valor spot 60 (Tabela)', 'valorTabela60'),
+          valorNegociado60: extractValue(properties, 0, 'Valor spot 60ʺ (Negociado)', 'Valor spot 60" (Negociado)', 'Valor spot 60 (Negociado)', 'valorNegociado60'),
           
           // Blitz
           spotsBlitz: extractValue(properties, 0, 'Blitz', 'Blitz', 'blitz'),
