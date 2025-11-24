@@ -297,11 +297,10 @@ body {
     background: var(--white);
     padding: 0;
     border-radius: 12px;
-    margin-bottom: 60px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    width: 100%;
     box-sizing: border-box;
     overflow: hidden;
+    height: fit-content;
 }
 
 .comparison-header {

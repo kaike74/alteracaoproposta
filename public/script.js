@@ -32,8 +32,7 @@ const PRODUTOS = [
 ];
 
 let charts = {
-    investment: null,
-    impacts: null
+    investment: null
 };
 
 // Função de debug visual - removida
@@ -610,13 +609,8 @@ function renderCharts() {
             charts.investment.destroy();
             charts.investment = null;
         }
-        if (charts.impacts) {
-            charts.impacts.destroy();
-            charts.impacts = null;
-        }
         
         renderInvestmentChart();
-        renderImpactsChart();
         console.log('✅ Gráficos renderizados com sucesso!');
     } catch (error) {
         console.error('⚠️ Erro ao renderizar gráficos (não crítico):', error);
@@ -716,165 +710,6 @@ function calculateChartMax(dataArray) {
     return roundedMax;
 }
 
-function renderImpactsChart() {
-    console.log('\n╔═══════════════════════════════════════════════════════════════╗');
-    console.log('║ 📊 renderImpactsChart() INICIADA');
-    console.log('╚═══════════════════════════════════════════════════════════════╝');
-    
-    const ctx = document.getElementById('impactsChart');
-    if (!ctx) {
-        console.error('❌ Canvas #impactsChart não encontrado!');
-        return;
-    }
-    
-    console.log('✅ Canvas #impactsChart encontrado');
-    
-    const canvasCtx = ctx.getContext('2d');
-    
-    const labels = [];
-    const data = [];
-    
-    console.log('\n🔍 Buscando emissoras selecionadas...');
-    
-    // Coleta impactos das emissoras selecionadas
-    const rows = document.querySelectorAll('#spotsTableBody tr');
-    console.log(`📋 Total de linhas na tabela: ${rows.length}`);
-    
-    let processadas = 0;
-    rows.forEach((row, rowIdx) => {
-        const checkbox = row.querySelector('input[type="checkbox"]');
-        const isChecked = checkbox && checkbox.checked;
-        
-        console.log(`  [Linha ${rowIdx}] Checkbox marcado? ${isChecked}`);
-        
-        if (checkbox && checkbox.checked) {
-            const cells = row.querySelectorAll('td');
-            console.log(`    ↳ Células encontradas: ${cells.length}`);
-            
-            if (cells.length >= 4) {
-                const emissoraName = cells[3].textContent.trim();
-                console.log(`    ↳ Emissora: ${emissoraName}`);
-                
-                // Encontra a emissora correspondente
-                const emissora = proposalData.emissoras.find(e => e.emissora === emissoraName);
-                
-                if (emissora) {
-                    console.log(`    ✅ Emissora encontrada em proposalData`);
-                    console.log(`    📦 Dados brutos: impactos = "${emissora.impactos}" (tipo: ${typeof emissora.impactos})`);
-                    
-                    // Converte impactos do formato brasileiro (com vírgula) para número
-                    let impactos = emissora.impactos || 0;
-                    const impactosOriginal = impactos;
-                    
-                    // Se for string, converte o formato brasileiro
-                    if (typeof impactos === 'string') {
-                        console.log(`    🔄 Convertendo de string: "${impactos}"`);
-                        impactos = parseFloat(impactos.replace('.', '').replace(',', '.')) || 0;
-                        console.log(`    ✅ Convertido para: ${impactos}`);
-                    }
-                    
-                    labels.push(emissoraName);
-                    data.push(impactos);
-                    processadas++;
-                    
-                    console.log(`    💾 Adicionado ao gráfico: ${emissoraName} = ${impactos} impactos`);
-                } else {
-                    console.log(`    ❌ Emissora NÃO encontrada em proposalData!`);
-                }
-            } else {
-                console.log(`    ⚠️ Linha tem menos de 4 células`);
-            }
-        }
-    });
-    
-    console.log(`\n✅ Emissoras processadas: ${processadas}`);
-    console.log('📊 Gráfico impactos - Emissoras encontradas:', labels.length);
-    console.log('📊 Labels (antes de ordenar):', labels);
-    console.log('📊 Dados (antes de ordenar):', data);
-    
-    // Ordena em ordem decrescente (maior para menor, esquerda para direita)
-    const pairedData = labels.map((label, index) => ({
-        label: label,
-        value: data[index]
-    }));
-    
-    pairedData.sort((a, b) => b.value - a.value);
-    
-    const sortedLabels = pairedData.map(item => item.label);
-    const sortedData = pairedData.map(item => item.value);
-    
-    console.log('📊 Labels (após ordenar):', sortedLabels);
-    console.log('📊 Dados (após ordenar):', sortedData);
-    
-    // Calcula o máximo de escala redondo
-    const yMax = calculateChartMax(sortedData);
-    
-    // Destrói o gráfico anterior se existir
-    if (charts.impacts) {
-        charts.impacts.destroy();
-    }
-    
-    charts.impacts = new Chart(canvasCtx, {
-        type: 'bar',
-        data: {
-            labels: sortedLabels,
-            datasets: [{
-                label: 'Quantidade de Impactos',
-                data: sortedData,
-                backgroundColor: [
-                    'rgba(139, 92, 246, 0.8)',
-                    'rgba(167, 139, 250, 0.8)',
-                    'rgba(196, 181, 253, 0.8)',
-                    'rgba(216, 180, 254, 0.8)'
-                ],
-                borderColor: '#8b5cf6',
-                borderWidth: 2,
-                borderRadius: 8,
-                barPercentage: 0.85,
-                categoryPercentage: 0.9
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { 
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const value = context.parsed.y;
-                            return `${value.toLocaleString('pt-BR', { 
-                                minimumFractionDigits: 0,
-                                maximumFractionDigits: 0
-                            })} impactos`;
-                        }
-                    },
-                    padding: 12,
-                    titleFont: { size: 14 },
-                    bodyFont: { size: 13 }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: {
-                        font: { size: 13, weight: 'bold' },
-                        maxRotation: 45,
-                        minRotation: 45,
-                        padding: 8
-                    },
-                    grid: { display: false }
-                },
-                y: {
-                    type: 'logarithmic',
-                    ticks: {
-                        display: false
-                    },
-                    grid: { color: 'rgba(0,0,0,0.05)' }
-                }
-            }
-        }
-    });
-}
 
 // =====================================================
 // CÁLCULOS
