@@ -925,48 +925,53 @@ function toggleOcultarEmissora(checkbox) {
     const emissoraIndex = parseInt(checkbox.getAttribute('data-emissora-index'));
     const emissora = proposalData.emissoras[emissoraIndex];
     
-    console.log(`🔄 Alternando ocultamento de emissora: ${emissoraId}, marcado: ${checkbox.checked}`);
-    console.log(`   Estado anterior - ocultasEmissoras:`, Array.from(proposalData.ocultasEmissoras));
+    console.log(`\n🔄 TOGGLE EMISSORA: ${emissora?.emissora || emissoraId}`);
+    console.log(`   ID: ${emissoraId}`);
+    console.log(`   Checkbox.checked: ${checkbox.checked}`);
+    console.log(`   Estado ANTES:`);
+    console.log(`     - ocultasEmissoras: [${Array.from(proposalData.ocultasEmissoras).join(', ')}]`);
+    console.log(`     - changedEmissoras: [${Array.from(proposalData.changedEmissoras).join(', ')}]`);
     
     if (checkbox.checked) {
-        // Marcar = REMOVER da lista (quando está marcado, mostra na proposta)
-        // Se está marcado agora, significa que estava desmarcado antes (estava oculto)
-        // Então precisamos removê-lo da lista de ocultos
+        // ✅ MARCAR = REMOVER da lista de ocultas (mostra na proposta)
+        console.log(`   → Ação: REMOVER de ocultasEmissoras (ADICIONAR à proposta)`);
         
-        // Fazer a mudança IMEDIATAMENTE
-        proposalData.ocultasEmissoras.delete(emissoraId);
-        proposalData.changedEmissoras.add(emissoraId);
-        
-        console.log(`   Estado novo - ocultasEmissoras:`, Array.from(proposalData.ocultasEmissoras));
-        
-        // Atualizar visual da linha
-        const row = document.getElementById(`emissora-row-${emissoraId}`);
-        if (row) {
-            row.classList.remove('emissora-oculta');
+        // Só faz algo se estava realmente oculto
+        if (proposalData.ocultasEmissoras.has(emissoraId)) {
+            proposalData.ocultasEmissoras.delete(emissoraId);
+            proposalData.changedEmissoras.add(emissoraId);
+            
+            const row = document.getElementById(`emissora-row-${emissoraId}`);
+            if (row) row.classList.remove('emissora-oculta');
+            
+            updateStats();
+            renderCharts();
+            showUnsavedChanges();
+            
+            console.log(`   ✅ REMOVIDO de ocultasEmissoras`);
+        } else {
+            console.log(`   ⚠️ Já estava visível, nada a fazer`);
         }
-        
-        // Atualizar estatísticas
-        updateStats();
-        renderCharts();
-        
-        // Mostrar botão de salvar
-        showUnsavedChanges();
-        
-        console.log(`✅ Emissora ${emissora?.emissora || emissoraId} ADICIONADA (será restaurada no Notion)`);
-        console.log(`📊 Emissoras ocultas agora:`, Array.from(proposalData.ocultasEmissoras));
     } else {
-        // Desmarcar = ADICIONAR à lista (quando está desmarcado, fica oculto na proposta)
-        // Se está desmarcado agora, significa que estava marcado antes (estava visível)
-        // Então precisamos adicioná-lo à lista de ocultos
+        // ❌ DESMARCAR = ADICIONAR à lista de ocultas (esconde da proposta)
+        console.log(`   → Ação: ADICIONAR a ocultasEmissoras (REMOVER da proposta)`);
         
-        // Marcar ANTES de mostrar o modal para que o botão apareça
-        proposalData.changedEmissoras.add(emissoraId);
-        showUnsavedChanges();  // Mostrar botão de salvar
-        
-        console.log(`⚠️ Mostrando confirmação para remover ${emissoraId}`);
-        showConfirmRemovalModal(checkbox, emissora, emissoraId);
-        return;  // NÃO continua aqui, espera confirmação
+        // Só faz algo se estava realmente visível
+        if (!proposalData.ocultasEmissoras.has(emissoraId)) {
+            proposalData.changedEmissoras.add(emissoraId);
+            showUnsavedChanges();  // Mostrar botão de salvar
+            
+            console.log(`   → Abrindo modal de confirmação...`);
+            showConfirmRemovalModal(checkbox, emissora, emissoraId);
+            return;  // Espera confirmação do usuário
+        } else {
+            console.log(`   ⚠️ Já estava oculto, nada a fazer`);
+        }
     }
+    
+    console.log(`   Estado DEPOIS:`);
+    console.log(`     - ocultasEmissoras: [${Array.from(proposalData.ocultasEmissoras).join(', ')}]`);
+    console.log(`     - changedEmissoras: [${Array.from(proposalData.changedEmissoras).join(', ')}]\n`);
 }
 
 // ✅ FUNÇÃO DE SINCRONIZAÇÃO: Força o estado correto dos checkboxes baseado no proposalData
@@ -1220,16 +1225,32 @@ function closeConfirmRemovalModal() {
     
     // Restaurar checkbox para o estado anterior
     if (pendingRemovalData) {
+        const { checkbox, emissoraId } = pendingRemovalData;
+        
+        // ⚠️ IMPORTANTE: Remover do changedEmissoras porque estamos cancelando
+        proposalData.changedEmissoras.delete(emissoraId);
+        
         // Ativar flag para ignorar o próximo evento de checkbox
         ignoreNextCheckboxChange = true;
-        pendingRemovalData.checkbox.checked = true;
+        checkbox.checked = true;
+        
+        // Sincronizar visual também
+        const row = document.getElementById(`emissora-row-${emissoraId}`);
+        if (row) {
+            row.classList.remove('emissora-oculta');
+        }
+        
+        // Atualizar estado do botão salvar
+        showUnsavedChanges();
+        
+        console.log(`   ✅ Estado do cancelamento sincronizado`);
     }
     
     pendingRemovalData = null;
 }
 
 function confirmRemoval() {
-    console.log('✅ Confirmando remoção de emissora...');
+    console.log('\n✅ CONFIRMANDO REMOÇÃO DE EMISSORA');
     
     if (!pendingRemovalData) {
         console.error('❌ pendingRemovalData é nulo!');
@@ -1238,39 +1259,50 @@ function confirmRemoval() {
     
     const { checkbox, emissora, emissoraId } = pendingRemovalData;
     
-    console.log(`   Estado ANTES de confirmar remoção:`);
-    console.log(`   - ocultasEmissoras: ${Array.from(proposalData.ocultasEmissoras)}`);
-    console.log(`   - checkbox.checked: ${checkbox.checked}`);
+    console.log(`   Emissora: ${emissora?.emissora || emissoraId}`);
+    console.log(`   Estado ANTES:`);
+    console.log(`     - ocultasEmissoras: [${Array.from(proposalData.ocultasEmissoras).join(', ')}]`);
+    console.log(`     - changedEmissoras: [${Array.from(proposalData.changedEmissoras).join(', ')}]`);
+    console.log(`     - checkbox.checked: ${checkbox.checked}`);
     
-    // Adicionar à lista de excluídas
-    proposalData.ocultasEmissoras.add(emissoraId);
-    proposalData.changedEmissoras.add(emissoraId);  // Marcar como alterada
+    // Validação: só adiciona à lista de ocultas se ainda não está lá
+    if (!proposalData.ocultasEmissoras.has(emissoraId)) {
+        proposalData.ocultasEmissoras.add(emissoraId);
+        console.log(`   ✅ Adicionado a ocultasEmissoras`);
+    } else {
+        console.log(`   ⚠️ Já estava em ocultasEmissoras`);
+    }
     
-    console.log(`   Estado DEPOIS de confirmar remoção:`);
-    console.log(`   - ocultasEmissoras: ${Array.from(proposalData.ocultasEmissoras)}`);
-    console.log(`🗑️ Emissora ${emissoraId} REMOVIDA (marcada para exclusão)`);
+    // Garantir que está em changedEmissoras
+    proposalData.changedEmissoras.add(emissoraId);
     
     // Atualizar visual da linha
     const row = document.getElementById(`emissora-row-${emissoraId}`);
     if (row) {
         row.classList.add('emissora-oculta');
-        console.log(`   ✅ Linha visual atualizada: ${emissoraId}`);
+        console.log(`   ✅ Linha visual marcada como oculta`);
     } else {
-        console.warn(`   ⚠️ Linha não encontrada para ${emissoraId}`);
+        console.warn(`   ⚠️ Linha não encontrada: ${emissoraId}`);
     }
+    
+    // ⚠️ CRUCIAL: Atualizar o checkbox visualmente mas com flag para não trigger novamente
+    ignoreNextCheckboxChange = true;
+    checkbox.checked = false;
     
     // Atualizar estatísticas
     updateStats();
     renderCharts();
     
-    // Marcar como alteração (precisa salvar)
+    // Mostrar botão salvar e marcar como alteração
     showUnsavedChanges();
     
     // Fechar modal
     document.getElementById('confirmRemovalModal').style.display = 'none';
     pendingRemovalData = null;
     
-    console.log('📊 Emissoras removidas agora:', Array.from(proposalData.ocultasEmissoras));
+    console.log(`   Estado DEPOIS:`);
+    console.log(`     - ocultasEmissoras: [${Array.from(proposalData.ocultasEmissoras).join(', ')}]`);
+    console.log(`     - changedEmissoras: [${Array.from(proposalData.changedEmissoras).join(', ')}]\n`);
 }
 
 
