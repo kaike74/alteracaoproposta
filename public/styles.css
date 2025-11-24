@@ -727,7 +727,7 @@ tr.radio-disabled .value-cell {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(5, 1fr);
     gap: 16px;
     margin-bottom: 28px;
     width: 100%;
