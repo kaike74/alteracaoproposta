@@ -55,7 +55,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-}}
+}
 
 /* Responsivo com zoom-out mantendo proporções */
 @media (max-width: 1920px) {
@@ -117,7 +117,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-}}
+}
 
 .header-inner {
     display: flex;
@@ -129,7 +129,7 @@ body {
     gap: 20px;
 }
 
-
+.header::before {
     content: '';
     position: absolute;
     top: -50%;
