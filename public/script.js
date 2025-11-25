@@ -474,7 +474,7 @@ function renderSpotsTable() {
                         style="width: 60px; padding: 4px; text-align: center;"
                     >
                 </td>
-                <td style="text-align: right; min-width: 90px;">R$ ${valorNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="product-value-negociado">R$ ${valorNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
             `;
         });
         

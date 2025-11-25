@@ -683,6 +683,15 @@ tbody tr:last-child td {
     text-overflow: ellipsis;
 }
 
+/* PRODUCT VALUE CELLS - Coloridas */
+.product-value-negociado {
+    background: linear-gradient(135deg, #fef3f2 0%, #fee4e2 100%);
+    color: #d97706;
+    font-weight: 600;
+    text-align: right;
+    min-width: 100px;
+}
+
 /* INVESTMENT CELLS - Coloridas com contraste */
 .investment-tabela {
     background: linear-gradient(135deg, #f3f0ff 0%, #ede9fe 100%);
