@@ -621,19 +621,22 @@ export async function onRequest(context) {
       }
 
       // Enviar email com as alterações
+      let emailLogs = [];
       try {
         console.log('📧 [PATCH] Chamando sendNotificationEmail...');
         console.log('📧 [PATCH] updatePromises:', updatePromises.length, 'alterações');
-        await sendNotificationEmail(env, {
+        emailLogs = await sendNotificationEmail(env, {
           tableId: tableId,
           changes: updatePromises,
           emissoras: emissoras,
           requestIP: request.headers.get('cf-connecting-ip') || 'desconhecido'
         });
         console.log('📧 [PATCH] sendNotificationEmail completado');
+        debugLogs.push(...emailLogs);
       } catch (emailError) {
         console.error('⚠️ [PATCH] Erro ao enviar email:', emailError.message);
         log('⚠️ Erro ao enviar email: ' + emailError.message);
+        debugLogs.push('⚠️ Erro ao enviar email: ' + emailError.message);
         // Não interrompe o fluxo se falhar o email
       }
 
@@ -690,6 +693,12 @@ export async function onRequest(context) {
 async function sendNotificationEmail(env, data) {
   const { tableId, changes, emissoras, requestIP } = data;
   const resendApiKey = env.RESEND_API_KEY;
+  const emailLogs = [];
+  
+  emailLogs.push('📧 [EMAIL] Iniciando envio de email...');
+  emailLogs.push('📧 [EMAIL] RESEND_API_KEY existe? ' + (!!resendApiKey));
+  emailLogs.push('📧 [EMAIL] Alterações recebidas: ' + changes.length);
+  emailLogs.push('📧 [EMAIL] Emissoras: ' + emissoras.length);
   
   console.log('📧 [EMAIL] Iniciando envio de email...');
   console.log('📧 [EMAIL] RESEND_API_KEY existe?', !!resendApiKey);
@@ -697,8 +706,9 @@ async function sendNotificationEmail(env, data) {
   console.log('📧 [EMAIL] Emissoras:', emissoras.length);
   
   if (!resendApiKey) {
+    emailLogs.push('⚠️ [EMAIL] RESEND_API_KEY não configurada. Email não será enviado.');
     console.warn('⚠️ [EMAIL] RESEND_API_KEY não configurada. Email não será enviado.');
-    return;
+    return emailLogs;
   }
 
   // Agrupar alteraes por emissora
@@ -802,6 +812,8 @@ async function sendNotificationEmail(env, data) {
 
   // Enviar via Resend
   try {
+    emailLogs.push('📧 [EMAIL] Enviando para: tatico5@hubradios.com');
+    emailLogs.push('📧 [EMAIL] De: noreply@hubradios.com');
     console.log('📧 [EMAIL] Enviando para: tatico5@hubradios.com');
     console.log('📧 [EMAIL] De: noreply@hubradios.com');
     
@@ -819,18 +831,28 @@ async function sendNotificationEmail(env, data) {
       })
     });
 
-    console.log('📧 [EMAIL] Status da resposta:', response.status);
+    const statusMsg = '📧 [EMAIL] Status da resposta: ' + response.status;
+    emailLogs.push(statusMsg);
+    console.log(statusMsg);
     
     if (response.ok) {
       const result = await response.json();
-      console.log('✅ [EMAIL] Email enviado com sucesso! ID:', result.id);
+      const successMsg = '✅ [EMAIL] Email enviado com sucesso! ID: ' + result.id;
+      emailLogs.push(successMsg);
+      console.log(successMsg);
     } else {
       const error = await response.json();
-      console.error('❌ [EMAIL] Erro ao enviar email via Resend:', error);
+      const errorMsg = '❌ [EMAIL] Erro ao enviar email via Resend: ' + JSON.stringify(error);
+      emailLogs.push(errorMsg);
+      console.error(errorMsg);
     }
   } catch (error) {
-    console.error('❌ [EMAIL] Erro na requisição Resend:', error);
+    const errorMsg = '❌ [EMAIL] Erro na requisição Resend: ' + error.message;
+    emailLogs.push(errorMsg);
+    console.error(errorMsg);
   }
+  
+  return emailLogs;
 }
 
 function findEmissoraIndexById(id, emissoras) {
