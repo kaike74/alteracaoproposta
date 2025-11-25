@@ -622,14 +622,17 @@ export async function onRequest(context) {
 
       // Enviar email com as alterações
       try {
+        console.log('📧 [PATCH] Chamando sendNotificationEmail...');
+        console.log('📧 [PATCH] updatePromises:', updatePromises.length, 'alterações');
         await sendNotificationEmail(env, {
           tableId: tableId,
           changes: updatePromises,
           emissoras: emissoras,
           requestIP: request.headers.get('cf-connecting-ip') || 'desconhecido'
         });
+        console.log('📧 [PATCH] sendNotificationEmail completado');
       } catch (emailError) {
-        console.error('⚠️ Erro ao enviar email:', emailError.message);
+        console.error('⚠️ [PATCH] Erro ao enviar email:', emailError.message);
         log('⚠️ Erro ao enviar email: ' + emailError.message);
         // Não interrompe o fluxo se falhar o email
       }
@@ -688,8 +691,13 @@ async function sendNotificationEmail(env, data) {
   const { tableId, changes, emissoras, requestIP } = data;
   const resendApiKey = env.RESEND_API_KEY;
   
+  console.log('📧 [EMAIL] Iniciando envio de email...');
+  console.log('📧 [EMAIL] RESEND_API_KEY existe?', !!resendApiKey);
+  console.log('📧 [EMAIL] Alterações recebidas:', changes.length);
+  console.log('📧 [EMAIL] Emissoras:', emissoras.length);
+  
   if (!resendApiKey) {
-    console.warn(' RESEND_API_KEY no configurada. Email no ser enviado.');
+    console.warn('⚠️ [EMAIL] RESEND_API_KEY não configurada. Email não será enviado.');
     return;
   }
 
@@ -794,6 +802,9 @@ async function sendNotificationEmail(env, data) {
 
   // Enviar via Resend
   try {
+    console.log('📧 [EMAIL] Enviando para: tatico5@hubradios.com');
+    console.log('📧 [EMAIL] De: noreply@hubradios.com');
+    
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -803,20 +814,22 @@ async function sendNotificationEmail(env, data) {
       body: JSON.stringify({
         from: 'noreply@hubradios.com',
         to: 'tatico5@hubradios.com',
-        subject: `[E-MDIAS] Alterao de Proposta - ${new Date().toLocaleDateString('pt-BR')}`,
+        subject: `[E-MDIAS] Alteração de Proposta - ${new Date().toLocaleDateString('pt-BR')}`,
         html: emailHTML
       })
     });
 
+    console.log('📧 [EMAIL] Status da resposta:', response.status);
+    
     if (response.ok) {
       const result = await response.json();
-      console.log(' Email enviado com sucesso:', result.id);
+      console.log('✅ [EMAIL] Email enviado com sucesso! ID:', result.id);
     } else {
       const error = await response.json();
-      console.error(' Erro ao enviar email via Resend:', error);
+      console.error('❌ [EMAIL] Erro ao enviar email via Resend:', error);
     }
   } catch (error) {
-    console.error(' Erro na requisio Resend:', error);
+    console.error('❌ [EMAIL] Erro na requisição Resend:', error);
   }
 }
 
