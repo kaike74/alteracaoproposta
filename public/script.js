@@ -494,10 +494,14 @@ function renderSpotsTable() {
         });
     });
     
+    // Também verificar produtos de Patrocínio
+    const temPatrocinioAtivo = proposalData.emissoras.some(e => e.cotasMeses > 0);
+    
     console.log('🔍 Produtos com dados encontrados:', Array.from(produtosAtivos).map(pk => {
         const p = PRODUTOS.find(x => x.key === pk);
         return p ? p.label : pk;
     }));
+    console.log('🔍 Tem Patrocínio ativo?', temPatrocinioAtivo);
     
     // RECONSTRÓI os cabeçalhos da tabela
     const thead = table.querySelector('thead');
@@ -513,16 +517,42 @@ function renderSpotsTable() {
             <th style="min-width: 140px;">Emissora</th>
         `;
         
-        // Cabeçalhos dinâmicos por produto
+        // Cabeçalhos dinâmicos por produto de MÍDIA AVULSA
         produtosAtivos.forEach(produtoKey => {
-            const produto = PRODUTOS.find(p => p.key === produtoKey);
-            headerRow.innerHTML += `
-                <th colspan="2" style="text-align: center; border-bottom: 2px solid var(--primary); min-width: 180px;">
-                    ${produto.label}
-                </th>
-            `;
+            const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
+            if (produto) {
+                headerRow.innerHTML += `
+                    <th colspan="2" style="text-align: center; border-bottom: 2px solid var(--primary); min-width: 180px;">
+                        ${produto.label}
+                    </th>
+                `;
+            }
         });
         
+        // Cabeçalhos para PATROCÍNIO se existir
+        if (temPatrocinioAtivo) {
+            headerRow.innerHTML += `
+                <th style="min-width: 120px;">Cotas / Meses</th>
+            `;
+            
+            // Inserções
+            const insercoes = ['ins5', 'ins15', 'ins30', 'ins60'];
+            insercoes.forEach(insKey => {
+                const ins = PRODUTOS.find(p => p.key === insKey);
+                if (ins) {
+                    headerRow.innerHTML += `
+                        <th style="min-width: 100px;">${ins.label}</th>
+                    `;
+                }
+            });
+            
+            headerRow.innerHTML += `
+                <th style="min-width: 120px;">Valor Tabela por Cota</th>
+                <th style="min-width: 120px;">Valor Negociado por Cota</th>
+            `;
+        }
+        
+        // Colunas finais de investimento
         headerRow.innerHTML += `
             <th style="min-width: 140px;">Inv. Tabela</th>
             <th style="min-width: 140px;">Inv. Negociado</th>
@@ -578,34 +608,88 @@ function renderSpotsTable() {
             </td>
         `;
         
-        // Colunas dinâmicas por produto
+        // Colunas dinâmicas por produto de MÍDIA AVULSA
         produtosAtivos.forEach(produtoKey => {
-            const produto = PRODUTOS.find(p => p.key === produtoKey);
-            const spots = emissora[produto.key] || 0;
-            const valorTabela = emissora[produto.tabelaKey] || 0;
-            const valorNegociado = emissora[produto.negKey] || 0;
+            const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
+            if (produto) {
+                const spots = emissora[produto.key] || 0;
+                const valorTabela = emissora[produto.tabelaKey] || 0;
+                const valorNegociado = emissora[produto.negKey] || 0;
+                
+                const invTabela = spots * valorTabela;
+                const invNegociado = spots * valorNegociado;
+                
+                investimentoTabelaEmissora += invTabela;
+                investimentoNegociadoEmissora += invNegociado;
+                
+                row.innerHTML += `
+                    <td style="text-align: center; min-width: 90px;">
+                        <input 
+                            type="number" 
+                            value="${spots}" 
+                            onchange="updateEmissora(${emissoraIndex}, '${produto.key}', this.value)"
+                            class="input-spots"
+                            min="0"
+                            step="1"
+                            style="width: 60px; padding: 4px; text-align: center;"
+                        >
+                    </td>
+                    <td class="product-value-negociado">R$ ${valorNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                `;
+            }
+        });
+        
+        // Colunas para PATROCÍNIO se existir
+        if (temPatrocinioAtivo) {
+            const cotasMeses = emissora.cotasMeses || 0;
+            const valorTabelaCota = emissora.valorTabelaCota || 0;
+            const valorNegociadoCota = emissora.valorNegociadoCota || 0;
             
-            const invTabela = spots * valorTabela;
-            const invNegociado = spots * valorNegociado;
+            // Investimento Patrocínio
+            const invTabePatrocinio = cotasMeses * valorTabelaCota;
+            const invNegPatrocinio = cotasMeses * valorNegociadoCota;
             
-            investimentoTabelaEmissora += invTabela;
-            investimentoNegociadoEmissora += invNegociado;
+            investimentoTabelaEmissora += invTabePatrocinio;
+            investimentoNegociadoEmissora += invNegPatrocinio;
             
             row.innerHTML += `
                 <td style="text-align: center; min-width: 90px;">
                     <input 
                         type="number" 
-                        value="${spots}" 
-                        onchange="updateEmissora(${emissoraIndex}, '${produto.key}', this.value)"
+                        value="${cotasMeses}" 
+                        onchange="updateEmissora(${emissoraIndex}, 'cotasMeses', this.value)"
                         class="input-spots"
                         min="0"
                         step="1"
                         style="width: 60px; padding: 4px; text-align: center;"
                     >
                 </td>
-                <td class="product-value-negociado">R$ ${valorNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
             `;
-        });
+            
+            // Inserções
+            const insercoes = ['ins5', 'ins15', 'ins30', 'ins60'];
+            insercoes.forEach(insKey => {
+                const ins = emissora[insKey] || 0;
+                row.innerHTML += `
+                    <td style="text-align: center; min-width: 80px;">
+                        <input 
+                            type="number" 
+                            value="${ins}" 
+                            onchange="updateEmissora(${emissoraIndex}, '${insKey}', this.value)"
+                            class="input-spots"
+                            min="0"
+                            step="1"
+                            style="width: 60px; padding: 4px; text-align: center;"
+                        >
+                    </td>
+                `;
+            });
+            
+            row.innerHTML += `
+                <td class="product-value-negociado">R$ ${valorTabelaCota.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="product-value-negociado">R$ ${valorNegociadoCota.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            `;
+        }
         
         // Colunas de investimento
         row.innerHTML += `
