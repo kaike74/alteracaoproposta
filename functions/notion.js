@@ -257,12 +257,17 @@ export async function onRequest(context) {
         });
       }
 
-      // Função otimizada para extrair valores (menos verbosa)
+      // Função otimizada para extrair valores com suporte a Patrocínio
       const extractValue = (properties, defaultValue = 0, propName = '', ...possibleKeys) => {
-        // Tenta cada chave possível em sequência
+        // Tenta cada chave possível em sequência (match exato primeiro)
         for (const key of possibleKeys) {
           const prop = properties[key];
           if (prop) {
+            // Log para Patrocínio
+            if (propName && propName.includes('Cota')) {
+              console.log(`✅ ENCONTRADO (match exato): "${key}" para ${propName}`);
+            }
+            
             switch (prop.type) {
               case 'number':
                 return prop.number !== null && prop.number !== undefined ? prop.number : defaultValue;
@@ -295,6 +300,11 @@ export async function onRequest(context) {
             if (keyLower.includes(searchLower) || searchLower.includes(keyLower)) {
               const prop = properties[key];
               
+              // Log para Patrocínio
+              if (propName && propName.includes('Cota')) {
+                console.log(`✅ ENCONTRADO (match fuzzy): "${key}" ≈ "${searchKey}" para ${propName}`);
+              }
+              
               switch (prop.type) {
                 case 'number':
                   return prop.number !== null && prop.number !== undefined ? prop.number : defaultValue;
@@ -315,6 +325,13 @@ export async function onRequest(context) {
               }
             }
           }
+        }
+        
+        // Se nada foi encontrado, logar para debug
+        if (propName && propName.includes('Cota')) {
+          console.warn(`❌ NÃO ENCONTRADO: ${propName}`);
+          console.warn(`   Procurando por: ${possibleKeys.join(', ')}`);
+          console.warn(`   Campos disponíveis:`, allKeys.filter(k => k.toLowerCase().includes('valor') || k.toLowerCase().includes('cota')));
         }
         
         return defaultValue;
