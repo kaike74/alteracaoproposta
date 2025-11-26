@@ -53,15 +53,23 @@ let charts = {
 // GERENCIAMENTO DE HISTÓRICO DE ALTERAÇÕES
 // =====================================================
 
-const HISTORY_STORAGE_KEY = 'proposal_history';
+const HISTORY_STORAGE_KEY_PREFIX = 'proposal_history_';
+
+function getHistoryStorageKey() {
+    // Usa o nome da proposta para criar uma chave única
+    const proposalKey = proposalData.proposalName ? proposalData.proposalName.replace(/\s+/g, '_') : 'default';
+    return HISTORY_STORAGE_KEY_PREFIX + proposalKey;
+}
 
 function loadHistoryFromStorage() {
-    const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
+    const key = getHistoryStorageKey();
+    const stored = localStorage.getItem(key);
     return stored ? JSON.parse(stored) : [];
 }
 
 function saveHistoryToStorage(history) {
-    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+    const key = getHistoryStorageKey();
+    localStorage.setItem(key, JSON.stringify(history));
 }
 
 function addToHistory(emissoraNome, campo, valorAnterior, novoValor) {
