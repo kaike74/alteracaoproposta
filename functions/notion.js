@@ -289,7 +289,7 @@ export async function onRequest(context) {
           }
         }
         
-        // FALLBACK: busca parcial case-insensitive (otimizado)
+        // FALLBACK 1: busca parcial case-insensitive (otimizado)
         const allKeys = Object.keys(properties);
         for (const key of allKeys) {
           const keyLower = key.toLowerCase().replace(/[^\w]/g, '');
@@ -302,7 +302,7 @@ export async function onRequest(context) {
               
               // Log para Patrocínio
               if (propName && propName.includes('Cota')) {
-                console.log(`✅ ENCONTRADO (match fuzzy): "${key}" ≈ "${searchKey}" para ${propName}`);
+                console.log(`✅ ENCONTRADO (match fuzzy básico): "${key}" ≈ "${searchKey}" para ${propName}`);
               }
               
               switch (prop.type) {
@@ -327,11 +327,34 @@ export async function onRequest(context) {
           }
         }
         
+        // FALLBACK 2: busca por palavras-chave (para campos "Valor Tabela por Cota" que podem estar com nomes diferentes)
+        if (propName && (propName.includes('Valor') && propName.includes('Cota'))) {
+          // Procura especificamente por campos que contêm "Valor" E "Cota"
+          for (const key of allKeys) {
+            const keyLower = key.toLowerCase();
+            if (keyLower.includes('valor') && keyLower.includes('cota')) {
+              const prop = properties[key];
+              console.warn(`⚠️  FALLBACK 2: Campo potencial encontrado: "${key}" (${prop.type}) para ${propName}`);
+              
+              switch (prop.type) {
+                case 'number':
+                  return prop.number !== null && prop.number !== undefined ? prop.number : defaultValue;
+                case 'formula':
+                  return prop.formula?.number !== null ? prop.formula.number : (prop.formula?.string || defaultValue);
+                default:
+                  return defaultValue;
+              }
+            }
+          }
+        }
+        
         // Se nada foi encontrado, logar para debug
         if (propName && propName.includes('Cota')) {
           console.warn(`❌ NÃO ENCONTRADO: ${propName}`);
           console.warn(`   Procurando por: ${possibleKeys.join(', ')}`);
-          console.warn(`   Campos disponíveis:`, allKeys.filter(k => k.toLowerCase().includes('valor') || k.toLowerCase().includes('cota')));
+          const valorCotaFields = allKeys.filter(k => k.toLowerCase().includes('valor') || k.toLowerCase().includes('cota'));
+          console.warn(`   Campos com 'valor' ou 'cota' disponíveis:`, valorCotaFields);
+          console.warn(`   TODOS os campos:`, allKeys.slice(0, 15).map(k => `"${k}"`).join(', '));
         }
         
         return defaultValue;
