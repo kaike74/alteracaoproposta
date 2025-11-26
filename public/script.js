@@ -780,16 +780,31 @@ function updateStats() {
         // Se a checkbox está checada, inclui no cálculo
         if (checkbox && checkbox.checked) {
             PRODUTOS.forEach(produto => {
-                const spots = emissora[produto.key] || 0;
-                if (spots > 0) {
-                    const valorTabela = emissora[produto.tabelaKey] || 0;
-                    const valorNegociado = emissora[produto.negKey] || 0;
-                    
-                    totalInvestimentoTabela += spots * valorTabela;
-                    totalInvestimentoNegociado += spots * valorNegociado;
-                    totalSpots += spots;
+                // Diferencia cálculo para MÍDIA e PATROCÍNIO
+                if (produto.type === 'midia') {
+                    // MÍDIA: spots × valor por spot
+                    const spots = emissora[produto.key] || 0;
+                    if (spots > 0) {
+                        const valorTabela = emissora[produto.tabelaKey] || 0;
+                        const valorNegociado = emissora[produto.negKey] || 0;
+                        
+                        totalInvestimentoTabela += spots * valorTabela;
+                        totalInvestimentoNegociado += spots * valorNegociado;
+                        totalSpots += spots;
+                    }
+                } else if (produto.type === 'patrocinio') {
+                    // PATROCÍNIO: já foi calculado na renderização da tabela
+                    // Não precisa fazer nada aqui, pois é somado em investimentoTabelaEmissora e investimentoNegociadoEmissora
                 }
             });
+            
+            // Para Patrocínio, adicionar o investimento já calculado na tabela
+            if (emissora.cotasMeses > 0) {
+                const invTabePatrocinio = (emissora.cotasMeses || 0) * (emissora.valorTabelaCota || 0);
+                const invNegPatrocinio = (emissora.cotasMeses || 0) * (emissora.valorNegociadoCota || 0);
+                totalInvestimentoTabela += invTabePatrocinio;
+                totalInvestimentoNegociado += invNegPatrocinio;
+            }
         }
     });
     
