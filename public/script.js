@@ -10,7 +10,13 @@ let proposalData = {
     changes: {},
     ocultasEmissoras: new Set(),  // Rastreia emissoras ocultas (por ID)
     initialOcultasEmissoras: new Set(),  // Estado inicial para detectar mudanças
-    changedEmissoras: new Set()  // Rastreia quais emissoras tiveram mudanças no status "Excluir"
+    changedEmissoras: new Set(),  // Rastreia quais emissoras tiveram mudanças no status "Excluir"
+    temMidia: false,  // Se tem produtos de Mídia Avulsa
+    temPatrocinio: false,  // Se tem produtos de Patrocínio
+    availableProducts: {  // Produtos disponíveis carregados do Notion
+        midia: [],
+        patrocinio: []
+    }
 };
 
 // Flag para ignorar o próximo evento de checkbox (evita double trigger)
@@ -19,17 +25,24 @@ let ignoreNextCheckboxChange = false;
 
 // Definição de todos os produtos disponíveis
 const PRODUTOS = [
-    { key: 'spots30', label: 'Spots 30"', tabelaKey: 'valorTabela30', negKey: 'valorNegociado30' },
-    { key: 'spots60', label: 'Spots 60"', tabelaKey: 'valorTabela60', negKey: 'valorNegociado60' },
-    { key: 'spotsBlitz', label: 'Blitz', tabelaKey: 'valorTabelaBlitz', negKey: 'valorNegociadoBlitz' },
-    { key: 'spots15', label: 'Spots 15"', tabelaKey: 'valorTabela15', negKey: 'valorNegociado15' },
-    { key: 'spots5', label: 'Spots 5"', tabelaKey: 'valorTabela5', negKey: 'valorNegociado5' },
-    { key: 'spotsTest30', label: 'Test 30"', tabelaKey: 'valorTabelaTest30', negKey: 'valorNegociadoTest30' },
-    { key: 'spotsTest60', label: 'Test 60"', tabelaKey: 'valorTabelaTest60', negKey: 'valorNegociadoTest60' },
-    { key: 'spotsFlash30', label: 'Flash 30"', tabelaKey: 'valorTabelaFlash30', negKey: 'valorNegociadoFlash30' },
-    { key: 'spotsFlash60', label: 'Flash 60"', tabelaKey: 'valorTabelaFlash60', negKey: 'valorNegociadoFlash60' },
-    { key: 'spotsMensham30', label: 'Mensham 30"', tabelaKey: 'valorTabelaMensham30', negKey: 'valorNegociadoMensham30' },
-    { key: 'spotsMensham60', label: 'Mensham 60"', tabelaKey: 'valorTabelaMensham60', negKey: 'valorNegociadoMensham60' }
+    // MÍDIA AVULSA
+    { key: 'spots30', label: 'Spots 30"', type: 'midia', tabelaKey: 'valorTabela30', negKey: 'valorNegociado30' },
+    { key: 'spots60', label: 'Spots 60"', type: 'midia', tabelaKey: 'valorTabela60', negKey: 'valorNegociado60' },
+    { key: 'spotsBlitz', label: 'Blitz', type: 'midia', tabelaKey: 'valorTabelaBlitz', negKey: 'valorNegociadoBlitz' },
+    { key: 'spots15', label: 'Spots 15"', type: 'midia', tabelaKey: 'valorTabela15', negKey: 'valorNegociado15' },
+    { key: 'spots5', label: 'Spots 5"', type: 'midia', tabelaKey: 'valorTabela5', negKey: 'valorNegociado5' },
+    { key: 'spotsTest30', label: 'Test 30"', type: 'midia', tabelaKey: 'valorTabelaTest30', negKey: 'valorNegociadoTest30' },
+    { key: 'spotsTest60', label: 'Test 60"', type: 'midia', tabelaKey: 'valorTabelaTest60', negKey: 'valorNegociadoTest60' },
+    { key: 'spotsFlash30', label: 'Flash 30"', type: 'midia', tabelaKey: 'valorTabelaFlash30', negKey: 'valorNegociadoFlash30' },
+    { key: 'spotsFlash60', label: 'Flash 60"', type: 'midia', tabelaKey: 'valorTabelaFlash60', negKey: 'valorNegociadoFlash60' },
+    { key: 'spotsMensham30', label: 'Mensham 30"', type: 'midia', tabelaKey: 'valorTabelaMensham30', negKey: 'valorNegociadoMensham30' },
+    { key: 'spotsMensham60', label: 'Mensham 60"', type: 'midia', tabelaKey: 'valorTabelaMensham60', negKey: 'valorNegociadoMensham60' },
+    
+    // PATROCÍNIO
+    { key: 'ins5', label: 'Ins 5"', type: 'patrocinio', quantidadeKey: 'ins5', tabelaKey: 'valorTabelaCota', negKey: 'valorNegociadoCota', isInsertion: true },
+    { key: 'ins15', label: 'Ins 15"', type: 'patrocinio', quantidadeKey: 'ins15', tabelaKey: 'valorTabelaCota', negKey: 'valorNegociadoCota', isInsertion: true },
+    { key: 'ins30', label: 'Ins 30"', type: 'patrocinio', quantidadeKey: 'ins30', tabelaKey: 'valorTabelaCota', negKey: 'valorNegociadoCota', isInsertion: true },
+    { key: 'ins60', label: 'Ins 60"', type: 'patrocinio', quantidadeKey: 'ins60', tabelaKey: 'valorTabelaCota', negKey: 'valorNegociadoCota', isInsertion: true }
 ];
 
 let charts = {
@@ -278,14 +291,15 @@ async function loadProposalFromNotion(tableId) {
         let emissoras = Array.isArray(data) ? data : (data.emissoras || []);
         let ocultasEmissoras = data.ocultasEmissoras || [];
         let proposalName = data.proposalName || 'Proposta';
+        let availableProducts = data.availableProducts || { midia: [], patrocinio: [] };
+        let temMidia = data.temMidia || false;
+        let temPatrocinio = data.temPatrocinio || false;
         
         console.log('\n═══ DADOS RECEBIDOS DO API /notion ═══');
-        console.log(`📦 data.proposalName: "${data.proposalName}"`);
-        console.log(`📦 proposalName extraído: "${proposalName}"`);
-        console.log(`📦 Tipo: ${typeof proposalName}`);
-        console.log(`📦 Comprimento: ${proposalName.length}`);
-        console.log(`📦 data.emissoras: ${data.emissoras?.length || 0} emissoras`);
-        console.log(`📦 data.ocultasEmissoras: ${data.ocultasEmissoras?.length || 0} ocultas`);
+        console.log(`📦 proposalName: "${proposalName}"`);
+        console.log(`📦 temMidia: ${temMidia}, temPatrocinio: ${temPatrocinio}`);
+        console.log(`📦 Produtos Mídia: ${availableProducts.midia.map(p => p.label).join(', ') || 'nenhum'}`);
+        console.log(`📦 Produtos Patrocínio: ${availableProducts.patrocinio.map(p => p.label).join(', ') || 'nenhum'}`);
         console.log('════════════════════════════════════════\n');
         
         // Log de debug das logos
@@ -313,6 +327,9 @@ async function loadProposalFromNotion(tableId) {
             // Usar os dados diretamente do Notion, sem transformação
             proposalData.emissoras = emissoras;
             proposalData.proposalName = proposalName;
+            proposalData.temMidia = temMidia;
+            proposalData.temPatrocinio = temPatrocinio;
+            proposalData.availableProducts = availableProducts;
             
             // Carregar emissoras ocultas no Set
             proposalData.ocultasEmissoras = new Set(ocultasEmissoras);

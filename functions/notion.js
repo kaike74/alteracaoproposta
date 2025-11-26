@@ -385,6 +385,15 @@ export async function onRequest(context) {
           valorTabelaMensham60: extractValue(properties, 0, 'Valor Mershan 60 (Tabela)', 'Valor Mershan 60ʺ (Tabela)'),
           valorNegociadoMensham60: extractValue(properties, 0, 'Valor Mershan 60 (Negociado)', 'Valor Mershan 60ʺ (Negociado)'),
           
+          // PATROCÍNIO - Inserções
+          cotasMeses: extractValue(properties, 0, 'Cotas | Meses', 'Cotas/Meses', 'Cotas Meses'),
+          ins5: extractValue(properties, 0, 'Ins 5ʺ', 'Ins 5"', 'Ins 5'),
+          ins15: extractValue(properties, 0, 'Ins 15ʺ', 'Ins 15"', 'Ins 15'),
+          ins30: extractValue(properties, 0, 'Ins 30ʺ', 'Ins 30"', 'Ins 30'),
+          ins60: extractValue(properties, 0, 'Ins 60ʺ', 'Ins 60"', 'Ins 60'),
+          valorTabelaCota: extractValue(properties, 0, 'Valor Tabela por Cota', 'Valor Tabela Cota'),
+          valorNegociadoCota: extractValue(properties, 0, 'Valor Negociado por Cota', 'Valor Negociado Cota'),
+          
           // Coluna "Excluir" para filtro no site
           excluir: (() => {
             const excludeField = properties['Excluir'];
@@ -402,14 +411,58 @@ export async function onRequest(context) {
       const ocultasEmissoras = emissoras
         .filter(e => e.excluir === true)
         .map(e => e.id);
-      console.log('');
-      console.log('');
-      console.log(' EMISSORAS MAPEADAS - PRIMEIRA EMISSORA:');
-      console.log('');
-      if (emissoras.length > 0) {
-        console.log(JSON.stringify(emissoras[0], null, 2));
+      
+      // Detectar quais produtos estão disponíveis (têm dados em alguma emissora)
+      const availableProducts = {
+        midia: [],
+        patrocinio: []
+      };
+      
+      // Verifica Mídia Avulsa
+      const mediaProducts = [
+        { key: 'spots30', field: 'spots30', label: 'Spots 30"' },
+        { key: 'spots60', field: 'spots60', label: 'Spots 60"' },
+        { key: 'spotsBlitz', field: 'spotsBlitz', label: 'Blitz' },
+        { key: 'spots15', field: 'spots15', label: 'Spots 15"' },
+        { key: 'spots5', field: 'spots5', label: 'Spots 5"' },
+        { key: 'spotsTest30', field: 'spotsTest30', label: 'Test 30"' },
+        { key: 'spotsTest60', field: 'spotsTest60', label: 'Test 60"' },
+        { key: 'spotsFlash30', field: 'spotsFlash30', label: 'Flash 30"' },
+        { key: 'spotsFlash60', field: 'spotsFlash60', label: 'Flash 60"' },
+        { key: 'spotsMensham30', field: 'spotsMensham30', label: 'Mensham 30"' },
+        { key: 'spotsMensham60', field: 'spotsMensham60', label: 'Mensham 60"' }
+      ];
+      
+      // Verifica Patrocínio
+      const patrocinioProducts = [
+        { key: 'ins5', field: 'ins5', label: 'Ins 5"' },
+        { key: 'ins15', field: 'ins15', label: 'Ins 15"' },
+        { key: 'ins30', field: 'ins30', label: 'Ins 30"' },
+        { key: 'ins60', field: 'ins60', label: 'Ins 60"' }
+      ];
+      
+      // Detectar produtos com dados
+      for (const product of mediaProducts) {
+        if (emissoras.some(e => e[product.field] > 0)) {
+          availableProducts.midia.push(product);
+        }
       }
+      
+      for (const product of patrocinioProducts) {
+        if (emissoras.some(e => e[product.field] > 0)) {
+          availableProducts.patrocinio.push(product);
+        }
+      }
+      
+      // Detectar se tem campo de Patrocínio (Cotas/Meses)
+      const temPatrocinio = emissoras.some(e => e.cotasMeses > 0);
+      const temMidia = emissoras.some(e => availableProducts.midia.length > 0);
+      
       console.log('');
+      console.log('');
+      console.log(' PRODUTOS DISPONÍVEIS DETECTADOS:');
+      console.log(`   Mídia Avulsa: ${availableProducts.midia.map(p => p.label).join(', ') || 'nenhum'}`);
+      console.log(`   Patrocínio: ${availableProducts.patrocinio.map(p => p.label).join(', ') || 'nenhum'}`);
       console.log('');
 
       // Buscar nome da proposta
@@ -425,7 +478,10 @@ export async function onRequest(context) {
       return new Response(JSON.stringify({
         emissoras: emissoras,
         ocultasEmissoras: ocultasEmissoras,
-        proposalName: proposalName
+        proposalName: proposalName,
+        availableProducts: availableProducts,
+        temMidia: temMidia,
+        temPatrocinio: temPatrocinio
       }), {
         status: 200,
         headers
