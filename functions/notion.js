@@ -49,13 +49,15 @@ export async function onRequest(context) {
         let id = url.searchParams.get('id');
         const debugMode = url.searchParams.get('debug') === 'true';
         const listFieldsOnly = url.searchParams.get('listFields') === 'true';
+        const debugFields = url.searchParams.get('debugFields') === 'true';
         
         console.log(' DEBUG GET REQUEST - TABELA DE EMISSORAS');
         console.log('URL completa:', request.url);
         console.log('Query params:', [...url.searchParams.entries()]);
         console.log('ID extrado:', id);
         console.log('Debug mode:', debugMode);
-        console.log('List fields only:', listFieldsOnly);      if (!id || id.trim() === '') {
+        console.log('List fields only:', listFieldsOnly);
+        console.log('Debug Fields mode:', debugFields);      if (!id || id.trim() === '') {
         return new Response(JSON.stringify({ 
           error: 'ID da tabela  obrigatrio',
           debug: {
@@ -129,6 +131,34 @@ export async function onRequest(context) {
           return new Response(JSON.stringify({
             error: 'Nenhum registro encontrado'
           }), { status: 400, headers });
+        }
+        
+        // Se debugFields, retornar com valores completos
+        if (debugFields) {
+          const fieldsWithValues = Object.keys(firstRecord.properties).map(name => {
+            const prop = firstRecord.properties[name];
+            let value = null;
+            
+            if (prop.type === 'number') value = prop.number;
+            else if (prop.type === 'title') value = prop.title?.[0]?.text?.content;
+            else if (prop.type === 'rich_text') value = prop.rich_text?.[0]?.text?.content;
+            else if (prop.type === 'formula') value = prop.formula?.number || prop.formula?.string;
+            
+            return {
+              name: name,
+              type: prop.type,
+              value: value,
+              raw: prop
+            };
+          });
+          
+          return new Response(JSON.stringify({
+            success: true,
+            debugFields: true,
+            firstRecordId: firstRecord.id,
+            emissora: firstRecord.properties['Emissora']?.rich_text?.[0]?.text?.content || 'Desconhecida',
+            fields: fieldsWithValues
+          }, null, 2), { status: 200, headers });
         }
         
         const fields = Object.keys(firstRecord.properties).map(name => ({
