@@ -346,6 +346,10 @@ async function loadProposalFromNotion(tableId) {
             proposalData.initialOcultasEmissoras = new Set(ocultasEmissoras);  // Guardar estado inicial
             console.log(`👤 ${proposalData.ocultasEmissoras.size} emissoras marcadas como ocultas`);
             
+            // Recalcular impactos dinamicamente para todas as emissoras
+            console.log('\n📊 Recalculando impactos com base na fórmula do Notion...');
+            recalculateAllImpactos();
+            
             console.log(`✅ ${proposalData.emissoras.length} emissoras carregadas com sucesso!`);
         } else {
             console.log('⚠️ Array vazio ou inválido');
@@ -1064,6 +1068,57 @@ function calculateCPM() {
 }
 
 // =====================================================
+// CÁLCULO DINÂMICO DE IMPACTOS
+// =====================================================
+// Fórmula: (Spots30 * PMM) + (Test60 * PMM * 2) + (Spots60 * PMM * 2) + (Spots15 * PMM / 2) + (Spots5 * PMM / 6)
+
+function calculateImpactosForEmissora(emissora) {
+    /**
+     * Calcula impactos dinamicamente usando a fórmula exata do Notion:
+     * (Spots30 * PMM) + (Test60 * PMM * 2) + (Spots60 * PMM * 2) + (Spots15 * PMM / 2) + (Spots5 * PMM / 6)
+     */
+    
+    if (!emissora) return 0;
+    
+    const pmm = emissora.PMM || parseFloat(emissora.PMM) || 0;
+    
+    const spots30 = parseFloat(emissora.spots30) || 0;
+    const test60 = parseFloat(emissora.spotsTest60) || 0;  // Test 60ʺ
+    const spots60 = parseFloat(emissora.spots60) || 0;
+    const spots15 = parseFloat(emissora.spots15) || 0;
+    const spots5 = parseFloat(emissora.spots5) || 0;
+    
+    // Aplicar a fórmula exata
+    const impactos = 
+        (spots30 * pmm) +
+        (test60 * pmm * 2) +
+        (spots60 * pmm * 2) +
+        (spots15 * pmm / 2) +
+        (spots5 * pmm / 6);
+    
+    return Math.round(impactos); // Arredondar para inteiro
+}
+
+function recalculateAllImpactos() {
+    /**
+     * Recalcula impactos para TODAS as emissoras
+     * Deve ser chamado sempre que um spot ou PMM muda
+     */
+    console.log('🔄 Recalculando impactos para todas as emissoras...');
+    
+    proposalData.emissoras.forEach((emissora, index) => {
+        const impactosAntigos = emissora.impactos;
+        emissora.impactos = calculateImpactosForEmissora(emissora);
+        
+        if (impactosAntigos !== emissora.impactos) {
+            console.log(`   📊 Emissora ${index} (${emissora.emissora}): ${impactosAntigos} → ${emissora.impactos}`);
+        }
+    });
+    
+    console.log('✅ Impactos recalculados!');
+}
+
+// =====================================================
 // EDIÇÃO E ATUALIZAÇÃO
 // =====================================================
 
@@ -1095,6 +1150,13 @@ function updateEmissora(index, field, value) {
     
     console.log(`📝 Emissora ${index} - ${field}: ${oldValue} → ${newValue}`);
     console.log('📊 Changes agora:', proposalData.changes);
+    
+    // Recalcular impactos se foi alterado um campo de spot ou PMM
+    const spotFields = ['spots30', 'spots60', 'spotsBlitz', 'spots15', 'spots5', 'spotsTest30', 'spotsTest60', 'spotsFlash30', 'spotsFlash60', 'spotsMensham30', 'spotsMensham60', 'PMM'];
+    if (spotFields.includes(field)) {
+        console.log(`   📊 Campo ${field} alterado - recalculando impactos...`);
+        recalculateAllImpactos();
+    }
     
     // NÃO chama renderSpotsTable, apenas atualiza estatísticas e gráficos
     updateStats();
