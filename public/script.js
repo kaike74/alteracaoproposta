@@ -524,6 +524,7 @@ function renderSpotsTable() {
             <th style="min-width: 80px;">Região</th>
             <th style="min-width: 100px;">Praça</th>
             <th style="min-width: 140px;">Emissora</th>
+            <th style="min-width: 120px;">Impactos</th>
         `;
         
         // Cabeçalhos dinâmicos por produto de MÍDIA AVULSA
@@ -614,6 +615,9 @@ function renderSpotsTable() {
             <td class="emissora-cell">
                 ${logoUrl ? `<img src="${logoUrl}" alt="${emissora.emissora}" class="emissora-logo" onerror="console.error('Erro ao carregar logo de ${emissora.emissora}')">` : ''}
                 <span class="emissora-name"><strong>${emissora.emissora || '-'}</strong></span>
+            </td>
+            <td style="text-align: center; font-weight: 600; color: #06055b;">
+                ${(emissora.impactos || 0).toLocaleString('pt-BR')}
             </td>
         `;
         
