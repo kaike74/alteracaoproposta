@@ -1194,6 +1194,7 @@ async function saveChanges() {
 }
 
 function showConfirmModal() {
+    console.log('%c🎯 PRÓXIMO PASSO: CLIQUE NO BOTÃO "CONFIRMAR" NO MODAL!', 'color: #dc2626; background: #fef2f2; padding: 10px 15px; font-size: 14px; font-weight: bold; border-radius: 5px;');
     console.log('📋 Abrindo modal de confirmação...');
     
     const modal = document.getElementById('confirmModal');
@@ -1527,10 +1528,33 @@ async function confirmAndSave() {
             console.log('═══════════════════════════════════════════════════════════');
             console.log('📋 LOGS DO SERVIDOR (Notion.js):');
             console.log('═══════════════════════════════════════════════════════════');
-            result.debugLogs.forEach(log => console.log(log));
+            result.debugLogs.forEach(log => {
+                console.log(log);
+                // Destacar logs de email
+                if (log.includes('[EMAIL]')) {
+                    console.warn('%c📧 EMAIL LOG: ' + log, 'color: #ec4899; font-weight: bold; background: #fecdd3; padding: 2px 6px; border-radius: 3px;');
+                }
+            });
             console.log('═══════════════════════════════════════════════════════════');
         } else {
             console.warn('⚠️ debugLogs vazio ou não é array:', result.debugLogs);
+        }
+        
+        // Procurar por logs de email nos debugLogs
+        const emailLogs = result.debugLogs ? result.debugLogs.filter(log => log.includes('[EMAIL]')) : [];
+        if (emailLogs.length > 0) {
+            console.warn('%c🎯 RESUMO DOS LOGS DE EMAIL:', 'color: #dc2626; font-weight: bold; font-size: 14px;');
+            emailLogs.forEach(log => {
+                if (log.includes('✅')) {
+                    console.log('%c✅ ' + log, 'color: #10b981; font-weight: bold;');
+                } else if (log.includes('❌')) {
+                    console.error('%c❌ ' + log, 'color: #dc2626; font-weight: bold;');
+                } else {
+                    console.log('%c📧 ' + log, 'color: #f59e0b; font-weight: bold;');
+                }
+            });
+        } else {
+            console.warn('%c⚠️ NENHUM LOG DE EMAIL ENCONTRADO NOS LOGS DO SERVIDOR', 'color: #f59e0b; font-weight: bold; font-size: 12px;');
         }
         
         // Adicionar alterações ao histórico

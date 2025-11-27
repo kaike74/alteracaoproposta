@@ -863,6 +863,8 @@ export async function onRequest(context) {
       try {
         console.log('📧 [PATCH] Chamando sendNotificationEmail...');
         console.log('📧 [PATCH] updatePromises:', updatePromises.length, 'alterações');
+        console.log('📧 [PATCH] data.editorEmail:', data.editorEmail);
+        console.log('📧 [PATCH] editorEmail final:', data.editorEmail || 'desconhecido@email.com');
         
         // Buscar nome da proposta
         let proposalName = 'Proposta';
@@ -872,20 +874,27 @@ export async function onRequest(context) {
           console.warn('⚠️ Não conseguiu buscar nome da proposta:', e.message);
         }
         
-        emailLogs = await sendNotificationEmail(env, {
+        const emailPayload = {
           tableId: tableId,
           proposalName: proposalName,
           changes: updatePromises,
           emissoras: emissoras,
           requestIP: request.headers.get('cf-connecting-ip') || 'desconhecido',
           editorEmail: data.editorEmail || 'desconhecido@email.com'
-        });
+        };
+        
+        console.log('📧 [PATCH] Payload enviado para sendNotificationEmail:', JSON.stringify(emailPayload));
+        
+        emailLogs = await sendNotificationEmail(env, emailPayload);
         console.log('📧 [PATCH] sendNotificationEmail completado');
+        console.log('📧 [PATCH] emailLogs retornado:', emailLogs);
         debugLogs.push(...emailLogs);
       } catch (emailError) {
         console.error('⚠️ [PATCH] Erro ao enviar email:', emailError.message);
+        console.error('⚠️ [PATCH] Stack:', emailError.stack);
         log('⚠️ Erro ao enviar email: ' + emailError.message);
         debugLogs.push('⚠️ Erro ao enviar email: ' + emailError.message);
+        debugLogs.push('⚠️ Stack completo: ' + emailError.stack);
         // Não interrompe o fluxo se falhar o email
       }
 
