@@ -853,6 +853,8 @@ export async function onRequest(context) {
             notionField: notionField,
             emissoraId: emissora.id,
             emissoraName: emissora.emissora,
+            oldValue: change.old || change.oldValue || 'N/A',
+            newValue: change.new || change.newValue || 'N/A',
             success: true
           });
         }
