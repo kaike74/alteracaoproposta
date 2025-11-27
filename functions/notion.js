@@ -710,6 +710,7 @@ export async function onRequest(context) {
       const updatePromises = [];
 
       // Sincronizar o status "Excluir" com Notion
+      const emissoras_changes = [];  // Rastrear mudanças de inclusão/exclusão
       if (ocultasEmissoras && Array.isArray(ocultasEmissoras)) {
         log(` Sincronizando status "Excluir" para ${ocultasEmissoras.length} emissoras`);
         
@@ -720,6 +721,18 @@ export async function onRequest(context) {
           // Só atualizar se houve mudança no status
           if (isExcluida !== wasPreviouslyExcluida) {
             log(`   Atualizando ${emissora.emissora}: Excluir = ${isExcluida}`);
+            
+            // Rastrear mudança de inclusão/exclusão
+            emissoras_changes.push({
+              field: 'Excluir',
+              notionField: 'Excluir',
+              emissoraId: emissora.id,
+              emissoraName: emissora.emissora,
+              oldValue: wasPreviouslyExcluida ? 'Excluída' : 'Ativa',
+              newValue: isExcluida ? 'Excluída' : 'Ativa',
+              success: true,
+              isExclusionChange: true
+            });
             
             const excludeResponse = await fetch(`https://api.notion.com/v1/pages/${emissora.id}`, {
               method: 'PATCH',
@@ -739,6 +752,7 @@ export async function onRequest(context) {
             
             if (excludeResponse.ok) {
               log(`     Excluir atualizado para ${isExcluida}`);
+              // O tracking já foi feito acima
             } else {
               const error = await excludeResponse.json();
               log(`     Erro ao atualizar Excluir: ${JSON.stringify(error)}`);
@@ -855,7 +869,8 @@ export async function onRequest(context) {
             emissoraName: emissora.emissora,
             oldValue: change.old || change.oldValue || 'N/A',
             newValue: change.new || change.newValue || 'N/A',
-            success: true
+            success: true,
+            isExclusionChange: false
           });
         }
       }
@@ -880,6 +895,7 @@ export async function onRequest(context) {
           tableId: tableId,
           proposalName: proposalName,
           changes: updatePromises,
+          emissoras_changes: emissoras_changes,
           emissoras: emissoras,
           requestIP: request.headers.get('cf-connecting-ip') || 'desconhecido',
           editorEmail: requestBody.editorEmail || 'desconhecido@email.com'
@@ -1103,7 +1119,7 @@ async function sendNotificationEmail(env, data) {
     return emailLogs;
   }
   
-  const { tableId, proposalName, changes, emissoras, requestIP, editorEmail } = data;
+  const { tableId, proposalName, changes, emissoras_changes, emissoras, requestIP, editorEmail } = data;
   const resendApiKey = env.RESEND_API_KEY;
   
   emailLogs.push('📧 [EMAIL] ===== INICIANDO ENVIO DE EMAIL =====');
@@ -1131,17 +1147,34 @@ async function sendNotificationEmail(env, data) {
 
   // Agrupar alteraes por emissora
   const changesByEmissora = {};
+  const exclusionChanges = [];  // Rastrear exclusões/inclusões separadamente
+  
   changes.forEach(change => {
     if (change.success) {
-      const emissoraIndex = findEmissoraIndexById(change.emissoraId, emissoras);
-      if (emissoraIndex !== -1) {
-        if (!changesByEmissora[emissoraIndex]) {
-          changesByEmissora[emissoraIndex] = [];
+      if (change.isExclusionChange) {
+        // Rastrear mudanças de exclusão/inclusão separadamente
+        exclusionChanges.push(change);
+      } else {
+        // Agrupar alterações normais por emissora
+        const emissoraIndex = findEmissoraIndexById(change.emissoraId, emissoras);
+        if (emissoraIndex !== -1) {
+          if (!changesByEmissora[emissoraIndex]) {
+            changesByEmissora[emissoraIndex] = [];
+          }
+          changesByEmissora[emissoraIndex].push(change);
         }
-        changesByEmissora[emissoraIndex].push(change);
       }
     }
   });
+  
+  // Adicionar exclusões/inclusões do payload também
+  if (emissoras_changes && Array.isArray(emissoras_changes)) {
+    emissoras_changes.forEach(change => {
+      if (change.success) {
+        exclusionChanges.push(change);
+      }
+    });
+  }
 
   // Gerar HTML do email
   let emailHTML = `
@@ -1170,14 +1203,14 @@ async function sendNotificationEmail(env, data) {
     <body>
       <div class="container">
         <div class="header">
-          <h1> Alteração de Proposta</h1>
+          <h1>🔔 Alteração de Proposta</h1>
           <p style="margin: 10px 0 0 0; opacity: 0.9;">Proposta: <strong>${proposalName}</strong></p>
-          <p style="margin: 8px 0 0 0; opacity: 0.8; font-size: 13px;">E-MDIAS | Sistema de Gestão de Propostas</p>
+          <p style="margin: 8px 0 0 0; opacity: 0.8; font-size: 13px;">E-MÍDIAS | Sistema de Gestão de Propostas</p>
         </div>
         
         <div class="content">
           <p>Olá,</p>
-          <p>A proposta <strong>"${proposalName}"</strong> foi alterada no sistema E-MDIAS. Confira os detalhes abaixo:</p>
+          <p>A proposta <strong>"${proposalName}"</strong> foi alterada no sistema E-MÍDIAS. Confira os detalhes abaixo:</p>
           
           <div class="info-box">
             <strong>📧 Alterado por:</strong> ${editorEmail || 'Desconhecido'}<br>
@@ -1186,22 +1219,44 @@ async function sendNotificationEmail(env, data) {
           </div>
   `;
 
+  // Adicionar alterações de inclusão/exclusão de emissoras (se houver)
+  if (exclusionChanges && exclusionChanges.length > 0) {
+    emailHTML += `
+      <div class="change-group" style="border-left-color: #f59e0b; background: #fffbf0;">
+        <h3 style="color: #f59e0b;">⚙️ Mudanças de Status (Inclusão/Exclusão)</h3>
+    `;
+    
+    exclusionChanges.forEach(change => {
+      const icon = change.newValue === 'Excluída' ? '❌' : '✅';
+      emailHTML += `
+        <div class="change-item">
+          <strong>${icon} ${change.emissoraName}:</strong> 
+          <span class="old-value">${change.oldValue}</span> 
+          → 
+          <span class="new-value">${change.newValue}</span>
+        </div>
+      `;
+    });
+    
+    emailHTML += '</div>';
+  }
+  
   // Adicionar alteraes por emissora
   for (const emissoraIndex in changesByEmissora) {
     const emissora = emissoras[emissoraIndex];
-    const emissoras_changes = changesByEmissora[emissoraIndex];
+    const changes_by_emissora = changesByEmissora[emissoraIndex];
     
     emailHTML += `
       <div class="change-group">
-        <h3> ${emissora.emissora}</h3>
+        <h3>📻 ${emissora.emissora}</h3>
     `;
     
-    emissoras_changes.forEach(change => {
+    changes_by_emissora.forEach(change => {
       emailHTML += `
         <div class="change-item">
           <strong>${change.notionField}:</strong> 
           <span class="old-value">${change.oldValue || change.old}</span> 
-           
+          → 
           <span class="new-value">${change.newValue || change.new}</span>
         </div>
       `;
@@ -1218,7 +1273,7 @@ async function sendNotificationEmail(env, data) {
         </div>
         
         <div class="footer">
-          <p> 2025 HUB RDIOS - E-MDIAS. Todos os direitos reservados.</p>
+          <p>© 2025 HUB RÁDIOS - E-MÍDIAS. Todos os direitos reservados.</p>
         </div>
       </div>
     </body>
@@ -1247,7 +1302,7 @@ async function sendNotificationEmail(env, data) {
       body: JSON.stringify({
         from: 'onboarding@resend.dev',
         to: 'tatico5@hubradios.com',
-        subject: `[E-MDIAS] Alteração de Proposta - ${new Date().toLocaleDateString('pt-BR')}`,
+        subject: `[E-MÍDIAS] Alteração de Proposta - ${proposalName} - ${new Date().toLocaleDateString('pt-BR')}`,
         html: emailHTML
       })
     });
