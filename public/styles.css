@@ -665,6 +665,7 @@ td {
     border-bottom: 1px solid var(--gray);
     color: var(--dark);
     font-size: 0.95rem;
+    vertical-align: middle;
 }
 
 tbody tr:hover {
@@ -686,7 +687,7 @@ tbody tr:last-child td {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 15px !important;
+    padding: 14px 15px !important;
 }
 
 .emissora-logo {
