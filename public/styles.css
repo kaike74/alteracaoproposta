@@ -610,14 +610,45 @@ table {
     border-collapse: collapse;
 }
 
-/* Colunas fixas na tabela - REMOVIDO STICKY HORIZONTAL */
+/* Colunas fixas ao rolar para o lado (HORIZONTAL) */
+table th:nth-child(1),
+table td:nth-child(1) {
+    position: sticky;
+    left: 0;
+    z-index: 12;
+    background: var(--white);
+}
+
+table th:nth-child(2),
+table td:nth-child(2) {
+    position: sticky;
+    left: 54px;
+    z-index: 12;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+table th:nth-child(3),
+table td:nth-child(3) {
+    position: sticky;
+    left: 120px;
+    z-index: 12;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+table th:nth-child(4),
+table td:nth-child(4) {
+    position: sticky;
+    left: 190px;
+    z-index: 12;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
 
 thead {
     background: linear-gradient(135deg, #f3f0ff 0%, #ede9fe 100%);
     border-bottom: 2px solid #8b5cf6;
     position: sticky;
     top: 0;
-    z-index: 20;
+    z-index: 15;
 }
 
 th {
@@ -630,9 +661,6 @@ th {
     letter-spacing: 0.6px;
     font-family: 'Space Grotesk', sans-serif;
     background: linear-gradient(135deg, #f3f0ff 0%, #ede9fe 100%);
-    position: sticky;
-    top: 0;
-    z-index: 21;
 }
 
 td {
