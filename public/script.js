@@ -1712,41 +1712,38 @@ function showError(message) {
 
 function goBack() {
     /**
-     * Redireciona para a proposta com links e fallback:
-     * URL Principal: https://hub.emidiastec.com.br/NOMEPROPOSTA-IDPAGINA
-     * URL Fallback: https://e-radios.notion.site/
+     * Redireciona para a proposta no hub emidiastec:
+     * URL Padrão: https://hub.emidiastec.com.br/NOME-PROPOSTA-ID
+     * Exemplo: https://hub.emidiastec.com.br/Corteva-24-11-16-27-Patroc-nio-2b520b549cf581818da3d9e924248ec6
+     * 
+     * Fallback: https://e-radios.notion.site/
      */
     
     const proposalName = proposalData.proposalName ? proposalData.proposalName.trim().replace(/\s+/g, '-') : '';
     const pageId = proposalData.tableId || '';
     
-    // URL principal: hub.emidiastec.com.br/NOMEPROPOSTA-IDPAGINA
-    const primaryUrl = `https://hub.emidiastec.com.br/${proposalName}-${pageId}`;
+    // URL única: hub.emidiastec.com.br/NOMEPROPOSTA-IDPAGINA
+    const hubUrl = `https://hub.emidiastec.com.br/${proposalName}-${pageId}`;
     
     // URL fallback: notion.site
     const fallbackUrl = 'https://e-radios.notion.site/';
     
-    console.log(`🔗 Tentando redirecionar para: ${primaryUrl}`);
-    console.log(`⚠️ URL Fallback: ${fallbackUrl}`);
+    console.log(`🔗 Redirecionando para: ${hubUrl}`);
+    console.log(`⚠️ Fallback disponível: ${fallbackUrl}`);
     
-    // Tentar carregar URL principal
-    try {
-        // Verificar se a URL é válida
-        if (proposalName && pageId) {
-            // Redirecionar para URL principal
-            window.location.href = primaryUrl;
-            
-            // Fallback após 3 segundos se a URL principal não carregar
-            setTimeout(() => {
-                window.location.href = fallbackUrl;
-            }, 3000);
-        } else {
-            // Se faltam dados, ir direto para o fallback
-            console.warn('⚠️ Dados insuficientes para URL principal, usando fallback');
+    // Verificar se temos os dados necessários
+    if (proposalName && pageId) {
+        // Redirecionar para URL do hub
+        window.location.href = hubUrl;
+        
+        // Fallback após 4 segundos se a URL não carregar
+        setTimeout(() => {
+            console.warn('⚠️ URL do hub não respondeu, usando fallback');
             window.location.href = fallbackUrl;
-        }
-    } catch (error) {
-        console.error('❌ Erro ao redirecionar:', error);
+        }, 4000);
+    } else {
+        // Se faltam dados, ir direto para o fallback
+        console.warn('⚠️ Dados insuficientes para URL do hub, usando fallback');
         window.location.href = fallbackUrl;
     }
 }
