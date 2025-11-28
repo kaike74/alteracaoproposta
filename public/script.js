@@ -875,9 +875,6 @@ function updateStats() {
     if (statTotalImpacts) statTotalImpacts.textContent = totalImpactos.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     if (statEconomia) statEconomia.textContent = percentualDesconto + '%';
     
-    // Atualizar rodapé da tabela com totais
-    updateTableFooter(totalInvestimentoTabela, totalInvestimentoNegociado);
-    
     // Atualizar lista de produtos ativos
     updateActiveProducts();
     
@@ -885,93 +882,6 @@ function updateStats() {
     // updateComparisonTable(totalInvestimentoNegociado, totalInvestimentoTabela);
     
     console.log('✅ Estatísticas atualizadas!\n');
-}
-
-function updateTableFooter(totalTabela, totalNegociado) {
-    console.log('\n╔════════════════════════════════════════════════════════════════╗');
-    console.log('║ 📊 ATUALIZANDO FOOTER DA TABELA');
-    console.log('╚════════════════════════════════════════════════════════════════╝');
-    console.log('📥 Valores recebidos:');
-    console.log('   - totalTabela:', totalTabela);
-    console.log('   - totalNegociado:', totalNegociado);
-    
-    const tfoot = document.getElementById('spotsTableFooter');
-    if (!tfoot) {
-        console.error('❌ Elemento tfoot não encontrado!');
-        return;
-    }
-    
-    console.log('✅ tfoot encontrado, limpando...');
-    
-    // Limpa o footer
-    tfoot.innerHTML = '';
-    
-    // Calcula o número de colunas dinâmicas (produtos ativos)
-    const produtosAtivos = new Set();
-    proposalData.emissoras.forEach(emissora => {
-        PRODUTOS.forEach(produto => {
-            const spots = emissora[produto.key] || 0;
-            if (spots > 0) {
-                produtosAtivos.add(produto.key);
-            }
-        });
-    });
-    
-    // Verifica se há patrocínio ativo
-    const temPatrocinioAtivo = proposalData.emissoras.some(e => e.cotasMeses > 0);
-    
-    console.log('📋 Produtos ativos:', Array.from(produtosAtivos).length);
-    console.log('📋 Tem patrocínio ativo?', temPatrocinioAtivo);
-    
-    // Cria a linha de totais
-    const totalRow = document.createElement('tr');
-    totalRow.className = 'total-row';
-    totalRow.style.fontWeight = 'bold';
-    totalRow.style.backgroundColor = '#f5f5f5';
-    totalRow.style.borderTop = '2px solid var(--primary)';
-    
-    let html = '<td colspan="4" style="text-align: right; padding-right: 16px; font-weight: bold;">TOTAL:</td>';
-    
-    // Adiciona colunas para produtos de mídia avulsa
-    produtosAtivos.forEach(produtoKey => {
-        const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
-        if (produto) {
-            // Duas colunas por produto (spots + valor negociado)
-            html += '<td></td><td></td>';
-        }
-    });
-    
-    // Adiciona colunas para patrocínio se existir
-    if (temPatrocinioAtivo) {
-        // Cotas/Meses + 4 inserções + 2 valores (tabela e negociado)
-        html += '<td></td><td></td><td></td><td></td><td></td><td></td><td></td>';
-    }
-    
-    // Formata os valores para exibição
-    const tabelaFormatado = formatCurrency(totalTabela);
-    const negociadoFormatado = formatCurrency(totalNegociado);
-    
-    console.log('💰 Valores formatados:');
-    console.log('   - Tabela:', tabelaFormatado);
-    console.log('   - Negociado:', negociadoFormatado);
-    
-    // Colunas de investimento e impactos (as finais)
-    html += `
-        <td style="text-align: right; padding-right: 8px; color: #06055b; font-weight: bold; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
-            ${tabelaFormatado}
-        </td>
-        <td style="text-align: right; padding-right: 8px; color: #06055b; font-weight: bold; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);">
-            ${negociadoFormatado}
-        </td>
-        <td></td>
-    `;
-    
-    console.log('📝 HTML final do footer:', html);
-    
-    totalRow.innerHTML = html;
-    tfoot.appendChild(totalRow);
-    
-    console.log('✅ Footer da tabela atualizado com totais\n');
 }
 
 function updateComparisonTable(negociado, tabela) {
