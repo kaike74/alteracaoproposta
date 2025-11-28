@@ -764,6 +764,57 @@ tbody tr:last-child td {
 }
 
 /* =====================================================
+   FOOTER DA TABELA
+   ===================================================== */
+tfoot {
+    position: sticky;
+    bottom: 0;
+    z-index: 15;
+    background: #f5f5f5;
+}
+
+tfoot tr {
+    background: #f5f5f5;
+    border-top: 2px solid #8b5cf6;
+    border-bottom: 2px solid #8b5cf6;
+}
+
+tfoot td {
+    padding: 16px 15px;
+    font-weight: 700;
+    color: #06055b;
+    background: #f5f5f5;
+}
+
+tfoot td:nth-child(1) {
+    position: sticky;
+    left: 0;
+    z-index: 16;
+    background: #f5f5f5;
+}
+
+tfoot td:nth-child(2) {
+    position: sticky;
+    left: 50px;
+    z-index: 16;
+    background: #f5f5f5;
+}
+
+tfoot td:nth-child(3) {
+    position: sticky;
+    left: 150px;
+    z-index: 16;
+    background: #f5f5f5;
+}
+
+tfoot td:nth-child(4) {
+    position: sticky;
+    left: 270px;
+    z-index: 16;
+    background: #f5f5f5;
+}
+
+/* =====================================================
    INPUTS E FORMULÁRIOS
    ===================================================== */
 input[type="checkbox"] {

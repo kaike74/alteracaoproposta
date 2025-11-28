@@ -624,12 +624,19 @@ function renderSpotsTable() {
         `;
         
         // Colunas dinâmicas por produto de MÍDIA AVULSA
+        console.log(`  🔍 Emissora ${emissora.emissora} - Produtos ativos:`, Array.from(produtosAtivos));
         produtosAtivos.forEach(produtoKey => {
             const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
             if (produto) {
                 const spots = emissora[produto.key] || 0;
                 const valorTabela = emissora[produto.tabelaKey] || 0;
                 const valorNegociado = emissora[produto.negKey] || 0;
+                
+                console.log(`     - ${produto.label}: ${spots} spots × R$ ${valorTabela} = R$ ${spots * valorTabela}`);
+                
+                // CALCULA O INVESTIMENTO PARA MÍDIA AVULSA
+                investimentoTabelaEmissora += spots * valorTabela;
+                investimentoNegociadoEmissora += spots * valorNegociado;
                 
                 row.innerHTML += `
                     <td style="text-align: center;">
@@ -659,11 +666,13 @@ function renderSpotsTable() {
             console.log(`   - valorTabelaCota: ${valorTabelaCota}`);
             console.log(`   - valorNegociadoCota: ${valorNegociadoCota}`);
             console.log(`   - ins5: ${emissora.ins5}, ins15: ${emissora.ins15}, ins30: ${emissora.ins30}, ins60: ${emissora.ins60}`);
-            console.log(`   - Dados brutos da emissora:`, emissora);
             
             // Investimento Patrocínio
             const invTabePatrocinio = cotasMeses * valorTabelaCota;
             const invNegPatrocinio = cotasMeses * valorNegociadoCota;
+            
+            console.log(`   - Inv. Tabela Patrocínio: ${invTabePatrocinio}`);
+            console.log(`   - Inv. Negociado Patrocínio: ${invNegPatrocinio}`);
             
             investimentoTabelaEmissora += invTabePatrocinio;
             investimentoNegociadoEmissora += invNegPatrocinio;
@@ -706,6 +715,10 @@ function renderSpotsTable() {
         }
         
         // Colunas de investimento
+        console.log(`💰 TOTAIS DA EMISSORA ${emissora.emissora}:`);
+        console.log(`   - Inv. Tabela: R$ ${investimentoTabelaEmissora.toFixed(2)}`);
+        console.log(`   - Inv. Negociado: R$ ${investimentoNegociadoEmissora.toFixed(2)}`);
+        
         row.innerHTML += `
             <td class="investment-tabela">R$ ${investimentoTabelaEmissora.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
             <td class="investment-negociado">R$ ${investimentoNegociadoEmissora.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
@@ -875,11 +888,20 @@ function updateStats() {
 }
 
 function updateTableFooter(totalTabela, totalNegociado) {
+    console.log('\n╔════════════════════════════════════════════════════════════════╗');
+    console.log('║ 📊 ATUALIZANDO FOOTER DA TABELA');
+    console.log('╚════════════════════════════════════════════════════════════════╝');
+    console.log('📥 Valores recebidos:');
+    console.log('   - totalTabela:', totalTabela);
+    console.log('   - totalNegociado:', totalNegociado);
+    
     const tfoot = document.getElementById('spotsTableFooter');
     if (!tfoot) {
         console.error('❌ Elemento tfoot não encontrado!');
         return;
     }
+    
+    console.log('✅ tfoot encontrado, limpando...');
     
     // Limpa o footer
     tfoot.innerHTML = '';
@@ -898,6 +920,9 @@ function updateTableFooter(totalTabela, totalNegociado) {
     // Verifica se há patrocínio ativo
     const temPatrocinioAtivo = proposalData.emissoras.some(e => e.cotasMeses > 0);
     
+    console.log('📋 Produtos ativos:', Array.from(produtosAtivos).length);
+    console.log('📋 Tem patrocínio ativo?', temPatrocinioAtivo);
+    
     // Cria a linha de totais
     const totalRow = document.createElement('tr');
     totalRow.className = 'total-row';
@@ -905,7 +930,7 @@ function updateTableFooter(totalTabela, totalNegociado) {
     totalRow.style.backgroundColor = '#f5f5f5';
     totalRow.style.borderTop = '2px solid var(--primary)';
     
-    let html = '<td colspan="4" style="text-align: right; padding-right: 16px;">TOTAL:</td>';
+    let html = '<td colspan="4" style="text-align: right; padding-right: 16px; font-weight: bold;">TOTAL:</td>';
     
     // Adiciona colunas para produtos de mídia avulsa
     produtosAtivos.forEach(produtoKey => {
@@ -922,21 +947,31 @@ function updateTableFooter(totalTabela, totalNegociado) {
         html += '<td></td><td></td><td></td><td></td><td></td><td></td><td></td>';
     }
     
+    // Formata os valores para exibição
+    const tabelaFormatado = formatCurrency(totalTabela);
+    const negociadoFormatado = formatCurrency(totalNegociado);
+    
+    console.log('💰 Valores formatados:');
+    console.log('   - Tabela:', tabelaFormatado);
+    console.log('   - Negociado:', negociadoFormatado);
+    
     // Colunas de investimento e impactos (as finais)
     html += `
-        <td style="text-align: right; padding-right: 8px; color: #06055b;">
-            ${formatCurrency(totalTabela)}
+        <td style="text-align: right; padding-right: 8px; color: #06055b; font-weight: bold; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
+            ${tabelaFormatado}
         </td>
-        <td style="text-align: right; padding-right: 8px; color: #06055b;">
-            ${formatCurrency(totalNegociado)}
+        <td style="text-align: right; padding-right: 8px; color: #06055b; font-weight: bold; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);">
+            ${negociadoFormatado}
         </td>
         <td></td>
     `;
     
+    console.log('📝 HTML final do footer:', html);
+    
     totalRow.innerHTML = html;
     tfoot.appendChild(totalRow);
     
-    console.log('✅ Footer da tabela atualizado com totais');
+    console.log('✅ Footer da tabela atualizado com totais\n');
 }
 
 function updateComparisonTable(negociado, tabela) {
