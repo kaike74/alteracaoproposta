@@ -1711,7 +1711,44 @@ function showError(message) {
 }
 
 function goBack() {
-    window.history.back();
+    /**
+     * Redireciona para a proposta com links e fallback:
+     * URL Principal: https://hub.emidiastec.com.br/NOMEPROPOSTA-IDPAGINA
+     * URL Fallback: https://e-radios.notion.site/
+     */
+    
+    const proposalName = proposalData.proposalName ? proposalData.proposalName.trim().replace(/\s+/g, '-') : '';
+    const pageId = proposalData.tableId || '';
+    
+    // URL principal: hub.emidiastec.com.br/NOMEPROPOSTA-IDPAGINA
+    const primaryUrl = `https://hub.emidiastec.com.br/${proposalName}-${pageId}`;
+    
+    // URL fallback: notion.site
+    const fallbackUrl = 'https://e-radios.notion.site/';
+    
+    console.log(`🔗 Tentando redirecionar para: ${primaryUrl}`);
+    console.log(`⚠️ URL Fallback: ${fallbackUrl}`);
+    
+    // Tentar carregar URL principal
+    try {
+        // Verificar se a URL é válida
+        if (proposalName && pageId) {
+            // Redirecionar para URL principal
+            window.location.href = primaryUrl;
+            
+            // Fallback após 3 segundos se a URL principal não carregar
+            setTimeout(() => {
+                window.location.href = fallbackUrl;
+            }, 3000);
+        } else {
+            // Se faltam dados, ir direto para o fallback
+            console.warn('⚠️ Dados insuficientes para URL principal, usando fallback');
+            window.location.href = fallbackUrl;
+        }
+    } catch (error) {
+        console.error('❌ Erro ao redirecionar:', error);
+        window.location.href = fallbackUrl;
+    }
 }
 
 window.addEventListener('resize', () => {
