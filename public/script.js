@@ -862,6 +862,9 @@ function updateStats() {
     if (statTotalImpacts) statTotalImpacts.textContent = totalImpactos.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     if (statEconomia) statEconomia.textContent = percentualDesconto + '%';
     
+    // Atualizar rodapé da tabela com totais
+    updateTableFooter(totalInvestimentoTabela, totalInvestimentoNegociado);
+    
     // Atualizar lista de produtos ativos
     updateActiveProducts();
     
@@ -869,6 +872,71 @@ function updateStats() {
     // updateComparisonTable(totalInvestimentoNegociado, totalInvestimentoTabela);
     
     console.log('✅ Estatísticas atualizadas!\n');
+}
+
+function updateTableFooter(totalTabela, totalNegociado) {
+    const tfoot = document.getElementById('spotsTableFooter');
+    if (!tfoot) {
+        console.error('❌ Elemento tfoot não encontrado!');
+        return;
+    }
+    
+    // Limpa o footer
+    tfoot.innerHTML = '';
+    
+    // Calcula o número de colunas dinâmicas (produtos ativos)
+    const produtosAtivos = new Set();
+    proposalData.emissoras.forEach(emissora => {
+        PRODUTOS.forEach(produto => {
+            const spots = emissora[produto.key] || 0;
+            if (spots > 0) {
+                produtosAtivos.add(produto.key);
+            }
+        });
+    });
+    
+    // Verifica se há patrocínio ativo
+    const temPatrocinioAtivo = proposalData.emissoras.some(e => e.cotasMeses > 0);
+    
+    // Cria a linha de totais
+    const totalRow = document.createElement('tr');
+    totalRow.className = 'total-row';
+    totalRow.style.fontWeight = 'bold';
+    totalRow.style.backgroundColor = '#f5f5f5';
+    totalRow.style.borderTop = '2px solid var(--primary)';
+    
+    let html = '<td colspan="4" style="text-align: right; padding-right: 16px;">TOTAL:</td>';
+    
+    // Adiciona colunas para produtos de mídia avulsa
+    produtosAtivos.forEach(produtoKey => {
+        const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
+        if (produto) {
+            // Duas colunas por produto (spots + valor negociado)
+            html += '<td></td><td></td>';
+        }
+    });
+    
+    // Adiciona colunas para patrocínio se existir
+    if (temPatrocinioAtivo) {
+        // Cotas/Meses + 4 inserções + 2 valores (tabela e negociado)
+        html += '<td></td><td></td><td></td><td></td><td></td><td></td><td></td>';
+    }
+    
+    // Colunas de investimento e impactos (as finais)
+    html += `
+        <td style="text-align: right; padding-right: 8px; color: #06055b;">
+            ${formatCurrency(totalTabela)}
+        </td>
+        <td style="text-align: right; padding-right: 8px; color: #06055b;">
+            ${formatCurrency(totalNegociado)}
+        </td>
+        <td></td>
+    `;
+    
+    totalRow.innerHTML = html;
+    tfoot.appendChild(totalRow);
+    
+    console.log('✅ Footer da tabela atualizado com totais');
 }
 
 function updateComparisonTable(negociado, tabela) {
