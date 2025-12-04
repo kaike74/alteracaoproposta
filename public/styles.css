@@ -86,6 +86,13 @@ body {
     gap: var(--spacing-sm);
 }
 
+.main-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+}
+
 /* =====================================================
    TOP HEADER COM LOGO
    ===================================================== */
@@ -429,6 +436,18 @@ body {
     letter-spacing: 0.5px;
     text-align: center;
     font-family: var(--font-primary);
+    position: relative;
+}
+
+.section-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--emidias-accent);
+    border-radius: 12px 12px 0 0;
 }
 
 /* =====================================================
@@ -447,27 +466,27 @@ body {
     box-sizing: border-box;
 }
 
-/* Scrollbar customizada minimalista */
+/* Scrollbar estilo Notion/Claude - super discreto */
 .table-wrapper::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 .table-wrapper::-webkit-scrollbar-track {
-    background: var(--emidias-light-gray);
+    background: transparent;
 }
 
 .table-wrapper::-webkit-scrollbar-thumb {
-    background: var(--emidias-gray);
-    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
 }
 
 .table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: var(--emidias-dark-gray);
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .table-wrapper {
-    scrollbar-color: var(--emidias-gray) var(--emidias-light-gray);
+    scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
     scrollbar-width: thin;
 }
 
@@ -558,15 +577,18 @@ tbody tr:last-child td {
     border-bottom: none;
 }
 
-/* Linha de total */
+/* Linha de total - Estilo Notion (discreta) */
 .total-row {
-    background: var(--emidias-bg);
-    font-weight: 600;
+    background: transparent;
+    font-weight: 400;
 }
 
 .total-row td {
     padding: var(--spacing-md) var(--spacing-md);
     border-bottom: none;
+    border-top: 1px solid var(--emidias-light-gray);
+    font-size: 0.8rem;
+    color: var(--emidias-dark-gray);
 }
 
 /* Garantir que as colunas fixas na linha de total tenham o background correto */
@@ -574,7 +596,7 @@ tbody tr:last-child td {
 .total-row td:nth-child(2),
 .total-row td:nth-child(3),
 .total-row td:nth-child(4) {
-    background: var(--emidias-bg);
+    background: var(--emidias-white);
 }
 
 .value-cell {

@@ -592,7 +592,7 @@ function renderSpotsTable() {
 
     // Montar linha de total
     // Primeira célula com "Emissoras: X"
-    let totalCells = `<td colspan="${4 + (produtosAtivos.size * 2)}" style="font-weight: 600; font-size: 0.85rem; color: var(--emidias-dark-gray); padding-left: 16px;">
+    let totalCells = `<td colspan="${4 + (produtosAtivos.size * 2)}" style="font-weight: 400; font-size: 0.8rem; color: var(--emidias-dark-gray); padding-left: 16px;">
         Emissoras: ${totalEmissorasSelecionadas}
     </td>`;
 
@@ -603,9 +603,9 @@ function renderSpotsTable() {
 
     totalRow.innerHTML = `
         ${totalCells}
-        <td class="investment-tabela" style="font-weight: bold; font-size: 0.9rem;">R$ ${totalInvTabela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-        <td class="investment-negociado" style="font-weight: bold; font-size: 0.9rem;">R$ ${totalInvNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-        <td style="text-align: center; font-weight: bold; font-size: 0.9rem; color: var(--emidias-dark-gray);">
+        <td class="investment-tabela" style="font-weight: 400; font-size: 0.8rem; color: var(--emidias-dark-gray);">R$ ${totalInvTabela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td class="investment-negociado" style="font-weight: 400; font-size: 0.8rem; color: var(--emidias-dark-gray);">R$ ${totalInvNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td style="text-align: center; font-weight: 400; font-size: 0.8rem; color: var(--emidias-dark-gray);">
             ${totalImpactos.toLocaleString('pt-BR')}
         </td>
     `;
