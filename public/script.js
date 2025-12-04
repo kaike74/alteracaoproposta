@@ -549,6 +549,69 @@ function renderSpotsTable() {
         tbody.appendChild(row);
         totalLinhasAdicionadas++;
     });
+
+    // Adicionar linha de total discreta
+    const totalRow = document.createElement('tr');
+    totalRow.className = 'total-row';
+    totalRow.style.borderTop = '2px solid var(--emidias-medium-gray)';
+
+    // Calcular totais apenas das emissoras SELECIONADAS (não ocultas)
+    let totalInvTabela = 0;
+    let totalInvNegociado = 0;
+    let totalImpactos = 0;
+    let totalEmissorasSelecionadas = 0;
+
+    proposalData.emissoras.forEach(emissora => {
+        if (!proposalData.ocultasEmissoras.has(emissora.id)) {
+            totalEmissorasSelecionadas++;
+
+            // Calcular investimento de mídia avulsa
+            produtosAtivos.forEach(produtoKey => {
+                const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
+                if (produto) {
+                    const spots = emissora[produto.key] || 0;
+                    const valorTabela = emissora[produto.tabelaKey] || 0;
+                    const valorNegociado = emissora[produto.negKey] || 0;
+                    totalInvTabela += spots * valorTabela;
+                    totalInvNegociado += spots * valorNegociado;
+                }
+            });
+
+            // Calcular investimento de patrocínio
+            if (temPatrocinioAtivo) {
+                const cotasMeses = emissora.cotasMeses || 0;
+                const valorTabelaCota = emissora.valorTabelaCota || 0;
+                const valorNegociadoCota = emissora.valorNegociadoCota || 0;
+                totalInvTabela += cotasMeses * valorTabelaCota;
+                totalInvNegociado += cotasMeses * valorNegociadoCota;
+            }
+
+            totalImpactos += emissora.impactos || 0;
+        }
+    });
+
+    // Montar linha de total
+    // Primeira célula com "Emissoras: X"
+    let totalCells = `<td colspan="${4 + (produtosAtivos.size * 2)}" style="font-weight: 600; font-size: 0.85rem; color: var(--emidias-dark-gray); padding-left: 16px;">
+        Emissoras: ${totalEmissorasSelecionadas}
+    </td>`;
+
+    // Se tem patrocínio, adiciona mais colunas vazias
+    if (temPatrocinioAtivo) {
+        totalCells += `<td colspan="${7}"></td>`; // cotasMeses + ins5 + ins15 + ins30 + ins60 + valorTabela + valorNeg
+    }
+
+    totalRow.innerHTML = `
+        ${totalCells}
+        <td class="investment-tabela" style="font-weight: bold; font-size: 0.9rem;">R$ ${totalInvTabela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td class="investment-negociado" style="font-weight: bold; font-size: 0.9rem;">R$ ${totalInvNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td style="text-align: center; font-weight: bold; font-size: 0.9rem; color: var(--emidias-dark-gray);">
+            ${totalImpactos.toLocaleString('pt-BR')}
+        </td>
+    `;
+
+    tbody.appendChild(totalRow);
+
     console.log('═══════════════════════════════════════════════════════════');
 }
 
@@ -685,10 +748,10 @@ function updateStats() {
         statEconomia: !!statEconomia
     });
     
-    if (statTotalSpots) statTotalSpots.textContent = totalSpots;
-    if (statTabelaValue) statTabelaValue.textContent = formatCurrency(totalInvestimentoTabela);
-    if (statNegociadoValue) statNegociadoValue.textContent = formatCurrency(totalInvestimentoNegociado);
-    if (statTotalImpacts) statTotalImpacts.textContent = totalImpactos.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    if (statTotalSpots) statTotalSpots.textContent = formatNumberCompact(totalSpots);
+    if (statTabelaValue) statTabelaValue.textContent = formatCurrencyCompact(totalInvestimentoTabela);
+    if (statNegociadoValue) statNegociadoValue.textContent = formatCurrencyCompact(totalInvestimentoNegociado);
+    if (statTotalImpacts) statTotalImpacts.textContent = formatNumberCompact(totalImpactos);
     if (statEconomia) statEconomia.textContent = percentualDesconto + '%';
     
     // Atualizar lista de produtos ativos
@@ -1519,6 +1582,35 @@ function formatCurrency(value) {
         style: 'currency',
         currency: 'BRL'
     }).format(value);
+}
+
+// Formata valores monetários com abreviações (MI e Mil) para cards
+function formatCurrencyCompact(value) {
+    if (value >= 1000000) {
+        // Milhões - usa 2 casas decimais
+        const millions = value / 1000000;
+        return `R$ ${millions.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MI`;
+    } else if (value >= 1000) {
+        // Milhares - usa 1 casa decimal
+        const thousands = value / 1000;
+        return `R$ ${thousands.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Mil`;
+    } else {
+        // Valores menores que 1000 - formato normal
+        return formatCurrency(value);
+    }
+}
+
+// Formata números grandes com abreviações (sem símbolo de moeda)
+function formatNumberCompact(value) {
+    if (value >= 1000000) {
+        const millions = value / 1000000;
+        return `${millions.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MI`;
+    } else if (value >= 1000) {
+        const thousands = value / 1000;
+        return `${thousands.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Mil`;
+    } else {
+        return value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
 }
 
 function showError(message) {
