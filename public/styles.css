@@ -663,7 +663,7 @@ tbody tr:last-child td {
 .total-row td {
     background: var(--emidias-white) !important;
     position: relative;
-    z-index: 1;
+    z-index: 1 !important;
 }
 
 /* Garantir que colunas sticky da linha de total fiquem acima das não-sticky */
@@ -674,9 +674,13 @@ tbody tr:last-child td {
     z-index: 13 !important;
 }
 
-/* Remover backgrounds coloridos das células de investimento na linha de total */
+/* Garantir que as colunas de investimento, desconto, impactos e CPM também tenham z-index baixo */
 .total-row .investment-tabela,
-.total-row .investment-negociado {
+.total-row .investment-negociado,
+.total-row .desconto-cell,
+.total-row .impactos-cell,
+.total-row .cpm-cell {
+    z-index: 1 !important;
     border-left: none !important;
 }
 
