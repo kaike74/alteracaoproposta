@@ -406,6 +406,8 @@ function renderSpotsTable() {
     
     // Renderiza uma linha por emissora
     proposalData.emissoras.forEach((emissora, emissoraIndex) => {
+        console.log(`📍 Processando emissora ${emissoraIndex}: ${emissora.emissora}`);
+        
         let investimentoTabelaEmissora = 0;
         let investimentoNegociadoEmissora = 0;
         
@@ -422,7 +424,9 @@ function renderSpotsTable() {
         // Colunas fixas
         const isOculta = proposalData.ocultasEmissoras.has(emissora.id);
         const logoUrl = getLogoUrl(emissora.linkLogo);
-
+        
+        console.log(`  Logo URL para ${emissora.emissora}: ${logoUrl}`);
+        
         row.innerHTML = `
             <td class="checkbox-cell">
                 <input 
@@ -443,13 +447,16 @@ function renderSpotsTable() {
         `;
         
         // Colunas dinâmicas por produto de MÍDIA AVULSA
+        console.log(`  🔍 Emissora ${emissora.emissora} - Produtos ativos:`, Array.from(produtosAtivos));
         produtosAtivos.forEach(produtoKey => {
             const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
             if (produto) {
                 const spots = emissora[produto.key] || 0;
                 const valorTabela = emissora[produto.tabelaKey] || 0;
                 const valorNegociado = emissora[produto.negKey] || 0;
-
+                
+                console.log(`     - ${produto.label}: ${spots} spots × R$ ${valorTabela} = R$ ${spots * valorTabela}`);
+                
                 // CALCULA O INVESTIMENTO PARA MÍDIA AVULSA
                 investimentoTabelaEmissora += spots * valorTabela;
                 investimentoNegociadoEmissora += spots * valorNegociado;
@@ -476,11 +483,20 @@ function renderSpotsTable() {
             const cotasMeses = emissora.cotasMeses || 0;
             const valorTabelaCota = emissora.valorTabelaCota || 0;
             const valorNegociadoCota = emissora.valorNegociadoCota || 0;
-
+            
+            console.log(`📋 PATROCÍNIO - Emissora ${emissoraIndex} (${emissora.emissora}):`);
+            console.log(`   - cotasMeses: ${cotasMeses}`);
+            console.log(`   - valorTabelaCota: ${valorTabelaCota}`);
+            console.log(`   - valorNegociadoCota: ${valorNegociadoCota}`);
+            console.log(`   - ins5: ${emissora.ins5}, ins15: ${emissora.ins15}, ins30: ${emissora.ins30}, ins60: ${emissora.ins60}`);
+            
             // Investimento Patrocínio
             const invTabePatrocinio = cotasMeses * valorTabelaCota;
             const invNegPatrocinio = cotasMeses * valorNegociadoCota;
-
+            
+            console.log(`   - Inv. Tabela Patrocínio: ${invTabePatrocinio}`);
+            console.log(`   - Inv. Negociado Patrocínio: ${invNegPatrocinio}`);
+            
             investimentoTabelaEmissora += invTabePatrocinio;
             investimentoNegociadoEmissora += invNegPatrocinio;
             
@@ -533,6 +549,70 @@ function renderSpotsTable() {
         tbody.appendChild(row);
         totalLinhasAdicionadas++;
     });
+
+    // Adicionar linha de total discreta
+    const totalRow = document.createElement('tr');
+    totalRow.className = 'total-row';
+    totalRow.style.borderTop = '2px solid var(--emidias-medium-gray)';
+
+    // Calcular totais apenas das emissoras SELECIONADAS (não ocultas)
+    let totalInvTabela = 0;
+    let totalInvNegociado = 0;
+    let totalImpactos = 0;
+    let totalEmissorasSelecionadas = 0;
+
+    proposalData.emissoras.forEach(emissora => {
+        if (!proposalData.ocultasEmissoras.has(emissora.id)) {
+            totalEmissorasSelecionadas++;
+
+            // Calcular investimento de mídia avulsa
+            produtosAtivos.forEach(produtoKey => {
+                const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
+                if (produto) {
+                    const spots = emissora[produto.key] || 0;
+                    const valorTabela = emissora[produto.tabelaKey] || 0;
+                    const valorNegociado = emissora[produto.negKey] || 0;
+                    totalInvTabela += spots * valorTabela;
+                    totalInvNegociado += spots * valorNegociado;
+                }
+            });
+
+            // Calcular investimento de patrocínio
+            if (temPatrocinioAtivo) {
+                const cotasMeses = emissora.cotasMeses || 0;
+                const valorTabelaCota = emissora.valorTabelaCota || 0;
+                const valorNegociadoCota = emissora.valorNegociadoCota || 0;
+                totalInvTabela += cotasMeses * valorTabelaCota;
+                totalInvNegociado += cotasMeses * valorNegociadoCota;
+            }
+
+            totalImpactos += emissora.impactos || 0;
+        }
+    });
+
+    // Montar linha de total
+    // Primeira célula com "Emissoras: X"
+    let totalCells = `<td colspan="${4 + (produtosAtivos.size * 2)}" style="font-weight: 600; font-size: 0.85rem; color: var(--emidias-dark-gray); padding-left: 16px;">
+        Emissoras: ${totalEmissorasSelecionadas}
+    </td>`;
+
+    // Se tem patrocínio, adiciona mais colunas vazias
+    if (temPatrocinioAtivo) {
+        totalCells += `<td colspan="${7}"></td>`; // cotasMeses + ins5 + ins15 + ins30 + ins60 + valorTabela + valorNeg
+    }
+
+    totalRow.innerHTML = `
+        ${totalCells}
+        <td class="investment-tabela" style="font-weight: bold; font-size: 0.9rem;">R$ ${totalInvTabela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td class="investment-negociado" style="font-weight: bold; font-size: 0.9rem;">R$ ${totalInvNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td style="text-align: center; font-weight: bold; font-size: 0.9rem; color: var(--emidias-dark-gray);">
+            ${totalImpactos.toLocaleString('pt-BR')}
+        </td>
+    `;
+
+    tbody.appendChild(totalRow);
+
+    console.log('═══════════════════════════════════════════════════════════');
 }
 
 function updateActiveProducts() {
@@ -579,6 +659,11 @@ function updateActiveProducts() {
 }
 
 function updateStats() {
+    console.log('\n╔════════════════════════════════════════════════════════════════╗');
+    console.log('║ 📍 INICIANDO: updateStats()');
+    console.log('╚════════════════════════════════════════════════════════════════╝');
+    console.log('✅ Iniciando cálculos apenas das emissoras SELECIONADAS...');
+    
     // Calcula o investimento total APENAS das emissoras checadas
     let totalInvestimentoTabela = 0;
     let totalInvestimentoNegociado = 0;
@@ -638,27 +723,44 @@ function updateStats() {
     
     // Calcula percentual de desconto
     const economia = totalInvestimentoTabela - totalInvestimentoNegociado;
-    const percentualDesconto = totalInvestimentoTabela > 0
+    const percentualDesconto = totalInvestimentoTabela > 0 
         ? ((economia / totalInvestimentoTabela) * 100).toFixed(2)
         : 0;
-
+    
+    console.log('📊 Total Spots:', totalSpots);
+    console.log('💰 Total Investimento Tabela:', totalInvestimentoTabela);
+    console.log('💰 Total Investimento Negociado:', totalInvestimentoNegociado);
+    console.log('📈 Total Impactos:', totalImpactos);
+    console.log('💵 Economia (R$):', economia);
+    console.log('💵 Desconto (%):', percentualDesconto);
+    
     const statTotalSpots = document.getElementById('statTotalSpots');
     const statTabelaValue = document.getElementById('statTabelaValue');
     const statNegociadoValue = document.getElementById('statNegociadoValue');
     const statTotalImpacts = document.getElementById('statTotalImpacts');
     const statEconomia = document.getElementById('statEconomia');
-
-    if (statTotalSpots) statTotalSpots.textContent = totalSpots;
-    if (statTabelaValue) statTabelaValue.textContent = formatCurrency(totalInvestimentoTabela);
-    if (statNegociadoValue) statNegociadoValue.textContent = formatCurrency(totalInvestimentoNegociado);
-    if (statTotalImpacts) statTotalImpacts.textContent = totalImpactos.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    
+    console.log('🔍 Elementos encontrados:', {
+        statTotalSpots: !!statTotalSpots,
+        statTabelaValue: !!statTabelaValue,
+        statNegociadoValue: !!statNegociadoValue,
+        statTotalImpacts: !!statTotalImpacts,
+        statEconomia: !!statEconomia
+    });
+    
+    if (statTotalSpots) statTotalSpots.textContent = formatNumberCompact(totalSpots);
+    if (statTabelaValue) statTabelaValue.textContent = formatCurrencyCompact(totalInvestimentoTabela);
+    if (statNegociadoValue) statNegociadoValue.textContent = formatCurrencyCompact(totalInvestimentoNegociado);
+    if (statTotalImpacts) statTotalImpacts.textContent = formatNumberCompact(totalImpactos);
     if (statEconomia) statEconomia.textContent = percentualDesconto + '%';
     
     // Atualizar lista de produtos ativos
     updateActiveProducts();
-
+    
     // Atualizar tabela comparativa "Sua Proposta" - Desativado
     // updateComparisonTable(totalInvestimentoNegociado, totalInvestimentoTabela);
+    
+    console.log('✅ Estatísticas atualizadas!\n');
 }
 
 function updateComparisonTable(negociado, tabela) {
@@ -680,14 +782,17 @@ function updateComparisonTable(negociado, tabela) {
 }
 
 function renderCharts() {
+    console.log('📊 Renderizando gráficos...');
+    
     try {
         // Destroi os gráficos antigos se existirem
         if (charts.investment) {
             // charts.investment.destroy(); // Desativado - gráfico removido do site
             // charts.investment = null;
         }
-
+        
         // renderInvestmentChart(); // Desativado - gráfico removido do site
+        console.log('✅ Estatísticas renderizadas com sucesso!');
     } catch (error) {
         console.error('⚠️ Erro ao renderizar gráficos (não crítico):', error);
     }
@@ -912,9 +1017,18 @@ function recalculateAllImpactos() {
      * Recalcula impactos para TODAS as emissoras
      * Deve ser chamado sempre que um spot ou PMM muda
      */
+    console.log('🔄 Recalculando impactos para todas as emissoras...');
+    
     proposalData.emissoras.forEach((emissora, index) => {
+        const impactosAntigos = emissora.impactos;
         emissora.impactos = calculateImpactosForEmissora(emissora);
+        
+        if (impactosAntigos !== emissora.impactos) {
+            console.log(`   📊 Emissora ${index} (${emissora.emissora}): ${impactosAntigos} → ${emissora.impactos}`);
+        }
     });
+    
+    console.log('✅ Impactos recalculados!');
 }
 
 // =====================================================
@@ -1325,10 +1439,19 @@ function showUnsavedChanges() {
     if (saveBtn) {
         const temMudancas = Object.keys(proposalData.changes).length > 0;
         const temMudancasEmissoras = proposalData.changedEmissoras.size > 0;
-
+        
         const shouldShow = temMudancas || temMudancasEmissoras;
-
+        
+        console.log(`💾 showUnsavedChanges:`);
+        console.log(`   Mudanças em campos: ${temMudancas}`);
+        console.log(`   Mudanças em emissoras: ${temMudancasEmissoras} (${proposalData.changedEmissoras.size})`);
+        console.log(`   Mostrar botão: ${shouldShow}`);
+        console.log(`   Changes: ${JSON.stringify(proposalData.changes)}`);
+        console.log(`   Emissoras alteradas: ${Array.from(proposalData.changedEmissoras)}`);
+        
         saveBtn.style.display = shouldShow ? 'block' : 'none';
+    } else {
+        console.warn('❌ Botão saveBtn não encontrado!');
     }
 }
 
@@ -1461,6 +1584,35 @@ function formatCurrency(value) {
     }).format(value);
 }
 
+// Formata valores monetários com abreviações (MI e Mil) para cards
+function formatCurrencyCompact(value) {
+    if (value >= 1000000) {
+        // Milhões - usa 2 casas decimais
+        const millions = value / 1000000;
+        return `R$ ${millions.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MI`;
+    } else if (value >= 1000) {
+        // Milhares - usa 1 casa decimal
+        const thousands = value / 1000;
+        return `R$ ${thousands.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Mil`;
+    } else {
+        // Valores menores que 1000 - formato normal
+        return formatCurrency(value);
+    }
+}
+
+// Formata números grandes com abreviações (sem símbolo de moeda)
+function formatNumberCompact(value) {
+    if (value >= 1000000) {
+        const millions = value / 1000000;
+        return `${millions.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MI`;
+    } else if (value >= 1000) {
+        const thousands = value / 1000;
+        return `${thousands.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Mil`;
+    } else {
+        return value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+}
+
 function showError(message) {
     console.error('❌', message);
     alert(`Erro: ${message}`);
@@ -1471,43 +1623,32 @@ function goBack() {
      * Redireciona para a página pai da proposta (parent page)
      * URL: https://hub.emidiastec.com.br/NOME-PROPOSTA-PARENT-PAGE-ID
      * Fallback: https://emidiastec.com.br
-     *
-     * Exemplo: "Giga-Atacado (02/12 - 11:20)" + "2bd20b54-9cf5-81ac-8602-fe85b8e66ddc"
-     *          → "Giga-Atacado-02-12-11-20-2bd20b549cf581ac8602fe85b8e66ddc"
      */
 
-    const rawProposalName = proposalData.proposalName || '';
-    const rawParentPageId = proposalData.parentPageId || '';
+    const proposalName = proposalData.proposalName ? proposalData.proposalName.trim().replace(/\s+/g, '-') : '';
+    const parentPageId = proposalData.parentPageId || '';
 
-    // Limpar nome da proposta de forma robusta
-    let cleanProposalName = rawProposalName
-        .replace(/\(/g, '')             // Remove (
-        .replace(/\)/g, '')             // Remove )
-        .replace(/\//g, '-')            // Substitui / por -
-        .replace(/:/g, '-')             // Substitui : por -
-        .replace(/\s+/g, '-')           // Substitui espaços por -
-        .replace(/-+/g, '-')            // Remove múltiplos - consecutivos
-        .replace(/^-+/, '')             // Remove - do início
-        .replace(/-+$/, '');            // Remove - do fim
+    // Construir URL com parent page ID
+    const urlPath = `${proposalName}-${parentPageId}`;
 
-    // Limpar parent page ID: remover TODOS os traços do UUID
-    const cleanParentPageId = rawParentPageId.replace(/-/g, '');
-
-    // Verificar se temos os dados necessários
-    if (!cleanProposalName || !cleanParentPageId) {
-        console.warn('⚠️ Parent page ID ou nome não disponível, redirecionando para fallback');
-        window.location.href = 'https://emidiastec.com.br';
-        return;
-    }
-
-    // Construir URL com nome e ID limpos
-    const urlPath = `${cleanProposalName}-${cleanParentPageId}`;
+    // URL principal: hub.emidiastec.com.br
     const hubUrl = `https://hub.emidiastec.com.br/${urlPath}`;
 
-    console.log(`🔗 Redirecionando para: ${hubUrl}`);
+    // Fallback: emidiastec.com.br
+    const fallbackUrl = 'https://emidiastec.com.br';
 
-    // Redirecionar
-    window.location.href = hubUrl;
+    console.log(`🔗 Redirecionando para página pai: ${hubUrl}`);
+    console.log(`⚠️ Fallback disponível: ${fallbackUrl}`);
+
+    // Verificar se temos os dados necessários
+    if (proposalName && parentPageId) {
+        // Redirecionar para URL do hub com parent page
+        window.location.href = hubUrl;
+    } else {
+        // Se faltam dados, ir para o fallback
+        console.warn('⚠️ Parent page ID não disponível, redirecionando para fallback');
+        window.location.href = fallbackUrl;
+    }
 }
 
 window.addEventListener('resize', () => {

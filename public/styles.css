@@ -83,7 +83,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-sm);
 }
 
 /* =====================================================
@@ -128,7 +128,7 @@ body {
     background: var(--emidias-white);
     border-radius: 12px;
     padding: var(--spacing-lg) var(--spacing-xl);
-    margin-bottom: var(--spacing-md);
+    margin-bottom: 0;
     box-shadow: var(--shadow-md);
     position: relative;
     overflow: hidden;
@@ -187,7 +187,7 @@ body {
     padding: var(--spacing-lg) var(--spacing-xl);
     border-radius: 12px;
     margin-top: 0 !important;
-    margin-bottom: var(--spacing-md);
+    margin-bottom: 0;
     box-shadow: var(--shadow-md);
     width: 100%;
     box-sizing: border-box;
@@ -330,7 +330,7 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: 0;
     width: 100%;
     box-sizing: border-box;
 }
@@ -363,24 +363,16 @@ body {
     box-shadow: var(--shadow-lg);
 }
 
-.stat-card.secondary::before {
-    background: var(--emidias-accent);
-}
-
-.stat-card.accent::before {
-    background: var(--emidias-success);
-}
-
-.stat-card.success::before {
-    background: var(--emidias-success);
-}
-
+/* Todas as riscas dos cards agora são azul escuro padronizado */
+.stat-card.secondary::before,
+.stat-card.accent::before,
+.stat-card.success::before,
 .stat-card.economy::before {
-    background: #0891b2;
+    background: var(--emidias-primary);
 }
 
 .stat-value {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: var(--font-weight-bold);
     color: var(--emidias-dark);
     display: block;
@@ -390,6 +382,7 @@ body {
     word-wrap: break-word;
     line-height: 1.2;
     font-family: var(--font-primary);
+    white-space: nowrap;
 }
 
 .stat-label {
@@ -415,6 +408,8 @@ body {
     border: 1px solid var(--emidias-medium-gray);
     position: relative;
     overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .card:hover {
@@ -561,6 +556,25 @@ tbody tr:hover {
 
 tbody tr:last-child td {
     border-bottom: none;
+}
+
+/* Linha de total */
+.total-row {
+    background: var(--emidias-bg);
+    font-weight: 600;
+}
+
+.total-row td {
+    padding: var(--spacing-md) var(--spacing-md);
+    border-bottom: none;
+}
+
+/* Garantir que as colunas fixas na linha de total tenham o background correto */
+.total-row td:nth-child(1),
+.total-row td:nth-child(2),
+.total-row td:nth-child(3),
+.total-row td:nth-child(4) {
+    background: var(--emidias-bg);
 }
 
 .value-cell {
