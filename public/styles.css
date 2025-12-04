@@ -659,9 +659,19 @@ tbody tr:last-child td {
     left: 220px;
 }
 
-/* Garantir que todas as células NÃO sticky da linha de total tenham background branco */
+/* Garantir que todas as células NÃO sticky da linha de total tenham background branco e z-index baixo */
 .total-row td {
     background: var(--emidias-white) !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Garantir que colunas sticky da linha de total fiquem acima das não-sticky */
+.total-row td:nth-child(1),
+.total-row td:nth-child(2),
+.total-row td:nth-child(3),
+.total-row td:nth-child(4) {
+    z-index: 13 !important;
 }
 
 /* Remover backgrounds coloridos das células de investimento na linha de total */

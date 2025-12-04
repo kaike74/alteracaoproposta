@@ -34,6 +34,9 @@ let initialStats = {
     captured: false  // Flag para controlar se já foi capturado
 };
 
+// Flag para controlar se houve alguma mudança (para mostrar/ocultar comparações)
+let hasChanges = false;
+
 
 // Definição de todos os produtos disponíveis
 const PRODUTOS = [
@@ -322,7 +325,8 @@ function renderInterface() {
     renderCharts();
     showUnsavedChanges();
 
-    // NÃO capturar estado inicial aqui - será capturado na primeira mudança
+    // Capturar estado inicial APÓS primeiro updateStats (mas não mostrar comparações ainda)
+    captureInitialStats();
 }
 
 function renderSpotsTable() {
@@ -974,6 +978,12 @@ function updateStats() {
 }
 
 function updateComparisonLines(currentTabela, currentNegociado, currentImpactos, currentDesconto, currentCPM) {
+    // Se não houve mudanças ainda, não mostrar comparações
+    if (!hasChanges) {
+        console.log('⏭️ Nenhuma mudança ainda, pulando comparações...');
+        return;
+    }
+
     // Se o estado inicial ainda não foi capturado, não mostrar comparações
     if (!initialStats.captured) {
         console.log('⏭️ Estado inicial não capturado, pulando comparações...');
@@ -1346,8 +1356,8 @@ function recalculateAllImpactos() {
 function updateEmissora(index, field, value) {
     console.log(`🔴 UPDATE: index=${index}, field=${field}, value=${value}`);
 
-    // Capturar estado inicial na primeira mudança
-    captureInitialStats();
+    // Marcar que houve mudança (para mostrar comparações)
+    hasChanges = true;
 
     const emissora = proposalData.emissoras[index];
     if (!emissora) {
@@ -1410,8 +1420,8 @@ function toggleOcultarEmissora(checkbox) {
         return;
     }
 
-    // Capturar estado inicial na primeira mudança
-    captureInitialStats();
+    // Marcar que houve mudança (para mostrar comparações)
+    hasChanges = true;
 
     const emissoraId = checkbox.getAttribute('data-emissora-id');
     const emissoraIndex = parseInt(checkbox.getAttribute('data-emissora-index'));
@@ -1904,10 +1914,16 @@ function clearComparisonLines() {
     if (statDescontoDiff) statDescontoDiff.style.display = 'none';
     if (statCPMDiff) statCPMDiff.style.display = 'none';
 
-    // Resetar flag para permitir nova captura na próxima mudança
+    // Resetar flags
+    hasChanges = false;
     initialStats.captured = false;
 
-    console.log('✅ Linhas de comparação limpas! Flag resetada para permitir nova captura.');
+    // Recapturar estado inicial após salvar
+    setTimeout(() => {
+        captureInitialStats();
+    }, 100);
+
+    console.log('✅ Linhas de comparação limpas! Flags resetadas.');
 }
 
 function showSuccessModal() {
