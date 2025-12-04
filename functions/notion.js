@@ -670,7 +670,7 @@ export async function onRequest(context) {
           continue;
         }
 
-        console.log(` Atualizando ${emissora.emissora} - Campo: "${notionField}" = ${change.new}`);
+        // Atualizando campo na base de dados
 
         const updateProperties = {};
         updateProperties[notionField] = { number: parseFloat(change.new) || 0 };
@@ -690,7 +690,7 @@ export async function onRequest(context) {
         const updateData = await updateResponse.json();
 
         if (!updateResponse.ok) {
-          console.error(` Erro ao atualizar ${emissora.emissora} (${notionField}):`, updateResponse.status, updateData);
+          console.error(` Erro ao atualizar ${emissora.emissora} (${notionField}):`, updateResponse.status);
           updatePromises.push({
             field: change.field,
             notionField: notionField,
@@ -720,11 +720,6 @@ export async function onRequest(context) {
       // Enviar email com as alterações
       let emailLogs = [];
       try {
-        console.log('📧 [PATCH] Chamando sendNotificationEmail...');
-        console.log('📧 [PATCH] updatePromises:', updatePromises.length, 'alterações');
-        console.log('📧 [PATCH] requestBody.editorEmail:', requestBody.editorEmail);
-        console.log('📧 [PATCH] editorEmail final:', requestBody.editorEmail || 'desconhecido@email.com');
-        
         // Buscar nome da proposta
         let proposalName = 'Proposta';
         try {
@@ -733,7 +728,7 @@ export async function onRequest(context) {
         } catch (e) {
           console.warn('⚠️ Não conseguiu buscar nome da proposta:', e.message);
         }
-        
+
         const emailPayload = {
           tableId: tableId,
           proposalName: proposalName,
@@ -743,30 +738,22 @@ export async function onRequest(context) {
           requestIP: request.headers.get('cf-connecting-ip') || 'desconhecido',
           editorEmail: requestBody.editorEmail || 'desconhecido@email.com'
         };
-        
-        console.log('📧 [PATCH] Payload enviado para sendNotificationEmail:', JSON.stringify(emailPayload));
-        
+
         emailLogs = await sendNotificationEmail(env, emailPayload);
-        console.log('📧 [PATCH] sendNotificationEmail completado');
-        console.log('📧 [PATCH] emailLogs retornado:', emailLogs);
         debugLogs.push(...emailLogs);
       } catch (emailError) {
         console.error('⚠️ [PATCH] Erro ao enviar email:', emailError.message);
-        console.error('⚠️ [PATCH] Stack:', emailError.stack);
         log('⚠️ Erro ao enviar email: ' + emailError.message);
         debugLogs.push('⚠️ Erro ao enviar email: ' + emailError.message);
-        debugLogs.push('⚠️ Stack completo: ' + emailError.stack);
         // Não interrompe o fluxo se falhar o email
       }
-
-      console.log(' Retornando resposta com debugLogs:', debugLogs.length, 'mensagens');
       
       const failedUpdates = updatePromises.filter(p => !p.success).length;
       const hasFailed = failedUpdates > 0;
       
       //  IMPORTANTE: Se houver qualquer falha, retornar sucesso falso
       // Isso garante que o frontend saiba que algo no funcionou
-      const responseData = { 
+      const responseData = {
         success: !hasFailed,  //  Retorna false se houver falhas
         message: hasFailed ? 'Algumas alteraes falharam' : 'Alteraes processadas com sucesso',
         totalChanges: Object.keys(changes).length,
@@ -775,8 +762,6 @@ export async function onRequest(context) {
         details: updatePromises,
         debugLogs: debugLogs
       };
-      
-      console.log(' Response data:', responseData);
       
       return new Response(JSON.stringify(responseData), {
         status: hasFailed ? 400 : 200,  //  Retorna 400 se houver falhas
