@@ -881,6 +881,23 @@ async function getProposalInfo(notionToken, databaseId) {
 // FUNÇÕES DE AUTENTICAÇÃO GMAIL API
 // =====================================================
 
+// Função auxiliar para extrair a chave privada
+function extractPrivateKey(privateKeyData) {
+  // Se for um JSON, extrair o campo private_key
+  if (privateKeyData.trim().startsWith('{')) {
+    try {
+      const jsonData = JSON.parse(privateKeyData);
+      if (jsonData.private_key) {
+        return jsonData.private_key;
+      }
+    } catch (e) {
+      // Não é um JSON válido, continuar com o valor original
+    }
+  }
+  // Retornar o valor original (já é a chave privada)
+  return privateKeyData;
+}
+
 // Função para criar JWT token
 async function createJWT(serviceAccountEmail, privateKey, scope) {
   const header = {
@@ -985,7 +1002,7 @@ async function sendNotificationEmail(env, data) {
 
   // Configurações Gmail API
   const gmailClientEmail = env.GMAIL_CLIENT_EMAIL;
-  const gmailPrivateKey = env.GMAIL_PRIVATE_KEY;
+  let gmailPrivateKey = env.GMAIL_PRIVATE_KEY;
 
   emailLogs.push('📧 [EMAIL] ===== INICIANDO ENVIO DE EMAIL VIA GMAIL API =====');
   emailLogs.push('📧 [EMAIL] Proposta: ' + proposalName);
@@ -998,6 +1015,15 @@ async function sendNotificationEmail(env, data) {
     emailLogs.push('❌ [EMAIL] Credenciais do Gmail não configuradas! Email NÃO será enviado.');
     emailLogs.push('❌ [EMAIL] GMAIL_CLIENT_EMAIL existe: ' + !!gmailClientEmail);
     emailLogs.push('❌ [EMAIL] GMAIL_PRIVATE_KEY existe: ' + !!gmailPrivateKey);
+    return emailLogs;
+  }
+
+  // Extrair chave privada (suporta JSON ou chave direta)
+  try {
+    gmailPrivateKey = extractPrivateKey(gmailPrivateKey);
+    emailLogs.push('📧 [EMAIL] Chave privada extraída com sucesso');
+  } catch (error) {
+    emailLogs.push('❌ [EMAIL] Erro ao processar chave privada: ' + error.message);
     return emailLogs;
   }
 

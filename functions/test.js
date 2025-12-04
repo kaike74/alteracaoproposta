@@ -23,7 +23,7 @@ export async function onRequest(context) {
   if (request.url.includes('/api/test-email')) {
     const env = context.env;
     const gmailClientEmail = env.GMAIL_CLIENT_EMAIL;
-    const gmailPrivateKey = env.GMAIL_PRIVATE_KEY;
+    let gmailPrivateKey = env.GMAIL_PRIVATE_KEY;
 
     console.log('🧪 [TEST-EMAIL] Verificando credenciais do Gmail...');
     console.log('🧪 [TEST-EMAIL] GMAIL_CLIENT_EMAIL existe?', !!gmailClientEmail);
@@ -32,8 +32,33 @@ export async function onRequest(context) {
     if (gmailClientEmail) {
       console.log('🧪 [TEST-EMAIL] Service Account:', gmailClientEmail);
     }
+
+    let privateKeyFormat = 'NOT SET';
+    let extractedKey = null;
+
     if (gmailPrivateKey) {
-      console.log('🧪 [TEST-EMAIL] Private Key (primeiros 50 chars):', gmailPrivateKey.substring(0, 50) + '...');
+      // Detectar formato da chave
+      if (gmailPrivateKey.trim().startsWith('{')) {
+        privateKeyFormat = 'JSON (será extraído automaticamente)';
+        try {
+          const jsonData = JSON.parse(gmailPrivateKey);
+          if (jsonData.private_key) {
+            extractedKey = jsonData.private_key;
+            console.log('🧪 [TEST-EMAIL] Formato: JSON detectado, chave extraída');
+          }
+        } catch (e) {
+          privateKeyFormat = 'JSON inválido';
+        }
+      } else if (gmailPrivateKey.includes('BEGIN PRIVATE KEY')) {
+        privateKeyFormat = 'Chave PEM direta (formato correto)';
+        extractedKey = gmailPrivateKey;
+      } else {
+        privateKeyFormat = 'Formato desconhecido';
+      }
+
+      if (extractedKey) {
+        console.log('🧪 [TEST-EMAIL] Private Key (primeiros 50 chars):', extractedKey.substring(0, 50) + '...');
+      }
     }
 
     return new Response(JSON.stringify({
@@ -42,8 +67,9 @@ export async function onRequest(context) {
       gmailClientEmailExists: !!gmailClientEmail,
       gmailPrivateKeyExists: !!gmailPrivateKey,
       gmailClientEmail: gmailClientEmail || 'NOT SET',
-      gmailPrivateKeyPreview: gmailPrivateKey ? gmailPrivateKey.substring(0, 50) + '...' : 'NOT SET',
-      configurationStatus: (gmailClientEmail && gmailPrivateKey) ? 'CONFIGURADO' : 'INCOMPLETO',
+      privateKeyFormat: privateKeyFormat,
+      privateKeyPreview: extractedKey ? extractedKey.substring(0, 50) + '...' : 'NOT SET',
+      configurationStatus: (gmailClientEmail && gmailPrivateKey && extractedKey) ? 'CONFIGURADO ✅' : 'INCOMPLETO ❌',
       timestamp: new Date().toISOString()
     }), {
       status: 200,
