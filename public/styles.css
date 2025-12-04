@@ -494,9 +494,10 @@ table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.875rem;
+    table-layout: auto;
 }
 
-/* Colunas fixas - Ajustadas proporcionalmente */
+/* Coluna checkbox fixa */
 table th:nth-child(1),
 table td:nth-child(1) {
     position: sticky;
@@ -506,36 +507,13 @@ table td:nth-child(1) {
     width: 40px;
     min-width: 40px;
     max-width: 40px;
+    white-space: nowrap;
 }
 
-table th:nth-child(2),
-table td:nth-child(2) {
-    position: sticky;
-    left: 40px;
-    z-index: 13;
-    background: var(--emidias-white);
-    width: 50px;
-    min-width: 50px;
-}
-
-table th:nth-child(3),
-table td:nth-child(3) {
-    position: sticky;
-    left: 90px;
-    z-index: 13;
-    background: var(--emidias-white);
-    width: 100px;
-    min-width: 100px;
-}
-
-table th:nth-child(4),
-table td:nth-child(4) {
-    position: sticky;
-    left: 190px;
-    z-index: 13;
-    background: var(--emidias-white);
-    width: 200px;
-    min-width: 200px;
+/* Outras colunas responsivas e dinâmicas */
+table th,
+table td {
+    white-space: nowrap;
 }
 
 thead {
@@ -592,11 +570,8 @@ tbody tr:last-child td {
     height: auto;
 }
 
-/* Garantir que as colunas fixas na linha de total tenham o background correto */
-.total-row td:nth-child(1),
-.total-row td:nth-child(2),
-.total-row td:nth-child(3),
-.total-row td:nth-child(4) {
+/* Garantir que a coluna checkbox na linha de total tenha o background correto */
+.total-row td:nth-child(1) {
     background: var(--emidias-white);
 }
 
@@ -646,11 +621,11 @@ tbody tr:last-child td {
     color: var(--emidias-dark);
 }
 
-/* CELLS - Larguras proporcionais e inteligentes */
+/* CELLS - Responsivas e dinâmicas */
 .spots-cell {
     text-align: center;
-    min-width: 70px;
-    width: 70px;
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
 }
 
 .product-value-negociado {
@@ -658,8 +633,8 @@ tbody tr:last-child td {
     color: var(--emidias-dark);
     font-weight: var(--font-weight-medium);
     text-align: right;
-    min-width: 110px;
-    width: 110px;
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
 }
 
 .investment-tabela {
@@ -667,8 +642,8 @@ tbody tr:last-child td {
     color: var(--emidias-danger);
     font-weight: var(--font-weight-semibold);
     text-align: right;
-    min-width: 130px;
-    width: 130px;
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
     border-left: 2px solid #FECACA;
 }
 
@@ -677,8 +652,8 @@ tbody tr:last-child td {
     color: var(--emidias-success);
     font-weight: var(--font-weight-semibold);
     text-align: right;
-    min-width: 130px;
-    width: 130px;
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
     border-left: 2px solid #BBF7D0;
 }
 
@@ -686,8 +661,8 @@ tbody tr:last-child td {
     text-align: center;
     font-weight: 600;
     color: var(--emidias-primary);
-    min-width: 100px;
-    width: 100px;
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
 }
 
 /* =====================================================
@@ -703,6 +678,7 @@ input[type="checkbox"] {
 input[type="number"].input-spots,
 input[type="number"].input-valor {
     width: 100%;
+    min-width: 60px;
     padding: 6px 8px;
     border: 1px solid var(--emidias-medium-gray);
     border-radius: 6px;
@@ -711,6 +687,7 @@ input[type="number"].input-valor {
     color: var(--emidias-dark);
     background: var(--emidias-white);
     transition: border-color 0.2s ease;
+    box-sizing: border-box;
 }
 
 input[type="number"].input-spots:focus,
