@@ -497,7 +497,7 @@ table {
     table-layout: auto;
 }
 
-/* Coluna checkbox fixa */
+/* Colunas fixas/sticky até Emissora */
 table th:nth-child(1),
 table td:nth-child(1) {
     position: sticky;
@@ -510,10 +510,48 @@ table td:nth-child(1) {
     white-space: nowrap;
 }
 
+table th:nth-child(2),
+table td:nth-child(2) {
+    position: sticky;
+    left: 40px;
+    z-index: 13;
+    background: var(--emidias-white);
+    min-width: 60px;
+    white-space: nowrap;
+}
+
+table th:nth-child(3),
+table td:nth-child(3) {
+    position: sticky;
+    left: 100px;
+    z-index: 13;
+    background: var(--emidias-white);
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+table th:nth-child(4),
+table td:nth-child(4) {
+    position: sticky;
+    left: 220px;
+    z-index: 13;
+    background: var(--emidias-white);
+    min-width: 200px;
+    white-space: nowrap;
+}
+
 /* Outras colunas responsivas e dinâmicas */
 table th,
 table td {
     white-space: nowrap;
+}
+
+/* Garantir que os headers sticky tenham z-index maior */
+thead th:nth-child(1),
+thead th:nth-child(2),
+thead th:nth-child(3),
+thead th:nth-child(4) {
+    z-index: 21;
 }
 
 thead {
@@ -570,8 +608,11 @@ tbody tr:last-child td {
     height: auto;
 }
 
-/* Garantir que a coluna checkbox na linha de total tenha o background correto */
-.total-row td:nth-child(1) {
+/* Garantir que as colunas sticky na linha de total tenham o background correto */
+.total-row td:nth-child(1),
+.total-row td:nth-child(2),
+.total-row td:nth-child(3),
+.total-row td:nth-child(4) {
     background: var(--emidias-white);
 }
 
@@ -661,6 +702,22 @@ tbody tr:last-child td {
     text-align: center;
     font-weight: 600;
     color: var(--emidias-primary);
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+}
+
+.desconto-cell {
+    text-align: center;
+    font-weight: var(--font-weight-semibold);
+    color: var(--emidias-dark);
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+}
+
+.cpm-cell {
+    text-align: right;
+    font-weight: var(--font-weight-medium);
+    color: var(--emidias-dark);
     padding-left: var(--spacing-lg);
     padding-right: var(--spacing-lg);
 }
