@@ -878,12 +878,100 @@ async function getProposalInfo(notionToken, databaseId) {
 }
 
 // =====================================================
-// FUNÇÃO DE ENVIO DE EMAIL
+// FUNÇÕES DE AUTENTICAÇÃO GMAIL API
+// =====================================================
+
+// Função para criar JWT token
+async function createJWT(serviceAccountEmail, privateKey, scope) {
+  const header = {
+    alg: 'RS256',
+    typ: 'JWT'
+  };
+
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: serviceAccountEmail,
+    scope: scope,
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600,
+    iat: now
+  };
+
+  // Encode header e payload em base64url
+  const base64UrlEncode = (obj) => {
+    const json = JSON.stringify(obj);
+    const base64 = btoa(json);
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  };
+
+  const encodedHeader = base64UrlEncode(header);
+  const encodedPayload = base64UrlEncode(payload);
+  const signatureInput = `${encodedHeader}.${encodedPayload}`;
+
+  // Importar chave privada para assinatura
+  const pemKey = privateKey.replace(/\\n/g, '\n');
+  const keyData = pemKey
+    .replace('-----BEGIN PRIVATE KEY-----', '')
+    .replace('-----END PRIVATE KEY-----', '')
+    .replace(/\s/g, '');
+
+  const binaryKey = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    binaryKey,
+    {
+      name: 'RSASSA-PKCS1-v1_5',
+      hash: 'SHA-256',
+    },
+    false,
+    ['sign']
+  );
+
+  // Assinar o JWT
+  const encoder = new TextEncoder();
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    cryptoKey,
+    encoder.encode(signatureInput)
+  );
+
+  // Converter signature para base64url
+  const signatureArray = new Uint8Array(signature);
+  const signatureBase64 = btoa(String.fromCharCode(...signatureArray));
+  const signatureBase64Url = signatureBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+  return `${signatureInput}.${signatureBase64Url}`;
+}
+
+// Função para obter access token do Google
+async function getGoogleAccessToken(serviceAccountEmail, privateKey, scope) {
+  const jwt = await createJWT(serviceAccountEmail, privateKey, scope);
+
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Erro ao obter access token: ${response.status} - ${error}`);
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}
+
+// =====================================================
+// FUNÇÃO DE ENVIO DE EMAIL VIA GMAIL API
 // =====================================================
 
 async function sendNotificationEmail(env, data) {
   const emailLogs = [];
-  
+
   // Validação defensiva
   if (!data || typeof data !== 'object') {
     emailLogs.push('❌ [EMAIL] ERRO: data inválida ou undefined!');
@@ -892,18 +980,24 @@ async function sendNotificationEmail(env, data) {
     console.error('❌ [EMAIL] ERRO: data inválida ou undefined!', data);
     return emailLogs;
   }
-  
+
   const { tableId, proposalName, changes, emissoras_changes, emissoras, requestIP, editorEmail } = data;
-  const resendApiKey = env.RESEND_API_KEY;
-  
-  emailLogs.push('📧 [EMAIL] ===== INICIANDO ENVIO DE EMAIL =====');
+
+  // Configurações Gmail API
+  const gmailClientEmail = env.GMAIL_CLIENT_EMAIL;
+  const gmailPrivateKey = env.GMAIL_PRIVATE_KEY;
+
+  emailLogs.push('📧 [EMAIL] ===== INICIANDO ENVIO DE EMAIL VIA GMAIL API =====');
   emailLogs.push('📧 [EMAIL] Proposta: ' + proposalName);
   emailLogs.push('📧 [EMAIL] Editor: ' + (editorEmail || 'desconhecido'));
   emailLogs.push('📧 [EMAIL] Alterações recebidas: ' + changes.length);
   emailLogs.push('📧 [EMAIL] Emissoras: ' + emissoras.length);
-  
-  if (!resendApiKey) {
-    emailLogs.push('❌ [EMAIL] API key de email não configurada! Email NÃO será enviado.');
+  emailLogs.push('📧 [EMAIL] Service Account: ' + (gmailClientEmail || 'NÃO CONFIGURADO'));
+
+  if (!gmailClientEmail || !gmailPrivateKey) {
+    emailLogs.push('❌ [EMAIL] Credenciais do Gmail não configuradas! Email NÃO será enviado.');
+    emailLogs.push('❌ [EMAIL] GMAIL_CLIENT_EMAIL existe: ' + !!gmailClientEmail);
+    emailLogs.push('❌ [EMAIL] GMAIL_PRIVATE_KEY existe: ' + !!gmailPrivateKey);
     return emailLogs;
   }
 
@@ -1042,46 +1136,73 @@ async function sendNotificationEmail(env, data) {
     </html>
   `;
 
-  // Enviar via Resend
+  // Enviar via Gmail API
   try {
-    emailLogs.push('📧 [EMAIL] Enviando notificação por email...');
-    
-    const response = await fetch('https://api.resend.com/emails', {
+    emailLogs.push('📧 [EMAIL] Obtendo access token do Google...');
+
+    // Obter access token
+    const accessToken = await getGoogleAccessToken(
+      gmailClientEmail,
+      gmailPrivateKey,
+      'https://www.googleapis.com/auth/gmail.send'
+    );
+
+    emailLogs.push('✅ [EMAIL] Access token obtido com sucesso');
+    emailLogs.push('📧 [EMAIL] Preparando email para envio...');
+
+    // Destinatários fixos
+    const recipients = ['kaike@hubradios.com', 'dani@hubradios.com'];
+    const subject = `[E-MÍDIAS] Alteração de Proposta - ${proposalName} - ${new Date().toLocaleDateString('pt-BR')}`;
+
+    // Criar mensagem RFC 2822
+    const emailMessage = [
+      `From: E-MÍDIAS <emidias@hubradios.com>`,
+      `To: ${recipients.join(', ')}`,
+      `Subject: ${subject}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: text/html; charset=utf-8`,
+      ``,
+      emailHTML
+    ].join('\r\n');
+
+    // Codificar mensagem em base64url
+    const encodedMessage = btoa(unescape(encodeURIComponent(emailMessage)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    emailLogs.push('📧 [EMAIL] Enviando email via Gmail API...');
+    emailLogs.push('📧 [EMAIL] Remetente (impersonation): emidias@hubradios.com');
+    emailLogs.push('📧 [EMAIL] Destinatários: ' + recipients.join(', '));
+
+    // Enviar email via Gmail API usando impersonation
+    const response = await fetch('https://www.googleapis.com/gmail/v1/users/emidias@hubradios.com/messages/send', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev',
-        to: 'tatico5@hubradios.com',
-        subject: `[E-MÍDIAS] Alteração de Proposta - ${proposalName} - ${new Date().toLocaleDateString('pt-BR')}`,
-        html: emailHTML
+        raw: encodedMessage
       })
     });
 
-    const statusMsg = '📧 [EMAIL] Status da resposta: ' + response.status;
+    const statusMsg = '📧 [EMAIL] Status da resposta Gmail API: ' + response.status;
     emailLogs.push(statusMsg);
     console.log(statusMsg);
-    
+
     if (response.ok) {
       const result = await response.json();
-      const successMsg = '✅ [EMAIL] Email enviado com sucesso! ID: ' + result.id;
+      const successMsg = '✅ [EMAIL] Email enviado com sucesso via Gmail API! ID: ' + result.id;
       emailLogs.push(successMsg);
+      emailLogs.push('📧 [EMAIL] Thread ID: ' + result.threadId);
       console.log(successMsg);
     } else {
       const errorText = await response.text();
-      const errorMsg = '❌ [EMAIL] Erro ao enviar email via Resend. Status: ' + response.status + ', Resposta: ' + errorText;
+      const errorMsg = '❌ [EMAIL] Erro ao enviar email via Gmail API. Status: ' + response.status + ', Resposta: ' + errorText;
       emailLogs.push(errorMsg);
       console.error(errorMsg);
-      
-      // Mensagem específica para erro 403 (domínio não verificado)
-      if (response.status === 403) {
-        const domainMsg = '⚠️ [EMAIL] Erro 403: O domínio hubradios.com não está verificado no Resend. Acesse https://resend.com/domains para verificar o domínio.';
-        emailLogs.push(domainMsg);
-        console.warn(domainMsg);
-      }
-      
+
       try {
         const errorJson = JSON.parse(errorText);
         emailLogs.push('📧 [EMAIL] Erro detalhado: ' + JSON.stringify(errorJson));
@@ -1091,11 +1212,11 @@ async function sendNotificationEmail(env, data) {
       }
     }
   } catch (error) {
-    const errorMsg = '❌ [EMAIL] Erro na requisição Resend: ' + error.message;
+    const errorMsg = '❌ [EMAIL] Erro na requisição Gmail API: ' + error.message;
     emailLogs.push(errorMsg);
+    emailLogs.push('❌ [EMAIL] Stack trace: ' + error.stack);
     console.error(errorMsg);
     console.error('Erro completo:', error);
-    console.error(errorMsg);
   }
   
   return emailLogs;
