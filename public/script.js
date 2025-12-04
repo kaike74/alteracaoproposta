@@ -462,15 +462,15 @@ function renderSpotsTable() {
                 investimentoNegociadoEmissora += spots * valorNegociado;
                 
                 row.innerHTML += `
-                    <td style="text-align: center;">
-                        <input 
-                            type="number" 
-                            value="${spots}" 
+                    <td class="spots-cell">
+                        <input
+                            type="number"
+                            value="${spots}"
                             onchange="updateEmissora(${emissoraIndex}, '${produto.key}', this.value)"
                             class="input-spots"
                             min="0"
                             step="1"
-                            style="width: 60px; padding: 4px; text-align: center;"
+                            style="padding: 4px; text-align: center;"
                         >
                     </td>
                     <td class="product-value-negociado">R$ ${valorNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
@@ -501,31 +501,31 @@ function renderSpotsTable() {
             investimentoNegociadoEmissora += invNegPatrocinio;
             
             row.innerHTML += `
-                <td style="text-align: center;">
-                    <input 
-                        type="number" 
-                        value="${cotasMeses}" 
+                <td class="spots-cell">
+                    <input
+                        type="number"
+                        value="${cotasMeses}"
                         onchange="updateEmissora(${emissoraIndex}, 'cotasMeses', this.value)"
                         class="input-spots"
                         min="0"
                         step="1"
-                        style="width: 60px; padding: 4px; text-align: center;"
+                        style="padding: 4px; text-align: center;"
                     >
                 </td>
             `;
-            
+
             // Inserções (SOMENTE LEITURA - não podem ser editadas)
             const insercoes = ['ins5', 'ins15', 'ins30', 'ins60'];
             insercoes.forEach(insKey => {
                 const ins = emissora[insKey] || 0;
                 row.innerHTML += `
-                    <td style="text-align: center;">
-                        <input 
-                            type="number" 
-                            value="${ins}" 
+                    <td class="spots-cell">
+                        <input
+                            type="number"
+                            value="${ins}"
                             readonly
                             class="input-spots"
-                            style="width: 60px; padding: 4px; text-align: center; background-color: #f0f0f0; cursor: not-allowed;"
+                            style="padding: 4px; text-align: center; background-color: #f0f0f0; cursor: not-allowed;"
                         >
                     </td>
                 `;
@@ -541,7 +541,7 @@ function renderSpotsTable() {
         row.innerHTML += `
             <td class="investment-tabela">R$ ${investimentoTabelaEmissora.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
             <td class="investment-negociado">R$ ${investimentoNegociadoEmissora.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-            <td style="text-align: center; font-weight: 600; color: #06055b; min-width: 120px;">
+            <td class="impactos-cell">
                 ${(emissora.impactos || 0).toLocaleString('pt-BR')}
             </td>
         `;

@@ -496,7 +496,7 @@ table {
     font-size: 0.875rem;
 }
 
-/* Colunas fixas - Primeira coluna (Checkbox, UF, Praça, Emissora) */
+/* Colunas fixas - Ajustadas proporcionalmente */
 table th:nth-child(1),
 table td:nth-child(1) {
     position: sticky;
@@ -514,28 +514,28 @@ table td:nth-child(2) {
     left: 40px;
     z-index: 13;
     background: var(--emidias-white);
-    width: 60px;
-    min-width: 60px;
+    width: 50px;
+    min-width: 50px;
 }
 
 table th:nth-child(3),
 table td:nth-child(3) {
     position: sticky;
-    left: 100px;
+    left: 90px;
     z-index: 13;
     background: var(--emidias-white);
-    width: 120px;
-    min-width: 120px;
+    width: 100px;
+    min-width: 100px;
 }
 
 table th:nth-child(4),
 table td:nth-child(4) {
     position: sticky;
-    left: 220px;
+    left: 190px;
     z-index: 13;
     background: var(--emidias-white);
-    width: 180px;
-    min-width: 180px;
+    width: 200px;
+    min-width: 200px;
 }
 
 thead {
@@ -577,18 +577,19 @@ tbody tr:last-child td {
     border-bottom: none;
 }
 
-/* Linha de total - Estilo Notion (discreta) */
+/* Linha de total - Estilo Notion (discreta e compacta) */
 .total-row {
     background: transparent;
     font-weight: 400;
 }
 
 .total-row td {
-    padding: var(--spacing-md) var(--spacing-md);
+    padding: 8px var(--spacing-md);
     border-bottom: none;
     border-top: 1px solid var(--emidias-light-gray);
     font-size: 0.8rem;
     color: var(--emidias-dark-gray);
+    height: auto;
 }
 
 /* Garantir que as colunas fixas na linha de total tenham o background correto */
@@ -597,6 +598,13 @@ tbody tr:last-child td {
 .total-row td:nth-child(3),
 .total-row td:nth-child(4) {
     background: var(--emidias-white);
+}
+
+/* Remover backgrounds coloridos das células de investimento na linha de total */
+.total-row .investment-tabela,
+.total-row .investment-negociado {
+    background: transparent !important;
+    border-left: none !important;
 }
 
 .value-cell {
@@ -638,13 +646,20 @@ tbody tr:last-child td {
     color: var(--emidias-dark);
 }
 
-/* CELLS - CORES REDUZIDAS E SUTIS */
+/* CELLS - Larguras proporcionais e inteligentes */
+.spots-cell {
+    text-align: center;
+    min-width: 70px;
+    width: 70px;
+}
+
 .product-value-negociado {
     background: transparent;
     color: var(--emidias-dark);
     font-weight: var(--font-weight-medium);
     text-align: right;
-    min-width: 100px;
+    min-width: 110px;
+    width: 110px;
 }
 
 .investment-tabela {
@@ -652,7 +667,8 @@ tbody tr:last-child td {
     color: var(--emidias-danger);
     font-weight: var(--font-weight-semibold);
     text-align: right;
-    min-width: 140px;
+    min-width: 130px;
+    width: 130px;
     border-left: 2px solid #FECACA;
 }
 
@@ -661,8 +677,17 @@ tbody tr:last-child td {
     color: var(--emidias-success);
     font-weight: var(--font-weight-semibold);
     text-align: right;
-    min-width: 140px;
+    min-width: 130px;
+    width: 130px;
     border-left: 2px solid #BBF7D0;
+}
+
+.impactos-cell {
+    text-align: center;
+    font-weight: 600;
+    color: var(--emidias-primary);
+    min-width: 100px;
+    width: 100px;
 }
 
 /* =====================================================
