@@ -393,7 +393,9 @@ function renderSpotsTable() {
         headerRow.innerHTML += `
             <th>Inv. Tabela</th>
             <th>Inv. Negociado</th>
+            <th>Desconto médio</th>
             <th>Impactos</th>
+            <th>CPM</th>
         `;
         
         thead.appendChild(headerRow);
@@ -644,6 +646,94 @@ function renderSpotsTable() {
     console.log('═══════════════════════════════════════════════════════════');
 }
 
+// Função para atualizar apenas a linha de total (sem re-renderizar toda a tabela)
+function updateTotalRow() {
+    const produtosAtivos = new Set();
+    proposalData.emissoras.forEach(emissora => {
+        PRODUTOS.forEach(produto => {
+            const spots = emissora[produto.key] || 0;
+            if (spots > 0) {
+                produtosAtivos.add(produto.key);
+            }
+        });
+    });
+
+    const temPatrocinioAtivo = proposalData.emissoras.some(e => e.cotasMeses > 0);
+
+    // Calcular totais apenas das emissoras SELECIONADAS (não ocultas)
+    let totalInvTabela = 0;
+    let totalInvNegociado = 0;
+    let totalImpactos = 0;
+    let totalEmissorasSelecionadas = 0;
+
+    proposalData.emissoras.forEach(emissora => {
+        if (!proposalData.ocultasEmissoras.has(emissora.id)) {
+            totalEmissorasSelecionadas++;
+
+            // Calcular investimento de mídia avulsa
+            produtosAtivos.forEach(produtoKey => {
+                const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
+                if (produto) {
+                    const spots = emissora[produto.key] || 0;
+                    const valorTabela = emissora[produto.tabelaKey] || 0;
+                    const valorNegociado = emissora[produto.negKey] || 0;
+                    totalInvTabela += spots * valorTabela;
+                    totalInvNegociado += spots * valorNegociado;
+                }
+            });
+
+            // Calcular investimento de patrocínio
+            if (temPatrocinioAtivo) {
+                const cotasMeses = emissora.cotasMeses || 0;
+                const valorTabelaCota = emissora.valorTabelaCota || 0;
+                const valorNegociadoCota = emissora.valorNegociadoCota || 0;
+                totalInvTabela += cotasMeses * valorTabelaCota;
+                totalInvNegociado += cotasMeses * valorNegociadoCota;
+            }
+
+            totalImpactos += emissora.impactos || 0;
+        }
+    });
+
+    // Calcular desconto médio e CPM totais
+    const descontoMedioTotal = totalInvTabela > 0
+        ? ((totalInvTabela - totalInvNegociado) / totalInvTabela) * 100
+        : 0;
+
+    const cpmTotal = totalImpactos > 0
+        ? (totalInvNegociado / totalImpactos) * 1000
+        : 0;
+
+    // Encontrar a linha de total existente e atualizar
+    const totalRow = document.querySelector('.total-row');
+    if (totalRow) {
+        // Montar linha de total
+        let totalCells = `<td colspan="${4 + (produtosAtivos.size * 2)}" style="font-weight: 400; font-size: 0.8rem; color: var(--emidias-dark-gray); padding-left: 16px;">
+            Emissoras: ${totalEmissorasSelecionadas}
+        </td>`;
+
+        // Se tem patrocínio, adiciona mais colunas vazias
+        if (temPatrocinioAtivo) {
+            totalCells += `<td colspan="${7}"></td>`;
+        }
+
+        totalRow.innerHTML = `
+            ${totalCells}
+            <td class="investment-tabela" style="font-weight: 400; font-size: 0.8rem; color: var(--emidias-dark-gray);">R$ ${totalInvTabela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            <td class="investment-negociado" style="font-weight: 400; font-size: 0.8rem; color: var(--emidias-dark-gray);">R$ ${totalInvNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            <td class="desconto-cell" style="font-weight: 400; font-size: 0.8rem; color: var(--emidias-dark-gray);">
+                ${descontoMedioTotal.toFixed(0)}%
+            </td>
+            <td class="impactos-cell" style="font-weight: 400; font-size: 0.8rem; color: var(--emidias-dark-gray);">
+                ${totalImpactos.toLocaleString('pt-BR')}
+            </td>
+            <td class="cpm-cell" style="font-weight: 400; font-size: 0.8rem; color: var(--emidias-dark-gray);">
+                R$ ${cpmTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            </td>
+        `;
+    }
+}
+
 function updateActiveProducts() {
     const activeProductsList = document.getElementById('activeProductsList');
     if (!activeProductsList) return;
@@ -763,11 +853,16 @@ function updateStats() {
     console.log('💵 Economia (R$):', economia);
     console.log('💵 Desconto (%):', percentualDesconto);
     
-    const statTotalSpots = document.getElementById('statTotalSpots');
     const statTabelaValue = document.getElementById('statTabelaValue');
     const statNegociadoValue = document.getElementById('statNegociadoValue');
     const statTotalImpacts = document.getElementById('statTotalImpacts');
+    const statDescontoMedio = document.getElementById('statDescontoMedio');
     const statCPM = document.getElementById('statCPM');
+
+    // Calcular Desconto médio: ((Tabela - Negociado) / Tabela) * 100
+    const descontoMedioCard = totalInvestimentoTabela > 0
+        ? ((totalInvestimentoTabela - totalInvestimentoNegociado) / totalInvestimentoTabela) * 100
+        : 0;
 
     // Calcular CPM: (Investimento Negociado / Impactos) * 1000
     const cpmCard = totalImpactos > 0
@@ -775,17 +870,17 @@ function updateStats() {
         : 0;
 
     console.log('🔍 Elementos encontrados:', {
-        statTotalSpots: !!statTotalSpots,
         statTabelaValue: !!statTabelaValue,
         statNegociadoValue: !!statNegociadoValue,
         statTotalImpacts: !!statTotalImpacts,
+        statDescontoMedio: !!statDescontoMedio,
         statCPM: !!statCPM
     });
 
-    if (statTotalSpots) statTotalSpots.textContent = formatNumberCompact(totalSpots);
     if (statTabelaValue) statTabelaValue.textContent = formatCurrencyCompact(totalInvestimentoTabela);
     if (statNegociadoValue) statNegociadoValue.textContent = formatCurrencyCompact(totalInvestimentoNegociado);
     if (statTotalImpacts) statTotalImpacts.textContent = formatNumberCompact(totalImpactos);
+    if (statDescontoMedio) statDescontoMedio.textContent = descontoMedioCard.toFixed(0) + '%';
     if (statCPM) statCPM.textContent = formatCurrency(cpmCard);
     
     // Atualizar lista de produtos ativos
@@ -1107,8 +1202,9 @@ function updateEmissora(index, field, value) {
     
     // NÃO chama renderSpotsTable, apenas atualiza estatísticas e gráficos
     updateStats();
+    updateTotalRow(); // Atualizar linha de total
     renderCharts();
-    
+
     // Mostrar botão de salvar quando há alterações
     showUnsavedChanges();
 }
@@ -1155,11 +1251,12 @@ function toggleOcultarEmissora(checkbox) {
         
         // Atualizar estatísticas
         updateStats();
+        updateTotalRow(); // Atualizar linha de total
         renderCharts();
-        
+
         // Mostrar botão de salvar
         showUnsavedChanges();
-        
+
         console.log(`✅ Emissora ${emissora?.emissora || emissoraId} ADICIONADA (será restaurada no Notion)`);
         console.log(`📊 Emissoras ocultas agora:`, Array.from(proposalData.ocultasEmissoras));
     } else {
@@ -1179,6 +1276,7 @@ function toggleOcultarEmissora(checkbox) {
 
         // Atualizar estatísticas
         updateStats();
+        updateTotalRow(); // Atualizar linha de total
         renderCharts();
 
         // Mostrar botão de salvar
