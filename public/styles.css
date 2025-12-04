@@ -383,13 +383,35 @@ body {
     font-weight: var(--font-weight-bold);
     color: var(--emidias-dark);
     display: block;
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: 4px;
     position: relative;
     z-index: 1;
     word-wrap: break-word;
     line-height: 1.2;
     font-family: var(--font-primary);
     white-space: nowrap;
+}
+
+.stat-diff {
+    font-size: 0.75rem;
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 1;
+    line-height: 1.2;
+    font-family: var(--font-primary);
+}
+
+.stat-diff.neutral {
+    color: var(--emidias-gray);
+}
+
+.stat-diff.positive {
+    color: var(--emidias-success);
+}
+
+.stat-diff.negative {
+    color: var(--emidias-danger);
 }
 
 .stat-label {
@@ -616,10 +638,14 @@ tbody tr:last-child td {
     background: var(--emidias-white);
 }
 
+/* Garantir que todas as células da linha de total tenham background branco */
+.total-row td {
+    background: var(--emidias-white) !important;
+}
+
 /* Remover backgrounds coloridos das células de investimento na linha de total */
 .total-row .investment-tabela,
 .total-row .investment-negociado {
-    background: transparent !important;
     border-left: none !important;
 }
 
