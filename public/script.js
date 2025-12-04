@@ -24,6 +24,15 @@ let proposalData = {
 // Flag para ignorar o próximo evento de checkbox (evita double trigger)
 let ignoreNextCheckboxChange = false;
 
+// Estado inicial dos totais (para comparação)
+let initialStats = {
+    investimentoTabela: 0,
+    investimentoNegociado: 0,
+    impactos: 0,
+    descontoMedio: 0,
+    cpm: 0
+};
+
 
 // Definição de todos os produtos disponíveis
 const PRODUTOS = [
@@ -289,10 +298,10 @@ function updateProposalTitle() {
 
 function renderInterface() {
     let proposalName = proposalData.proposalName || 'Proposta de Mídia';
-    
+
     if (proposalData.emissoras && proposalData.emissoras.length > 0) {
         const firstEmissora = proposalData.emissoras[0];
-        
+
         if (firstEmissora.proposta && firstEmissora.proposta.trim()) {
             proposalName = firstEmissora.proposta;
         } else if (firstEmissora.empresa && firstEmissora.empresa.trim()) {
@@ -301,16 +310,19 @@ function renderInterface() {
             proposalName = firstEmissora.emissora || 'Proposta de Mídia';
         }
     }
-    
+
     const locationInfo = document.getElementById('locationInfo');
     if (locationInfo && locationInfo.parentElement) {
         locationInfo.parentElement.style.display = 'none';
     }
-    
+
     renderSpotsTable();
     updateStats();
     renderCharts();
     showUnsavedChanges();
+
+    // Capturar estado inicial para comparação após primeira renderização
+    captureInitialStats();
 }
 
 function renderSpotsTable() {
@@ -734,16 +746,76 @@ function updateTotalRow() {
     }
 }
 
+function captureInitialStats() {
+    console.log('📸 Capturando estado inicial para comparação...');
+
+    // Calcula o investimento total das emissoras selecionadas
+    let totalInvestimentoTabela = 0;
+    let totalInvestimentoNegociado = 0;
+    let totalImpactos = 0;
+
+    proposalData.emissoras.forEach((emissora, index) => {
+        const checkbox = document.querySelector(`input[type="checkbox"][data-emissora-index="${index}"]`);
+
+        if (checkbox && checkbox.checked) {
+            PRODUTOS.forEach(produto => {
+                if (produto.type === 'midia') {
+                    const spots = emissora[produto.key] || 0;
+                    if (spots > 0) {
+                        const valorTabela = emissora[produto.tabelaKey] || 0;
+                        const valorNegociado = emissora[produto.negKey] || 0;
+
+                        totalInvestimentoTabela += spots * valorTabela;
+                        totalInvestimentoNegociado += spots * valorNegociado;
+                    }
+                }
+            });
+
+            if (emissora.cotasMeses > 0) {
+                const invTabePatrocinio = (emissora.cotasMeses || 0) * (emissora.valorTabelaCota || 0);
+                const invNegPatrocinio = (emissora.cotasMeses || 0) * (emissora.valorNegociadoCota || 0);
+                totalInvestimentoTabela += invTabePatrocinio;
+                totalInvestimentoNegociado += invNegPatrocinio;
+            }
+
+            const impactosValue = emissora.impactos || 0;
+            const impactosNum = typeof impactosValue === 'string'
+                ? parseFloat(impactosValue.replace('.', '').replace(',', '.')) || 0
+                : impactosValue;
+            totalImpactos += impactosNum;
+        }
+    });
+
+    // Calcular desconto médio
+    const descontoMedioCard = totalInvestimentoTabela > 0
+        ? ((totalInvestimentoTabela - totalInvestimentoNegociado) / totalInvestimentoTabela) * 100
+        : 0;
+
+    // Calcular CPM
+    const cpmCard = totalImpactos > 0
+        ? (totalInvestimentoNegociado / totalImpactos) * 1000
+        : 0;
+
+    // Salvar no objeto initialStats
+    initialStats.investimentoTabela = totalInvestimentoTabela;
+    initialStats.investimentoNegociado = totalInvestimentoNegociado;
+    initialStats.impactos = totalImpactos;
+    initialStats.descontoMedio = descontoMedioCard;
+    initialStats.cpm = cpmCard;
+
+    console.log('✅ Estado inicial capturado:', initialStats);
+}
+
 function updateActiveProducts() {
     const activeProductsList = document.getElementById('activeProductsList');
     if (!activeProductsList) return;
-    
+
     // Contar quantidade de cada produto nas emissoras SELECIONADAS
     const productCounts = {};
-    
+
     proposalData.emissoras.forEach((emissora, index) => {
         const checkbox = document.querySelector(`input[type="checkbox"][data-emissora-index="${index}"]`);
-        
+
         // Apenas conta emissoras selecionadas
         if (checkbox && checkbox.checked) {
             PRODUTOS.forEach(produto => {
@@ -757,7 +829,7 @@ function updateActiveProducts() {
             });
         }
     });
-    
+
     // Renderizar badges com produtos ativos
     const badgesHTML = Object.entries(productCounts)
         .sort((a, b) => b[1] - a[1]) // Ordena por quantidade descendente
@@ -769,11 +841,11 @@ function updateActiveProducts() {
             if (product.includes('15"')) styleClass = '';
             if (product.includes('60"')) styleClass = 'accent';
             if (product.includes('Test')) styleClass = 'secondary';
-            
+
             return `<div class="product-badge ${styleClass}"><strong>${product}:</strong> ${count}</div>`;
         })
         .join('');
-    
+
     activeProductsList.innerHTML = badgesHTML || '<div class="product-badge">Nenhum produto selecionado</div>';
 }
 
@@ -882,14 +954,109 @@ function updateStats() {
     if (statTotalImpacts) statTotalImpacts.textContent = formatNumberCompact(totalImpactos);
     if (statDescontoMedio) statDescontoMedio.textContent = descontoMedioCard.toFixed(0) + '%';
     if (statCPM) statCPM.textContent = formatCurrency(cpmCard);
-    
+
+    // Atualizar linhas de comparação (antes/depois)
+    updateComparisonLines(totalInvestimentoTabela, totalInvestimentoNegociado, totalImpactos, descontoMedioCard, cpmCard);
+
     // Atualizar lista de produtos ativos
     updateActiveProducts();
-    
+
     // Atualizar tabela comparativa "Sua Proposta" - Desativado
     // updateComparisonTable(totalInvestimentoNegociado, totalInvestimentoTabela);
-    
+
     console.log('✅ Estatísticas atualizadas!\n');
+}
+
+function updateComparisonLines(currentTabela, currentNegociado, currentImpactos, currentDesconto, currentCPM) {
+    console.log('📊 Atualizando linhas de comparação...');
+
+    // Função auxiliar para formatar a diferença
+    function formatDiff(initial, current, type) {
+        const diff = current - initial;
+
+        // Se não há diferença, ocultar
+        if (Math.abs(diff) < 0.01) {
+            return { text: '', show: false };
+        }
+
+        const arrow = diff > 0 ? '↑' : '↓';
+        let diffText = '';
+        let colorClass = 'neutral';
+
+        switch (type) {
+            case 'currency': // Valor Tabela, Valor Negociado
+                const percentChange = initial !== 0 ? ((diff / initial) * 100) : 0;
+                diffText = `${arrow} ${diff > 0 ? '+' : '-'} ${formatCurrency(Math.abs(diff))} (${Math.abs(percentChange).toFixed(0)}%)`;
+                colorClass = 'neutral';
+                break;
+
+            case 'impacts': // Impactos
+                diffText = `${arrow} ${diff > 0 ? '+' : ''}${formatNumberCompact(diff)}`;
+                colorClass = diff > 0 ? 'positive' : 'negative';
+                break;
+
+            case 'percentage': // Desconto médio
+                diffText = `${arrow} ${diff > 0 ? '+' : ''}${Math.abs(diff).toFixed(0)}%`;
+                colorClass = 'neutral';
+                break;
+
+            case 'cpm': // CPM
+                diffText = `${arrow} ${diff > 0 ? '+' : ''}${formatCurrency(diff)}`;
+                colorClass = diff > 0 ? 'negative' : 'positive'; // Aumentar CPM é ruim (vermelho), diminuir é bom (verde)
+                break;
+        }
+
+        return { text: diffText, show: true, colorClass };
+    }
+
+    // Atualizar cada stat-diff
+    const statTabelaDiff = document.getElementById('statTabelaDiff');
+    const statNegociadoDiff = document.getElementById('statNegociadoDiff');
+    const statImpactsDiff = document.getElementById('statImpactsDiff');
+    const statDescontoDiff = document.getElementById('statDescontoDiff');
+    const statCPMDiff = document.getElementById('statCPMDiff');
+
+    // Valor Tabela
+    if (statTabelaDiff) {
+        const diff = formatDiff(initialStats.investimentoTabela, currentTabela, 'currency');
+        statTabelaDiff.textContent = diff.text;
+        statTabelaDiff.style.display = diff.show ? 'block' : 'none';
+        statTabelaDiff.className = `stat-diff ${diff.colorClass}`;
+    }
+
+    // Valor Negociado
+    if (statNegociadoDiff) {
+        const diff = formatDiff(initialStats.investimentoNegociado, currentNegociado, 'currency');
+        statNegociadoDiff.textContent = diff.text;
+        statNegociadoDiff.style.display = diff.show ? 'block' : 'none';
+        statNegociadoDiff.className = `stat-diff ${diff.colorClass}`;
+    }
+
+    // Impactos
+    if (statImpactsDiff) {
+        const diff = formatDiff(initialStats.impactos, currentImpactos, 'impacts');
+        statImpactsDiff.textContent = diff.text;
+        statImpactsDiff.style.display = diff.show ? 'block' : 'none';
+        statImpactsDiff.className = `stat-diff ${diff.colorClass}`;
+    }
+
+    // Desconto médio
+    if (statDescontoDiff) {
+        const diff = formatDiff(initialStats.descontoMedio, currentDesconto, 'percentage');
+        statDescontoDiff.textContent = diff.text;
+        statDescontoDiff.style.display = diff.show ? 'block' : 'none';
+        statDescontoDiff.className = `stat-diff ${diff.colorClass}`;
+    }
+
+    // CPM
+    if (statCPMDiff) {
+        const diff = formatDiff(initialStats.cpm, currentCPM, 'cpm');
+        statCPMDiff.textContent = diff.text;
+        statCPMDiff.style.display = diff.show ? 'block' : 'none';
+        statCPMDiff.className = `stat-diff ${diff.colorClass}`;
+    }
+
+    console.log('✅ Linhas de comparação atualizadas!');
 }
 
 function updateComparisonTable(negociado, tabela) {
@@ -898,11 +1065,11 @@ function updateComparisonTable(negociado, tabela) {
     const compNegociadoAtual = document.getElementById('compNegociadoAtual');
     const compTabela = document.getElementById('compTabela');
     const compTabelaAtual = document.getElementById('compTabelaAtual');
-    
+
     // Valor anterior (sempre 0 ou pode vir de proposalData se existir dados anteriores)
     const negociadoAnterior = proposalData.negociadoAnterior || 0;
     const tabelaAnterior = proposalData.tabelaAnterior || 0;
-    
+
     // Atualiza os valores
     if (compNegociado) compNegociado.textContent = formatCurrency(negociadoAnterior);
     if (compNegociadoAtual) compNegociadoAtual.textContent = formatCurrency(negociado);
@@ -1688,10 +1855,13 @@ async function confirmAndSave() {
         // Atualizar estado inicial das emissoras ocultas após salvar
         proposalData.initialOcultasEmissoras = new Set(proposalData.ocultasEmissoras);
         proposalData.changedEmissoras = new Set();  // Limpar emissoras alteradas
-        
+
+        // Limpar linhas de comparação (resetar initialStats)
+        clearComparisonLines();
+
         // Ocultar botão de salvar já que não há mais alterações
         showUnsavedChanges();
-        
+
         // Mostrar modal de sucesso
         showSuccessModal();
     } catch (error) {
@@ -1700,11 +1870,33 @@ async function confirmAndSave() {
     }
 }
 
+function clearComparisonLines() {
+    console.log('🧹 Limpando linhas de comparação...');
+
+    // Ocultar todos os stat-diff
+    const statTabelaDiff = document.getElementById('statTabelaDiff');
+    const statNegociadoDiff = document.getElementById('statNegociadoDiff');
+    const statImpactsDiff = document.getElementById('statImpactsDiff');
+    const statDescontoDiff = document.getElementById('statDescontoDiff');
+    const statCPMDiff = document.getElementById('statCPMDiff');
+
+    if (statTabelaDiff) statTabelaDiff.style.display = 'none';
+    if (statNegociadoDiff) statNegociadoDiff.style.display = 'none';
+    if (statImpactsDiff) statImpactsDiff.style.display = 'none';
+    if (statDescontoDiff) statDescontoDiff.style.display = 'none';
+    if (statCPMDiff) statCPMDiff.style.display = 'none';
+
+    // Recapturar estado inicial (novo baseline)
+    captureInitialStats();
+
+    console.log('✅ Linhas de comparação limpas e novo estado inicial capturado!');
+}
+
 function showSuccessModal() {
     console.log('🎉 Mostrando modal de sucesso...');
     const successModal = document.getElementById('successModal');
     successModal.style.display = 'flex';
-    
+
     // Recarregar página após 3 segundos
     setTimeout(() => {
         console.log('🔄 Recarregando página...');
