@@ -1182,7 +1182,7 @@ async function sendNotificationEmail(env, data) {
 
     // Criar mensagem RFC 2822
     const emailMessage = [
-      `From: E-MÍDIAS <emidias@hubradios.com>`,
+      `From: E-MÍDIAS <kaike@hubradios.com>`,
       `To: ${recipients.join(', ')}`,
       `Subject: ${subject}`,
       `MIME-Version: 1.0`,
@@ -1198,11 +1198,11 @@ async function sendNotificationEmail(env, data) {
       .replace(/=+$/, '');
 
     emailLogs.push('📧 [EMAIL] Enviando email via Gmail API...');
-    emailLogs.push('📧 [EMAIL] Remetente (impersonation): emidias@hubradios.com');
+    emailLogs.push('📧 [EMAIL] Remetente (impersonation): kaike@hubradios.com');
     emailLogs.push('📧 [EMAIL] Destinatários: ' + recipients.join(', '));
 
     // Enviar email via Gmail API usando impersonation
-    const response = await fetch('https://www.googleapis.com/gmail/v1/users/emidias@hubradios.com/messages/send', {
+    const response = await fetch('https://www.googleapis.com/gmail/v1/users/kaike@hubradios.com/messages/send', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -1258,6 +1258,7 @@ function findEmissoraIndexById(id, emissoras) {
 // (getAlternantesEmissoraIds, getOrCreateAlternantesDatabase,
 //  createAlternantesDatabase, moveToAlternantes, removeFromAlternantes)
 // =====================================================
+
 
 
 
