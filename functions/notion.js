@@ -1076,97 +1076,413 @@ async function sendNotificationEmail(env, data) {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Alterao de Proposta</title>
+      <title>Alteração de Proposta - E-Mídias</title>
       <style>
-        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #06055b 0%, #1a0f4f 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
-        .header h1 { margin: 0; font-size: 24px; }
-        .content { background: #f9f9f9; padding: 20px; border: 1px solid #e0e0e0; }
-        .change-group { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #6366f1; border-radius: 4px; }
-        .change-group h3 { margin-top: 0; color: #06055b; }
-        .change-item { padding: 8px 0; font-size: 14px; }
-        .old-value { color: #ef4444; font-weight: bold; }
-        .new-value { color: #10b981; font-weight: bold; }
-        .info-box { background: #ede9fe; padding: 12px; border-radius: 4px; font-size: 12px; color: #666; margin: 15px 0; }
-        .footer { background: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #999; border-radius: 0 0 8px 8px; }
-        .link { color: #6366f1; text-decoration: none; font-weight: bold; }
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+          background-color: #f5f7fa;
+          color: #333;
+          line-height: 1.6;
+          padding: 20px 0;
+        }
+
+        .email-container {
+          max-width: 700px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .header {
+          background: linear-gradient(135deg, #06055b 0%, #1a0f4f 100%);
+          color: white;
+          padding: 30px 40px;
+          text-align: center;
+          position: relative;
+        }
+
+        .notification-badge {
+          position: absolute;
+          top: 25px;
+          right: 25px;
+          background-color: #ff4757;
+          color: white;
+          font-size: 12px;
+          font-weight: bold;
+          padding: 5px 12px;
+          border-radius: 20px;
+        }
+
+        .logo-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 20px;
+        }
+
+        .logo-img {
+          max-width: 200px;
+          height: auto;
+        }
+
+        .header h1 {
+          font-size: 28px;
+          margin-bottom: 10px;
+          font-weight: 600;
+        }
+
+        .header p {
+          opacity: 0.9;
+          font-size: 16px;
+        }
+
+        .content {
+          padding: 40px;
+        }
+
+        .section {
+          margin-bottom: 35px;
+        }
+
+        .section-title {
+          display: flex;
+          align-items: center;
+          font-size: 18px;
+          color: #06055b;
+          margin-bottom: 20px;
+          padding-bottom: 10px;
+          border-bottom: 2px solid #f0f4ff;
+          font-weight: 600;
+        }
+
+        .info-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 20px;
+        }
+
+        .info-card {
+          background-color: #f8faff;
+          border-radius: 10px;
+          padding: 20px;
+          border-left: 4px solid #06055b;
+        }
+
+        .info-card h3 {
+          color: #06055b;
+          font-size: 14px;
+          margin-bottom: 8px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .info-card p {
+          color: #333;
+          font-size: 16px;
+          font-weight: 600;
+          word-break: break-word;
+        }
+
+        .changes-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 15px;
+          background: white;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .changes-table thead {
+          background: linear-gradient(135deg, #06055b 0%, #1a0f4f 100%);
+          color: white;
+        }
+
+        .changes-table th {
+          padding: 15px;
+          text-align: left;
+          font-weight: 600;
+          font-size: 14px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .changes-table td {
+          padding: 15px;
+          border-bottom: 1px solid #eee;
+          font-size: 14px;
+        }
+
+        .changes-table tbody tr:hover {
+          background-color: #f8faff;
+        }
+
+        .changes-table tbody tr:last-child td {
+          border-bottom: none;
+        }
+
+        .emissora-name {
+          font-weight: 700;
+          color: #06055b;
+          font-size: 15px;
+        }
+
+        .field-name {
+          color: #666;
+          font-weight: 500;
+        }
+
+        .value-change {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .old-value {
+          background-color: #ffeaea;
+          color: #ff4757;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-weight: 700;
+          text-decoration: line-through;
+        }
+
+        .new-value {
+          background-color: #e8f7ef;
+          color: #2ed573;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-weight: 700;
+        }
+
+        .arrow {
+          color: #06055b;
+          font-weight: bold;
+        }
+
+        .status-change {
+          background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+          border-radius: 10px;
+          padding: 20px;
+          margin-top: 15px;
+          border-left: 4px solid #ffb300;
+        }
+
+        .status-change h3 {
+          color: #ff8c00;
+          margin-bottom: 15px;
+          font-size: 16px;
+        }
+
+        .status-item {
+          padding: 10px 0;
+          border-bottom: 1px solid rgba(255, 179, 0, 0.2);
+        }
+
+        .status-item:last-child {
+          border-bottom: none;
+        }
+
+        .status-icon {
+          font-size: 18px;
+          margin-right: 8px;
+        }
+
+        .footer {
+          background-color: #f8faff;
+          padding: 25px 40px;
+          text-align: center;
+          color: #666;
+          font-size: 14px;
+          border-top: 1px solid #eaeaea;
+        }
+
+        .footer p {
+          margin: 5px 0;
+        }
+
+        .security-note {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 15px;
+          color: #777;
+          font-size: 13px;
+        }
+
+        .security-icon {
+          color: #2ed573;
+          margin-right: 8px;
+        }
+
+        @media (max-width: 600px) {
+          .header, .content, .footer {
+            padding: 25px 20px;
+          }
+
+          .info-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .changes-table {
+            font-size: 12px;
+          }
+
+          .changes-table th,
+          .changes-table td {
+            padding: 10px 8px;
+          }
+
+          .value-change {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+          }
+
+          .notification-badge {
+            top: 15px;
+            right: 15px;
+            font-size: 10px;
+            padding: 4px 8px;
+          }
+        }
       </style>
     </head>
     <body>
-      <div class="container">
+      <div class="email-container">
         <div class="header">
-          <h1>🔔 Alteração de Proposta</h1>
-          <p style="margin: 10px 0 0 0; opacity: 0.9;">Proposta: <strong>${proposalName}</strong></p>
-          <p style="margin: 8px 0 0 0; opacity: 0.8; font-size: 13px;">E-MÍDIAS | Sistema de Gestão de Propostas</p>
+          <div class="notification-badge">ALTERAÇÃO</div>
+          <div class="logo-container">
+            <img src="https://emidiastec.com.br/wp-content/smush-avif/2025/03/logo-E-MIDIAS-png-fundo-escuro-HORIZONTAL.png.avif" alt="E-MÍDIAS" class="logo-img">
+          </div>
+          <h1>Alteração de Proposta</h1>
+          <p>Sistema de Gestão de Propostas - Notificação de Alteração</p>
         </div>
-        
+
         <div class="content">
-          <p>Olá,</p>
-          <p>A proposta <strong>"${proposalName}"</strong> foi alterada no sistema E-MÍDIAS. Confira os detalhes abaixo:</p>
-          
-          <div class="info-box">
-            <strong>📧 Alterado por:</strong> ${editorEmail || 'Desconhecido'}<br>
-            <strong>📅 Data/Hora:</strong> ${new Date().toLocaleString('pt-BR')}<br>
-            <strong>🌐 IP do Responsável:</strong> ${requestIP}
+          <div class="section">
+            <div class="section-title">DETALHES DA PROPOSTA</div>
+
+            <div class="info-grid">
+              <div class="info-card">
+                <h3>Nome da Proposta</h3>
+                <p>${proposalName}</p>
+              </div>
+
+              <div class="info-card">
+                <h3>Alterado por</h3>
+                <p>${editorEmail || 'Desconhecido'}</p>
+              </div>
+
+              <div class="info-card">
+                <h3>Data/Hora</h3>
+                <p>${new Date().toLocaleString('pt-BR')}</p>
+              </div>
+
+              <div class="info-card">
+                <h3>Endereço IP</h3>
+                <p style="font-size: 13px; word-break: break-all;">${requestIP}</p>
+              </div>
+            </div>
           </div>
   `;
 
   // Adicionar alterações de inclusão/exclusão de emissoras (se houver)
   if (exclusionChanges && exclusionChanges.length > 0) {
     emailHTML += `
-      <div class="change-group" style="border-left-color: #f59e0b; background: #fffbf0;">
-        <h3 style="color: #f59e0b;">⚙️ Mudanças de Status (Inclusão/Exclusão)</h3>
+          <div class="section">
+            <div class="section-title">MUDANÇAS DE STATUS</div>
+            <div class="status-change">
+              <h3>⚙️ Inclusão / Exclusão de Emissoras</h3>
     `;
-    
+
     exclusionChanges.forEach(change => {
       const icon = change.newValue === 'Excluída' ? '❌' : '✅';
       emailHTML += `
-        <div class="change-item">
-          <strong>${icon} ${change.emissoraName}:</strong> 
-          <span class="old-value">${change.oldValue}</span> 
-          → 
-          <span class="new-value">${change.newValue}</span>
-        </div>
+              <div class="status-item">
+                <span class="status-icon">${icon}</span>
+                <strong>${change.emissoraName}</strong>:
+                <span class="old-value">${change.oldValue}</span>
+                <span class="arrow">→</span>
+                <span class="new-value">${change.newValue}</span>
+              </div>
       `;
     });
-    
-    emailHTML += '</div>';
-  }
-  
-  // Adicionar alteraes por emissora
-  for (const emissoraIndex in changesByEmissora) {
-    const emissora = emissoras[emissoraIndex];
-    const changes_by_emissora = changesByEmissora[emissoraIndex];
-    
+
     emailHTML += `
-      <div class="change-group">
-        <h3>📻 ${emissora.emissora}</h3>
+            </div>
+          </div>
     `;
-    
-    changes_by_emissora.forEach(change => {
-      emailHTML += `
-        <div class="change-item">
-          <strong>${change.notionField}:</strong> 
-          <span class="old-value">${change.oldValue || change.old}</span> 
-          → 
-          <span class="new-value">${change.newValue || change.new}</span>
-        </div>
-      `;
-    });
-    
-    emailHTML += '</div>';
+  }
+
+  // Adicionar alterações por emissora em formato de tabela
+  const hasChanges = Object.keys(changesByEmissora).length > 0;
+
+  if (hasChanges) {
+    emailHTML += `
+          <div class="section">
+            <div class="section-title">ALTERAÇÕES REALIZADAS</div>
+            <table class="changes-table">
+              <thead>
+                <tr>
+                  <th>Emissora</th>
+                  <th>Campo Alterado</th>
+                  <th>Valor Anterior → Novo</th>
+                </tr>
+              </thead>
+              <tbody>
+    `;
+
+    for (const emissoraIndex in changesByEmissora) {
+      const emissora = emissoras[emissoraIndex];
+      const changes_by_emissora = changesByEmissora[emissoraIndex];
+
+      changes_by_emissora.forEach((change, index) => {
+        emailHTML += `
+                <tr>
+                  <td>${index === 0 ? '<span class="emissora-name">📻 ' + emissora.emissora + '</span>' : ''}</td>
+                  <td><span class="field-name">${change.notionField}</span></td>
+                  <td>
+                    <div class="value-change">
+                      <span class="old-value">${change.oldValue || change.old}</span>
+                      <span class="arrow">→</span>
+                      <span class="new-value">${change.newValue || change.new}</span>
+                    </div>
+                  </td>
+                </tr>
+        `;
+      });
+    }
+
+    emailHTML += `
+              </tbody>
+            </table>
+          </div>
+    `;
   }
 
   // Fechar conteúdo
   emailHTML += `
-          <p style="color: #999; font-size: 12px; margin-top: 20px;">
-            Este é um email automático. Não responda este message.
-          </p>
         </div>
-        
+
         <div class="footer">
-          <p>© 2025 HUB RÁDIOS - E-MÍDIAS. Todos os direitos reservados.</p>
+          <p><strong>E-MÍDIAS | Sistema de Gestão de Propostas</strong></p>
+          <p>Esta é uma notificação automática. Por favor, não responda a este e-mail.</p>
+
+          <div class="security-note">
+            <span class="security-icon">🔒</span>
+            <span>Esta alteração foi registrada com data, hora e endereço IP para fins de auditoria.</span>
+          </div>
         </div>
       </div>
     </body>
