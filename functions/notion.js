@@ -1069,6 +1069,9 @@ async function sendNotificationEmail(env, data) {
     });
   }
 
+  // Construir URL da proposta
+  const proposalUrl = `https://19f04e2d.alteracaoproposta1.pages.dev/?id=${tableId}`;
+
   // Gerar HTML do email
   let emailHTML = `
     <!DOCTYPE html>
@@ -1101,47 +1104,27 @@ async function sendNotificationEmail(env, data) {
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         }
 
-        .header {
-          background: linear-gradient(135deg, #06055b 0%, #1a0f4f 100%);
-          color: white;
-          padding: 30px 40px;
+        .logo-section {
+          background-color: #ffffff;
+          padding: 30px 40px 20px 40px;
           text-align: center;
-          position: relative;
-        }
-
-        .notification-badge {
-          position: absolute;
-          top: 25px;
-          right: 25px;
-          background-color: #ff4757;
-          color: white;
-          font-size: 12px;
-          font-weight: bold;
-          padding: 5px 12px;
-          border-radius: 20px;
-        }
-
-        .logo-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 20px;
         }
 
         .logo-img {
-          max-width: 200px;
+          max-width: 150px;
           height: auto;
         }
 
-        .header h1 {
-          font-size: 28px;
-          margin-bottom: 10px;
-          font-weight: 600;
+        .header {
+          background: linear-gradient(135deg, #06055b 0%, #1a0f4f 100%);
+          color: white;
+          padding: 20px 40px;
+          text-align: center;
         }
 
-        .header p {
-          opacity: 0.9;
-          font-size: 16px;
+        .header h1 {
+          font-size: 24px;
+          font-weight: 600;
         }
 
         .content {
@@ -1190,6 +1173,17 @@ async function sendNotificationEmail(env, data) {
           font-size: 16px;
           font-weight: 600;
           word-break: break-word;
+        }
+
+        .info-card a {
+          color: #06055b;
+          text-decoration: none;
+          transition: color 0.3s ease;
+        }
+
+        .info-card a:hover {
+          color: #1a0f4f;
+          text-decoration: underline;
         }
 
         .changes-table {
@@ -1271,31 +1265,37 @@ async function sendNotificationEmail(env, data) {
         }
 
         .status-change {
-          background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+          background-color: #f8faff;
           border-radius: 10px;
           padding: 20px;
           margin-top: 15px;
-          border-left: 4px solid #ffb300;
+          border-left: 4px solid #FF1493;
         }
 
         .status-change h3 {
-          color: #ff8c00;
+          color: #06055b;
           margin-bottom: 15px;
           font-size: 16px;
+          font-weight: 600;
         }
 
         .status-item {
-          padding: 10px 0;
-          border-bottom: 1px solid rgba(255, 179, 0, 0.2);
+          padding: 12px 0;
+          border-bottom: 1px solid #e0e0e0;
         }
 
         .status-item:last-child {
           border-bottom: none;
         }
 
-        .status-icon {
-          font-size: 18px;
-          margin-right: 8px;
+        .status-active {
+          color: #2ed573;
+          font-weight: 700;
+        }
+
+        .status-excluded {
+          color: #ff4757;
+          font-weight: 700;
         }
 
         .footer {
@@ -1360,13 +1360,12 @@ async function sendNotificationEmail(env, data) {
     </head>
     <body>
       <div class="email-container">
+        <div class="logo-section">
+          <img src="https://emidiastec.com.br/wp-content/smush-avif/2025/03/logo-E-MIDIAS-png-fundo-escuro-HORIZONTAL.png.avif" alt="E-MÍDIAS" class="logo-img">
+        </div>
+
         <div class="header">
-          <div class="notification-badge">ALTERAÇÃO</div>
-          <div class="logo-container">
-            <img src="https://emidiastec.com.br/wp-content/smush-avif/2025/03/logo-E-MIDIAS-png-fundo-escuro-HORIZONTAL.png.avif" alt="E-MÍDIAS" class="logo-img">
-          </div>
           <h1>Alteração de Proposta</h1>
-          <p>Sistema de Gestão de Propostas - Notificação de Alteração</p>
         </div>
 
         <div class="content">
@@ -1376,7 +1375,7 @@ async function sendNotificationEmail(env, data) {
             <div class="info-grid">
               <div class="info-card">
                 <h3>Nome da Proposta</h3>
-                <p>${proposalName}</p>
+                <p><a href="${proposalUrl}" target="_blank">${proposalName}</a></p>
               </div>
 
               <div class="info-card">
@@ -1386,7 +1385,7 @@ async function sendNotificationEmail(env, data) {
 
               <div class="info-card">
                 <h3>Data/Hora</h3>
-                <p>${new Date().toLocaleString('pt-BR')}</p>
+                <p>${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</p>
               </div>
 
               <div class="info-card">
@@ -1403,18 +1402,18 @@ async function sendNotificationEmail(env, data) {
           <div class="section">
             <div class="section-title">MUDANÇAS DE STATUS</div>
             <div class="status-change">
-              <h3>⚙️ Inclusão / Exclusão de Emissoras</h3>
+              <h3>Inclusão / Exclusão de Emissoras</h3>
     `;
 
     exclusionChanges.forEach(change => {
-      const icon = change.newValue === 'Excluída' ? '❌' : '✅';
+      const oldStatusClass = change.oldValue === 'Excluída' ? 'status-excluded' : 'status-active';
+      const newStatusClass = change.newValue === 'Excluída' ? 'status-excluded' : 'status-active';
       emailHTML += `
               <div class="status-item">
-                <span class="status-icon">${icon}</span>
                 <strong>${change.emissoraName}</strong>:
-                <span class="old-value">${change.oldValue}</span>
+                <span class="${oldStatusClass}">${change.oldValue}</span>
                 <span class="arrow">→</span>
-                <span class="new-value">${change.newValue}</span>
+                <span class="${newStatusClass}">${change.newValue}</span>
               </div>
       `;
     });
@@ -1505,7 +1504,15 @@ async function sendNotificationEmail(env, data) {
 
     // Destinatários fixos
     const recipients = ['kaike@hubradios.com', 'dani@hubradios.com'];
-    const subject = `[E-MÍDIAS] Alteração de Proposta - ${proposalName} - ${new Date().toLocaleDateString('pt-BR')}`;
+    const subjectText = `${proposalName} - Modificado`;
+
+    // Encode subject em MIME para suportar caracteres especiais
+    const encodeSubject = (text) => {
+      const encoded = Buffer.from(text, 'utf8').toString('base64');
+      return `=?UTF-8?B?${encoded}?=`;
+    };
+
+    const subject = encodeSubject(subjectText);
 
     // Criar mensagem RFC 2822
     const emailMessage = [
