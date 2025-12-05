@@ -485,7 +485,7 @@ function renderSpotsTable() {
                         <input
                             type="number"
                             value="${spots}"
-                            onchange="updateEmissora(${emissoraIndex}, '${produto.key}', this.value)"
+                            oninput="updateEmissora(${emissoraIndex}, '${produto.key}', this.value)"
                             class="input-spots"
                             min="0"
                             step="1"
@@ -524,7 +524,7 @@ function renderSpotsTable() {
                     <input
                         type="number"
                         value="${cotasMeses}"
-                        onchange="updateEmissora(${emissoraIndex}, 'cotasMeses', this.value)"
+                        oninput="updateEmissora(${emissoraIndex}, 'cotasMeses', this.value)"
                         class="input-spots"
                         min="0"
                         step="1"
@@ -1415,36 +1415,46 @@ function updateRowCalculations(emissoraIndex) {
     const emissora = proposalData.emissoras[emissoraIndex];
     if (!emissora) return;
 
-    // Encontrar a linha na tabela (índice na tabela pode ser diferente do índice no array devido ao filtro)
+    // Encontrar a linha na tabela
     const tbody = document.querySelector('#spotsTable tbody');
     if (!tbody) return;
 
-    // Encontrar a linha correta pela data-emissora-index
     const row = tbody.querySelector(`tr[data-emissora-index="${emissoraIndex}"]`);
     if (!row) return;
 
-    // Calcular investimentos
+    // Calcular investimentos usando TODOS os produtos possíveis
     let investimentoTabela = 0;
     let investimentoNegociado = 0;
 
-    // Calcular investimento de MÍDIA AVULSA
-    produtosAtivos.forEach(produtoKey => {
-        const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
-        if (produto) {
-            const spots = emissora[produto.key] || 0;
-            const valorTabela = emissora[produto.tabelaKey] || 0;
-            const valorNegociado = emissora[produto.negKey] || 0;
+    // MÍDIA AVULSA - verificar todos os produtos
+    const produtosMidia = [
+        { key: 'spots30', tabelaKey: 'valorTabela30', negKey: 'valorNegociado30' },
+        { key: 'spots60', tabelaKey: 'valorTabela60', negKey: 'valorNegociado60' },
+        { key: 'spotsBlitz', tabelaKey: 'valorTabelaBlitz', negKey: 'valorNegociadoBlitz' },
+        { key: 'spots15', tabelaKey: 'valorTabela15', negKey: 'valorNegociado15' },
+        { key: 'spots5', tabelaKey: 'valorTabela5', negKey: 'valorNegociado5' },
+        { key: 'spotsTest30', tabelaKey: 'valorTabelaTest30', negKey: 'valorNegociadoTest30' },
+        { key: 'spotsTest60', tabelaKey: 'valorTabelaTest60', negKey: 'valorNegociadoTest60' },
+        { key: 'spotsFlash30', tabelaKey: 'valorTabelaFlash30', negKey: 'valorNegociadoFlash30' },
+        { key: 'spotsFlash60', tabelaKey: 'valorTabelaFlash60', negKey: 'valorNegociadoFlash60' },
+        { key: 'spotsMensham30', tabelaKey: 'valorTabelaMensham30', negKey: 'valorNegociadoMensham30' },
+        { key: 'spotsMensham60', tabelaKey: 'valorTabelaMensham60', negKey: 'valorNegociadoMensham60' }
+    ];
 
-            investimentoTabela += spots * valorTabela;
-            investimentoNegociado += spots * valorNegociado;
-        }
+    produtosMidia.forEach(produto => {
+        const spots = parseFloat(emissora[produto.key]) || 0;
+        const valorTabela = parseFloat(emissora[produto.tabelaKey]) || 0;
+        const valorNegociado = parseFloat(emissora[produto.negKey]) || 0;
+
+        investimentoTabela += spots * valorTabela;
+        investimentoNegociado += spots * valorNegociado;
     });
 
-    // Calcular investimento de PATROCÍNIO
-    if (temPatrocinioAtivo) {
-        const cotasMeses = emissora.cotasMeses || 0;
-        const valorTabelaCota = emissora.valorTabelaCota || 0;
-        const valorNegociadoCota = emissora.valorNegociadoCota || 0;
+    // PATROCÍNIO
+    const cotasMeses = parseFloat(emissora.cotasMeses) || 0;
+    if (cotasMeses > 0) {
+        const valorTabelaCota = parseFloat(emissora.valorTabelaCota) || 0;
+        const valorNegociadoCota = parseFloat(emissora.valorNegociadoCota) || 0;
 
         investimentoTabela += cotasMeses * valorTabelaCota;
         investimentoNegociado += cotasMeses * valorNegociadoCota;
