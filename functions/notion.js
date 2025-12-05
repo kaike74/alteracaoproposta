@@ -1098,25 +1098,13 @@ async function sendNotificationEmail(env, data) {
           background: linear-gradient(135deg, #06055b 0%, #1a0f4f 100%);
           color: white;
           padding: 25px 40px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
+          text-align: center;
           border-radius: 12px 12px 0 0;
-          gap: 30px;
         }
 
         .header-logo {
-          max-width: 140px;
+          max-width: 180px;
           height: auto;
-          flex-shrink: 0;
-        }
-
-        .header h1 {
-          font-size: 24px;
-          font-weight: 600;
-          margin: 0;
-          text-align: right;
-          flex: 1;
         }
 
         .content {
@@ -1319,18 +1307,11 @@ async function sendNotificationEmail(env, data) {
 
         @media (max-width: 600px) {
           .header {
-            flex-direction: column;
-            text-align: center;
-            gap: 15px;
             padding: 20px;
           }
 
           .header-logo {
-            max-width: 120px;
-          }
-
-          .header h1 {
-            font-size: 20px;
+            max-width: 140px;
           }
 
           .content, .footer {
@@ -1362,7 +1343,6 @@ async function sendNotificationEmail(env, data) {
       <div class="email-container">
         <div class="header">
           <img src="https://emidiastec.com.br/wp-content/smush-avif/2025/03/logo-E-MIDIAS-png-fundo-escuro-HORIZONTAL.png.avif" alt="E-MÍDIAS" class="header-logo">
-          <h1>Alteração de Proposta</h1>
         </div>
 
         <div class="content">
