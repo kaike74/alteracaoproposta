@@ -432,6 +432,7 @@ function renderSpotsTable() {
         const row = document.createElement('tr');
         row.className = 'spots-data-row';
         row.id = `emissora-row-${emissora.id}`;  // ID único para CSS
+        row.setAttribute('data-emissora-index', emissoraIndex);  // Para encontrar a linha depois
         row.setAttribute('data-emissora-id', emissora.id);  // Para rastreamento
         
         // Aplicar estilo se oculta
@@ -1395,10 +1396,93 @@ function updateEmissora(index, field, value) {
     // NÃO chama renderSpotsTable, apenas atualiza estatísticas e gráficos
     updateStats();
     updateTotalRow(); // Atualizar linha de total
+    updateRowCalculations(index); // Atualizar cálculos da linha específica
     renderCharts();
 
     // Mostrar botão de salvar quando há alterações
     showUnsavedChanges();
+}
+
+// =====================================================
+// ATUALIZAÇÃO DINÂMICA DAS COLUNAS DA TABELA
+// =====================================================
+
+function updateRowCalculations(emissoraIndex) {
+    /**
+     * Atualiza as colunas calculadas (investimento, desconto, impactos, CPM)
+     * de uma linha específica da tabela sem re-renderizar tudo
+     */
+    const emissora = proposalData.emissoras[emissoraIndex];
+    if (!emissora) return;
+
+    // Encontrar a linha na tabela (índice na tabela pode ser diferente do índice no array devido ao filtro)
+    const tbody = document.querySelector('#spotsTable tbody');
+    if (!tbody) return;
+
+    // Encontrar a linha correta pela data-emissora-index
+    const row = tbody.querySelector(`tr[data-emissora-index="${emissoraIndex}"]`);
+    if (!row) return;
+
+    // Calcular investimentos
+    let investimentoTabela = 0;
+    let investimentoNegociado = 0;
+
+    // Calcular investimento de MÍDIA AVULSA
+    produtosAtivos.forEach(produtoKey => {
+        const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
+        if (produto) {
+            const spots = emissora[produto.key] || 0;
+            const valorTabela = emissora[produto.tabelaKey] || 0;
+            const valorNegociado = emissora[produto.negKey] || 0;
+
+            investimentoTabela += spots * valorTabela;
+            investimentoNegociado += spots * valorNegociado;
+        }
+    });
+
+    // Calcular investimento de PATROCÍNIO
+    if (temPatrocinioAtivo) {
+        const cotasMeses = emissora.cotasMeses || 0;
+        const valorTabelaCota = emissora.valorTabelaCota || 0;
+        const valorNegociadoCota = emissora.valorNegociadoCota || 0;
+
+        investimentoTabela += cotasMeses * valorTabelaCota;
+        investimentoNegociado += cotasMeses * valorNegociadoCota;
+    }
+
+    // Calcular desconto médio
+    const descontoMedio = investimentoTabela > 0
+        ? ((investimentoTabela - investimentoNegociado) / investimentoTabela) * 100
+        : 0;
+
+    // Calcular CPM
+    const impactos = emissora.impactos || 0;
+    const cpm = impactos > 0
+        ? (investimentoNegociado / impactos) * 1000
+        : 0;
+
+    // Atualizar células da tabela
+    const investTabelaCell = row.querySelector('.investment-tabela');
+    const investNegociadoCell = row.querySelector('.investment-negociado');
+    const descontoCell = row.querySelector('.desconto-cell');
+    const impactosCell = row.querySelector('.impactos-cell');
+    const cpmCell = row.querySelector('.cpm-cell');
+
+    if (investTabelaCell) {
+        investTabelaCell.textContent = `R$ ${investimentoTabela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+    if (investNegociadoCell) {
+        investNegociadoCell.textContent = `R$ ${investimentoNegociado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+    if (descontoCell) {
+        descontoCell.textContent = `${descontoMedio.toFixed(0)}%`;
+    }
+    if (impactosCell) {
+        impactosCell.textContent = impactos.toLocaleString('pt-BR');
+    }
+    if (cpmCell) {
+        cpmCell.textContent = `R$ ${cpm.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
 }
 
 function updateRowSelection() {
