@@ -899,7 +899,7 @@ function extractPrivateKey(privateKeyData) {
 }
 
 // Função para criar JWT token
-async function createJWT(serviceAccountEmail, privateKey, scope) {
+async function createJWT(serviceAccountEmail, privateKey, scope, userToImpersonate) {
   const header = {
     alg: 'RS256',
     typ: 'JWT'
@@ -908,11 +908,13 @@ async function createJWT(serviceAccountEmail, privateKey, scope) {
   const now = Math.floor(Date.now() / 1000);
   const payload = {
     iss: serviceAccountEmail,
-    scope: scope,
+    sub: userToImpersonate,   // ← ESSENCIAL
+    scope: scope,             // ← agora pode ter múltiplos escopos
     aud: 'https://oauth2.googleapis.com/token',
     exp: now + 3600,
     iat: now
   };
+
 
   // Encode header e payload em base64url
   const base64UrlEncode = (obj) => {
@@ -962,8 +964,17 @@ async function createJWT(serviceAccountEmail, privateKey, scope) {
 }
 
 // Função para obter access token do Google
-async function getGoogleAccessToken(serviceAccountEmail, privateKey, scope) {
-  const jwt = await createJWT(serviceAccountEmail, privateKey, scope);
+async function getGoogleAccessToken(serviceAccountEmail, privateKey) {
+
+  const scope =
+    "https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.modify";
+
+  const jwt = await createJWT(
+    serviceAccountEmail,
+    privateKey,
+    scope,
+    "kaike@hubradios.com"  // ← aqui entra o impersonation
+  );
 
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -1202,16 +1213,20 @@ async function sendNotificationEmail(env, data) {
     emailLogs.push('📧 [EMAIL] Destinatários: ' + recipients.join(', '));
 
     // Enviar email via Gmail API usando impersonation
-    const response = await fetch('https://www.googleapis.com/gmail/v1/users/kaike@hubradios.com/messages/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        raw: encodedMessage
-      })
-    });
+const response = await fetch(
+  'https://gmail.googleapis.com/gmail/v1/users/kaike@hubradios.com/messages/send?alt=json',
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      raw: encodedMessage
+    })
+  }
+);
+
 
     const statusMsg = '📧 [EMAIL] Status da resposta Gmail API: ' + response.status;
     emailLogs.push(statusMsg);
@@ -1258,6 +1273,7 @@ function findEmissoraIndexById(id, emissoras) {
 // (getAlternantesEmissoraIds, getOrCreateAlternantesDatabase,
 //  createAlternantesDatabase, moveToAlternantes, removeFromAlternantes)
 // =====================================================
+
 
 
 
