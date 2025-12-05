@@ -196,12 +196,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateProposalTitle();
         renderInterface();
     } catch (error) {
+        //console.error('Erro ao carregar proposta:', error);
         showError(error.message);
     }
 });
 
 function showWelcomeMessage() {
     // Redirecionar automaticamente para https://emidiastec.com.br
+    //console.log('⚠️ Nenhum ID de proposta fornecido. Redirecionando para emidiastec.com.br...');
     window.location.href = 'https://emidiastec.com.br';
 }
 
@@ -258,6 +260,7 @@ async function loadProposalFromNotion(tableId) {
             throw new Error('Nenhuma emissora encontrada');
         }
     } catch (error) {
+        //console.error('Erro ao carregar proposta:', error);
         throw error;
     }
 }
@@ -331,10 +334,12 @@ function renderSpotsTable() {
     const table = document.getElementById('spotsTable');
     
     if (!tbody || !table) {
+        //console.error('Elementos da tabela não encontrados');
         return;
     }
     
     if (!proposalData.emissoras || proposalData.emissoras.length === 0) {
+        //console.error('Nenhuma emissora disponível');
         return;
     }
     
@@ -419,6 +424,7 @@ function renderSpotsTable() {
     
     // Renderiza uma linha por emissora
     proposalData.emissoras.forEach((emissora, emissoraIndex) => {
+        //console.log(`📍 Processando emissora ${emissoraIndex}: ${emissora.emissora}`);
         
         let investimentoTabelaEmissora = 0;
         let investimentoNegociadoEmissora = 0;
@@ -437,6 +443,7 @@ function renderSpotsTable() {
         const isOculta = proposalData.ocultasEmissoras.has(emissora.id);
         const logoUrl = getLogoUrl(emissora.linkLogo);
         
+        //console.log(`  Logo URL para ${emissora.emissora}: ${logoUrl}`);
         
         row.innerHTML = `
             <td class="checkbox-cell">
@@ -452,11 +459,13 @@ function renderSpotsTable() {
             <td>${emissora.uf || '-'}</td>
             <td>${emissora.praca || '-'}</td>
             <td class="emissora-cell">
+                ${logoUrl ? `<img src="${logoUrl}" alt="${emissora.emissora}" class="emissora-logo" onerror="//console.error('Erro ao carregar logo de ${emissora.emissora}')">` : ''}
                 <span class="emissora-name"><strong>${emissora.emissora || '-'}</strong></span>
             </td>
         `;
         
         // Colunas dinâmicas por produto de MÍDIA AVULSA
+        //console.log(`  🔍 Emissora ${emissora.emissora} - Produtos ativos:`, Array.from(produtosAtivos));
         produtosAtivos.forEach(produtoKey => {
             const produto = PRODUTOS.find(p => p.key === produtoKey && p.type === 'midia');
             if (produto) {
@@ -464,6 +473,7 @@ function renderSpotsTable() {
                 const valorTabela = emissora[produto.tabelaKey] || 0;
                 const valorNegociado = emissora[produto.negKey] || 0;
                 
+                //console.log(`     - ${produto.label}: ${spots} spots × R$ ${valorTabela} = R$ ${spots * valorTabela}`);
                 
                 // CALCULA O INVESTIMENTO PARA MÍDIA AVULSA
                 investimentoTabelaEmissora += spots * valorTabela;
@@ -492,11 +502,18 @@ function renderSpotsTable() {
             const valorTabelaCota = emissora.valorTabelaCota || 0;
             const valorNegociadoCota = emissora.valorNegociadoCota || 0;
             
+            //console.log(`📋 PATROCÍNIO - Emissora ${emissoraIndex} (${emissora.emissora}):`);
+            //console.log(`   - cotasMeses: ${cotasMeses}`);
+            //console.log(`   - valorTabelaCota: ${valorTabelaCota}`);
+            //console.log(`   - valorNegociadoCota: ${valorNegociadoCota}`);
+            //console.log(`   - ins5: ${emissora.ins5}, ins15: ${emissora.ins15}, ins30: ${emissora.ins30}, ins60: ${emissora.ins60}`);
             
             // Investimento Patrocínio
             const invTabePatrocinio = cotasMeses * valorTabelaCota;
             const invNegPatrocinio = cotasMeses * valorNegociadoCota;
             
+            //console.log(`   - Inv. Tabela Patrocínio: ${invTabePatrocinio}`);
+            //console.log(`   - Inv. Negociado Patrocínio: ${invNegPatrocinio}`);
             
             investimentoTabelaEmissora += invTabePatrocinio;
             investimentoNegociadoEmissora += invNegPatrocinio;
@@ -642,6 +659,7 @@ function renderSpotsTable() {
 
     tbody.appendChild(totalRow);
 
+    //console.log('═══════════════════════════════════════════════════════════');
 }
 
 // Função para atualizar apenas a linha de total (sem re-renderizar toda a tabela)
@@ -738,6 +756,7 @@ function captureInitialStats() {
         return;
     }
 
+    //console.log('📸 Capturando estado inicial para comparação (primeira mudança)...');
 
     // Calcula o investimento total das emissoras selecionadas
     let totalInvestimentoTabela = 0;
@@ -794,6 +813,7 @@ function captureInitialStats() {
     initialStats.cpm = cpmCard;
     initialStats.captured = true;  // Marcar como capturado
 
+    //console.log('✅ Estado inicial capturado:', initialStats);
 }
 
 function updateActiveProducts() {
@@ -840,6 +860,10 @@ function updateActiveProducts() {
 }
 
 function updateStats() {
+    //console.log('\n╔════════════════════════════════════════════════════════════════╗');
+    //console.log('║ 📍 INICIANDO: updateStats()');
+    //console.log('╚════════════════════════════════════════════════════════════════╝');
+    //console.log('✅ Iniciando cálculos apenas das emissoras SELECIONADAS...');
     
     // Calcula o investimento total APENAS das emissoras checadas
     let totalInvestimentoTabela = 0;
@@ -904,6 +928,12 @@ function updateStats() {
         ? ((economia / totalInvestimentoTabela) * 100).toFixed(2)
         : 0;
     
+    //console.log('📊 Total Spots:', totalSpots);
+    //console.log('💰 Total Investimento Tabela:', totalInvestimentoTabela);
+    //console.log('💰 Total Investimento Negociado:', totalInvestimentoNegociado);
+    //console.log('📈 Total Impactos:', totalImpactos);
+    //console.log('💵 Economia (R$):', economia);
+    //console.log('💵 Desconto (%):', percentualDesconto);
     
     const statTabelaValue = document.getElementById('statTabelaValue');
     const statNegociadoValue = document.getElementById('statNegociadoValue');
@@ -921,6 +951,7 @@ function updateStats() {
         ? (totalInvestimentoNegociado / totalImpactos) * 1000
         : 0;
 
+    //console.log('🔍 Elementos encontrados:', {
         statTabelaValue: !!statTabelaValue,
         statNegociadoValue: !!statNegociadoValue,
         statTotalImpacts: !!statTotalImpacts,
@@ -943,19 +974,23 @@ function updateStats() {
     // Atualizar tabela comparativa "Sua Proposta" - Desativado
     // updateComparisonTable(totalInvestimentoNegociado, totalInvestimentoTabela);
 
+    //console.log('✅ Estatísticas atualizadas!\n');
 }
 
 function updateComparisonLines(currentTabela, currentNegociado, currentImpactos, currentDesconto, currentCPM) {
     // Se não houve mudanças ainda, não mostrar comparações
     if (!hasChanges) {
+        //console.log('⏭️ Nenhuma mudança ainda, pulando comparações...');
         return;
     }
 
     // Se o estado inicial ainda não foi capturado, não mostrar comparações
     if (!initialStats.captured) {
+        //console.log('⏭️ Estado inicial não capturado, pulando comparações...');
         return;
     }
 
+    //console.log('📊 Atualizando linhas de comparação...');
 
     // Função auxiliar para formatar a diferença
     function formatDiff(initial, current, type) {
@@ -1043,6 +1078,7 @@ function updateComparisonLines(currentTabela, currentNegociado, currentImpactos,
         statCPMDiff.className = `stat-diff ${diff.colorClass}`;
     }
 
+    //console.log('✅ Linhas de comparação atualizadas!');
 }
 
 function updateComparisonTable(negociado, tabela) {
@@ -1064,6 +1100,7 @@ function updateComparisonTable(negociado, tabela) {
 }
 
 function renderCharts() {
+    //console.log('📊 Renderizando gráficos...');
     
     try {
         // Destroi os gráficos antigos se existirem
@@ -1073,13 +1110,16 @@ function renderCharts() {
         }
         
         // renderInvestmentChart(); // Desativado - gráfico removido do site
+        //console.log('✅ Estatísticas renderizadas com sucesso!');
     } catch (error) {
+        //console.error('⚠️ Erro ao renderizar gráficos (não crítico):', error);
     }
 }
 
 function renderInvestmentChart() {
     const ctx = document.getElementById('investmentChart');
     if (!ctx) {
+        //console.warn('⚠️ Elemento investmentChart não encontrado');
         return;
     }
     
@@ -1114,6 +1154,7 @@ function renderInvestmentChart() {
     const labels = ['Tabela', 'Negociado'];
     const data = [totalTabela, totalNegociado];
     
+    //console.log('📊 Gráfico investimento - Tabela:', totalTabela, 'Negociado:', totalNegociado);
     
     charts.investment = new Chart(canvasCtx, {
         type: 'doughnut',
@@ -1174,12 +1215,15 @@ function calculateChartMax(dataArray) {
 // =====================================================
 
 function getSelectedRows() {
+    //console.log('  ↳ getSelectedRows() chamada');
     // Retorna array de checkboxes selecionados
     const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]:checked');
+    //console.log('  ↳ Checkboxes selecionados:', checkboxes.length);
     return checkboxes;
 }
 
 function calculateTotalSpots() {
+    //console.log('  ↳ calculateTotalSpots() chamada');
     let total = 0;
     getSelectedRows().forEach(checkbox => {
         const row = checkbox.closest('tr');
@@ -1188,10 +1232,12 @@ function calculateTotalSpots() {
             total += parseFloat(input.value) || 0;
         }
     });
+    //console.log('  ↳ Total spots calculado:', total);
     return total;
 }
 
 function calculateTotalInvestimentoTabela() {
+    //console.log('  ↳ calculateTotalInvestimentoTabela() chamada');
     let total = 0;
     getSelectedRows().forEach(checkbox => {
         const row = checkbox.closest('tr');
@@ -1201,10 +1247,12 @@ function calculateTotalInvestimentoTabela() {
             total += parseFloat(value) || 0;
         }
     });
+    //console.log('  ↳ Total investimento tabela calculado:', total);
     return total;
 }
 
 function calculateTotalInvestimentoNegociado() {
+    //console.log('  ↳ calculateTotalInvestimentoNegociado() chamada');
     let total = 0;
     getSelectedRows().forEach(checkbox => {
         const row = checkbox.closest('tr');
@@ -1214,13 +1262,16 @@ function calculateTotalInvestimentoNegociado() {
             total += parseFloat(value) || 0;
         }
     });
+    //console.log('  ↳ Total investimento negociado calculado:', total);
     return total;
 }
 
 function calculateCPM() {
+    //console.log('  ↳ calculateCPM() chamada');
     const totalSpots = calculateTotalSpots();
     const totalInvestimento = calculateTotalInvestimentoNegociado();
     
+    //console.log('  ↳ CPM: spots=', totalSpots, 'investimento=', totalInvestimento);
     
     if (totalSpots === 0 || totalInvestimento === 0) return 0;
     return (totalInvestimento / totalSpots) * 1000;
@@ -1284,15 +1335,18 @@ function recalculateAllImpactos() {
      * Recalcula impactos para TODAS as emissoras
      * Deve ser chamado sempre que um spot ou PMM muda
      */
+    //console.log('🔄 Recalculando impactos para todas as emissoras...');
     
     proposalData.emissoras.forEach((emissora, index) => {
         const impactosAntigos = emissora.impactos;
         emissora.impactos = calculateImpactosForEmissora(emissora);
         
         if (impactosAntigos !== emissora.impactos) {
+            //console.log(`   📊 Emissora ${index} (${emissora.emissora}): ${impactosAntigos} → ${emissora.impactos}`);
         }
     });
     
+    //console.log('✅ Impactos recalculados!');
 }
 
 // =====================================================
@@ -1300,12 +1354,14 @@ function recalculateAllImpactos() {
 // =====================================================
 
 function updateEmissora(index, field, value) {
+    //console.log(`🔴 UPDATE: index=${index}, field=${field}, value=${value}`);
 
     // Marcar que houve mudança (para mostrar comparações)
     hasChanges = true;
 
     const emissora = proposalData.emissoras[index];
     if (!emissora) {
+        //console.error('❌ Emissora não encontrada:', index);
         return;
     }
 
@@ -1326,10 +1382,13 @@ function updateEmissora(index, field, value) {
         proposalData.changes[changeKey].new = newValue;
     }
 
+    //console.log(`📝 Emissora ${index} - ${field}: ${oldValue} → ${newValue}`);
+    //console.log('📊 Changes agora:', proposalData.changes);
 
     // Recalcular impactos se foi alterado um campo de spot ou PMM
     const spotFields = ['spots30', 'spots60', 'spotsBlitz', 'spots15', 'spots5', 'spotsTest30', 'spotsTest60', 'spotsFlash30', 'spotsFlash60', 'spotsMensham30', 'spotsMensham60', 'PMM'];
     if (spotFields.includes(field)) {
+        //console.log(`   📊 Campo ${field} alterado - recalculando impactos...`);
         recalculateAllImpactos();
     }
 
@@ -1345,6 +1404,7 @@ function updateEmissora(index, field, value) {
 function updateRowSelection() {
     // Função chamada quando um checkbox é marcado/desmarcado
     // Recalcula os totais baseado nas linhas selecionadas
+    //console.log('📝 Linha selecionada/desmarcada');
     updateStats();
     renderCharts();
     
@@ -1355,6 +1415,7 @@ function updateRowSelection() {
 function toggleOcultarEmissora(checkbox) {
     // Se a flag está ativa, ignora este evento e desativa a flag
     if (ignoreNextCheckboxChange) {
+        //console.log('⏭️ Ignorando evento de checkbox (double trigger prevention)');
         ignoreNextCheckboxChange = false;
         return;
     }
@@ -1366,6 +1427,7 @@ function toggleOcultarEmissora(checkbox) {
     const emissoraIndex = parseInt(checkbox.getAttribute('data-emissora-index'));
     const emissora = proposalData.emissoras[emissoraIndex];
 
+    //console.log(`🔄 Alternando ocultamento de emissora: ${emissoraId}, marcado: ${checkbox.checked}`);
     
     if (checkbox.checked) {
         // Marcar = REMOVER da lista (quando está marcado, mostra na proposta)
@@ -1390,6 +1452,8 @@ function toggleOcultarEmissora(checkbox) {
         // Mostrar botão de salvar
         showUnsavedChanges();
 
+        //console.log(`✅ Emissora ${emissora?.emissora || emissoraId} ADICIONADA (será restaurada no Notion)`);
+        //console.log(`📊 Emissoras ocultas agora:`, Array.from(proposalData.ocultasEmissoras));
     } else {
         // Desmarcar = ADICIONAR à lista (quando está desmarcado, fica oculto na proposta)
         // Se está desmarcado agora, significa que estava marcado antes (estava visível)
@@ -1413,6 +1477,8 @@ function toggleOcultarEmissora(checkbox) {
         // Mostrar botão de salvar
         showUnsavedChanges();
 
+        //console.log(`✅ Emissora ${emissora?.emissora || emissoraId} REMOVIDA (será excluída no Notion)`);
+        //console.log(`📊 Emissoras ocultas agora:`, Array.from(proposalData.ocultasEmissoras));
     }
 }
 // =====================================================
@@ -1420,15 +1486,22 @@ function toggleOcultarEmissora(checkbox) {
 // =====================================================
 
 async function saveChanges() {
+    //console.log('🔴 CLICOU EM SALVAR!');
+    //console.log('📊 proposalData.changes:', proposalData.changes);
+    //console.log('📊 Número de mudanças:', Object.keys(proposalData.changes).length);
+    //console.log('👤 Emissoras ocultas:', proposalData.ocultasEmissoras.size);
+    //console.log('👤 Emissoras alteradas:', proposalData.changedEmissoras.size);
     
     const temMudancas = Object.keys(proposalData.changes).length > 0;
     const temMudancasEmissoras = proposalData.changedEmissoras.size > 0;
     
     if (!temMudancas && !temMudancasEmissoras) {
+        //console.warn('⚠️ Nenhuma alteração para salvar!');
         alert('Nenhuma alteração para salvar!');
         return;
     }
     
+    //console.log('💾 Abrindo modal para capturar email...');
     
     // Mostrar modal de email
     const emailModal = document.getElementById('emailModal');
@@ -1436,6 +1509,8 @@ async function saveChanges() {
 }
 
 function showConfirmModal() {
+    //console.log('%c🎯 PRÓXIMO PASSO: CLIQUE NO BOTÃO "CONFIRMAR" NO MODAL!', 'color: #dc2626; background: #fef2f2; padding: 10px 15px; font-size: 14px; font-weight: bold; border-radius: 5px;');
+    //console.log('📋 Abrindo modal de confirmação...');
     
     const modal = document.getElementById('confirmModal');
     const modalBody = document.getElementById('confirmModalBody');
@@ -1575,9 +1650,11 @@ function showConfirmModal() {
     modalBody.innerHTML = html;
     modal.style.display = 'flex';
     
+    //console.log('✅ Modal aberto com sucesso!');
 }
 
 function closeEmailModal() {
+    //console.log('❌ Fechando modal de email');
     document.getElementById('emailModal').style.display = 'none';
     document.getElementById('editorEmail').value = '';
 }
@@ -1594,6 +1671,7 @@ function proceedWithEmail() {
         return;
     }
     
+    //console.log('✅ Email validado:', email);
     
     // Armazenar email no proposalData para usar depois
     proposalData.editorEmail = email;
@@ -1606,6 +1684,7 @@ function proceedWithEmail() {
 }
 
 function closeConfirmModal() {
+    //console.log('❌ Fechando modal (editando novamente)');
     document.getElementById('confirmModal').style.display = 'none';
 }
 
@@ -1616,6 +1695,7 @@ function closeConfirmModal() {
 let pendingRemovalData = null;
 
 function showConfirmRemovalModal(checkbox, emissora, emissoraId) {
+    //console.log('📋 Abrindo modal de confirmação de remoção...');
     
     // Salvar dados para confirmação
     pendingRemovalData = {
@@ -1647,6 +1727,7 @@ function showConfirmRemovalModal(checkbox, emissora, emissoraId) {
 }
 
 function closeConfirmRemovalModal() {
+    //console.log('❌ Cancelando remoção');
     document.getElementById('confirmRemovalModal').style.display = 'none';
     
     // Restaurar checkbox para o estado anterior
@@ -1660,6 +1741,7 @@ function closeConfirmRemovalModal() {
 }
 
 function confirmRemoval() {
+    //console.log('✅ Confirmando remoção de emissora...');
     
     if (!pendingRemovalData) return;
     
@@ -1668,6 +1750,7 @@ function confirmRemoval() {
     // Adicionar à lista de excluídas
     proposalData.ocultasEmissoras.add(emissoraId);
     proposalData.changedEmissoras.add(emissoraId);  // Marcar como alterada
+    //console.log(`🗑️ Emissora ${emissoraId} REMOVIDA (marcada para exclusão)`);
     
     // Atualizar visual da linha
     const row = document.getElementById(`emissora-row-${emissoraId}`);
@@ -1686,6 +1769,7 @@ function confirmRemoval() {
     document.getElementById('confirmRemovalModal').style.display = 'none';
     pendingRemovalData = null;
     
+    //console.log('📊 Emissoras removidas agora:', Array.from(proposalData.ocultasEmissoras));
 }
 
 
@@ -1697,20 +1781,29 @@ function showUnsavedChanges() {
         
         const shouldShow = temMudancas || temMudancasEmissoras;
         
+        //console.log(`💾 showUnsavedChanges:`);
+        //console.log(`   Mudanças em campos: ${temMudancas}`);
+        //console.log(`   Mudanças em emissoras: ${temMudancasEmissoras} (${proposalData.changedEmissoras.size})`);
+        //console.log(`   Mostrar botão: ${shouldShow}`);
+        //console.log(`   Changes: ${JSON.stringify(proposalData.changes)}`);
+        //console.log(`   Emissoras alteradas: ${Array.from(proposalData.changedEmissoras)}`);
         
         saveBtn.style.display = shouldShow ? 'block' : 'none';
     } else {
+        //console.warn('❌ Botão saveBtn não encontrado!');
     }
 }
 
 
 async function confirmAndSave() {
+    //console.log('✅ Confirmando e salvando alterações...');
     
     const modal = document.getElementById('confirmModal');
     modal.style.display = 'none';
     
     try {
         const apiUrl = getApiUrl();
+        //console.log('📡 API URL:', apiUrl);
         
         // Sincronizar o estado "Excluir" com o Notion
         const dataToSave = {
@@ -1721,6 +1814,9 @@ async function confirmAndSave() {
             editorEmail: proposalData.editorEmail || 'desconhecido@email.com'  // Incluir email do editor
         };
         
+        //console.log('📤 Enviando dados:', dataToSave);
+        //console.log('👤 Email do editor:', dataToSave.editorEmail);
+        //console.log('👤 Emissoras ocultas:', dataToSave.ocultasEmissoras);
         
         const response = await fetch(`${apiUrl}?id=${proposalData.tableId}`, {
             method: 'PATCH',
@@ -1728,34 +1824,52 @@ async function confirmAndSave() {
             body: JSON.stringify(dataToSave)
         });
         
+        //console.log('📥 Response status:', response.status);
+        //console.log('📥 Response ok:', response.ok);
         
         if (!response.ok) {
             const error = await response.json();
+            //console.error('❌ Erro na resposta:', error);
+            //console.error('❌ Erro completo:', JSON.stringify(error, null, 2));
             throw new Error(error.error || error.message || 'Erro ao salvar');
         }
         
         const result = await response.json();
+        //console.log('✅ Alterações salvas!', result);
+        //console.log('🔍 debugLogs recebido:', result.debugLogs);
         
         // Exibir logs do servidor no console
         if (result.debugLogs && Array.isArray(result.debugLogs)) {
+            //console.log('═══════════════════════════════════════════════════════════');
+            //console.log('📋 LOGS DO SERVIDOR (Notion.js):');
+            //console.log('═══════════════════════════════════════════════════════════');
             result.debugLogs.forEach(log => {
+                //console.log(log);
                 // Destacar logs de email
                 if (log.includes('[EMAIL]')) {
+                    //console.warn('%c📧 EMAIL LOG: ' + log, 'color: #ec4899; font-weight: bold; background: #fecdd3; padding: 2px 6px; border-radius: 3px;');
                 }
             });
+            //console.log('═══════════════════════════════════════════════════════════');
         } else {
+            //console.warn('⚠️ debugLogs vazio ou não é array:', result.debugLogs);
         }
         
         // Procurar por logs de email nos debugLogs
         const emailLogs = result.debugLogs ? result.debugLogs.filter(log => log.includes('[EMAIL]')) : [];
         if (emailLogs.length > 0) {
+            //console.warn('%c🎯 RESUMO DOS LOGS DE EMAIL:', 'color: #dc2626; font-weight: bold; font-size: 14px;');
             emailLogs.forEach(log => {
                 if (log.includes('✅')) {
+                    //console.log('%c✅ ' + log, 'color: #10b981; font-weight: bold;');
                 } else if (log.includes('❌')) {
+                    //console.error('%c❌ ' + log, 'color: #dc2626; font-weight: bold;');
                 } else {
+                    //console.log('%c📧 ' + log, 'color: #f59e0b; font-weight: bold;');
                 }
             });
         } else {
+            //console.warn('%c⚠️ NENHUM LOG DE EMAIL ENCONTRADO NOS LOGS DO SERVIDOR', 'color: #f59e0b; font-weight: bold; font-size: 12px;');
         }
         
         // Adicionar alterações ao histórico
@@ -1779,11 +1893,13 @@ async function confirmAndSave() {
         // Mostrar modal de sucesso
         showSuccessModal();
     } catch (error) {
+        //console.error('❌ Erro:', error);
         alert(`Erro ao salvar: ${error.message}`);
     }
 }
 
 function clearComparisonLines() {
+    //console.log('🧹 Limpando linhas de comparação...');
 
     // Ocultar todos os stat-diff
     const statTabelaDiff = document.getElementById('statTabelaDiff');
@@ -1807,19 +1923,23 @@ function clearComparisonLines() {
         captureInitialStats();
     }, 100);
 
+    //console.log('✅ Linhas de comparação limpas! Flags resetadas.');
 }
 
 function showSuccessModal() {
+    //console.log('🎉 Mostrando modal de sucesso...');
     const successModal = document.getElementById('successModal');
     successModal.style.display = 'flex';
 
     // Recarregar página após 3 segundos
     setTimeout(() => {
+        //console.log('🔄 Recarregando página...');
         window.location.reload();
     }, 3000);
 }
 
 function closeSuccessModal() {
+    //console.log('Fechando modal de sucesso');
     document.getElementById('successModal').style.display = 'none';
 }
 
@@ -1864,6 +1984,7 @@ function formatNumberCompact(value) {
 }
 
 function showError(message) {
+    //console.error('❌', message);
     alert(`Erro: ${message}`);
 }
 
@@ -1886,6 +2007,8 @@ function goBack() {
     // Fallback: emidiastec.com.br
     const fallbackUrl = 'https://emidiastec.com.br';
 
+    //console.log(`🔗 Redirecionando para página pai: ${hubUrl}`);
+    //console.log(`⚠️ Fallback disponível: ${fallbackUrl}`);
 
     // Verificar se temos os dados necessários
     if (proposalName && parentPageId) {
@@ -1893,6 +2016,7 @@ function goBack() {
         window.location.href = hubUrl;
     } else {
         // Se faltam dados, ir para o fallback
+        //console.warn('⚠️ Parent page ID não disponível, redirecionando para fallback');
         window.location.href = fallbackUrl;
     }
 }
@@ -1908,6 +2032,7 @@ window.addEventListener('resize', () => {
 // =====================================================
 
 function exportToExcel() {
+    //console.log('📊 Iniciando exportação para Excel...');
     
     // Criar workbook XLSX
     const workbook = XLSX.utils.book_new();
@@ -2087,6 +2212,7 @@ function exportToExcel() {
     // Salvar arquivo
     XLSX.writeFile(workbook, fileName);
     
+    //console.log('✅ Arquivo Excel exportado:', fileName);
 }
 
 
